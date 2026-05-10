@@ -56,18 +56,25 @@
         </article>
       </section>
 
-      <section class="grid two">
-        <article class="panel">
+      <section class="grid ontology-section">
+        <article class="panel ontology-panel">
           <div class="panel-head">
             <h2>Ontology View</h2>
             <span id="graph-run-label">no run</span>
           </div>
           <div class="ontology-toolbar">
-            <button class="chip active" data-node-filter="all" type="button">All</button>
-            <button class="chip" data-node-filter="Requirement" type="button">Requirement</button>
-            <button class="chip" data-node-filter="Design_Spec" type="button">Design</button>
-            <button class="chip" data-node-filter="Verification" type="button">Verification</button>
-            <button class="chip" data-node-filter="Decision" type="button">Decision</button>
+            <div class="chip-group" aria-label="node filters">
+              <button class="chip active" data-node-filter="all" type="button">All</button>
+              <button class="chip" data-node-filter="Requirement" type="button">Requirement</button>
+              <button class="chip" data-node-filter="Design_Spec" type="button">Design</button>
+              <button class="chip" data-node-filter="Verification" type="button">Verification</button>
+              <button class="chip" data-node-filter="Decision" type="button">Decision</button>
+            </div>
+            <div class="chip-group" aria-label="graph view controls">
+              <button class="chip" id="ontology-zoom-out" type="button">Zoom Out</button>
+              <button class="chip" id="ontology-zoom-in" type="button">Zoom In</button>
+              <button class="chip" id="ontology-reset" type="button">Reset View</button>
+            </div>
           </div>
           <div class="ontology-layout">
             <svg id="ontology-graph" role="img" aria-label="ontology graph view"></svg>
@@ -84,7 +91,9 @@
             </div>
           </div>
         </article>
+      </section>
 
+      <section class="grid two">
         <article class="panel">
           <div class="panel-head">
             <h2>Approvals</h2>

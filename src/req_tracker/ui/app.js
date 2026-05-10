@@ -3,6 +3,14 @@ const state = {
   currentRunId: null,
   nodeFilter: "all",
   graphProjection: { nodes: [], approved_edges: [], pending_edges: [] },
+  ontologyView: {
+    scale: 1,
+    x: 0,
+    y: 0,
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+  },
 };
 
 const api = async (path, options = {}) => {
@@ -45,6 +53,41 @@ const nodeColors = {
 
 const shortName = (name) => (name.length > 28 ? `${name.slice(0, 25)}...` : name);
 
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+const applyOntologyTransform = () => {
+  const viewport = document.getElementById("ontology-viewport");
+  if (!viewport) return;
+  const { scale, x, y } = state.ontologyView;
+  viewport.setAttribute("transform", `translate(${x} ${y}) scale(${scale})`);
+};
+
+const resetOntologyView = () => {
+  state.ontologyView.scale = 1;
+  state.ontologyView.x = 0;
+  state.ontologyView.y = 0;
+  applyOntologyTransform();
+};
+
+const zoomOntology = (factor, anchorX = 640, anchorY = 360) => {
+  const current = state.ontologyView.scale;
+  const next = clamp(current * factor, 0.35, 3.5);
+  const ratio = next / current;
+  state.ontologyView.x = anchorX - (anchorX - state.ontologyView.x) * ratio;
+  state.ontologyView.y = anchorY - (anchorY - state.ontologyView.y) * ratio;
+  state.ontologyView.scale = next;
+  applyOntologyTransform();
+};
+
+const svgPointFromEvent = (svg, event) => {
+  const matrix = svg.getScreenCTM();
+  if (!matrix) return { x: 640, y: 360 };
+  const point = svg.createSVGPoint();
+  point.x = event.clientX;
+  point.y = event.clientY;
+  return point.matrixTransform(matrix.inverse());
+};
+
 const renderNodes = (nodes) => {
   const list = el("nodes");
   list.replaceChildren();
@@ -82,8 +125,8 @@ const renderEdges = (edges) => {
 const renderOntologyGraph = (projection) => {
   const svg = el("ontology-graph");
   svg.replaceChildren();
-  const width = 980;
-  const height = 420;
+  const width = 1280;
+  const height = 720;
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
   const nodes = projection.nodes.filter(
@@ -100,18 +143,21 @@ const renderOntologyGraph = (projection) => {
     ["Verification", "Issue"],
   ];
   const positions = new Map();
+  const viewport = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  viewport.setAttribute("id", "ontology-viewport");
 
   levels.forEach((types, column) => {
     const group = nodes.filter((node) => types.includes(node.node_type));
-    const x = 95 + column * 265;
+    const x = 110 + column * 340;
     group.forEach((node, index) => {
-      const y = 55 + index * Math.max(42, Math.min(78, 310 / Math.max(group.length, 1)));
+      const spacing = Math.max(58, Math.min(108, 560 / Math.max(group.length, 1)));
+      const y = 70 + index * spacing;
       positions.set(node.node_id, { x, y });
     });
   });
 
   const missing = nodes.filter((node) => !positions.has(node.node_id));
-  missing.forEach((node, index) => positions.set(node.node_id, { x: 880, y: 60 + index * 54 }));
+  missing.forEach((node, index) => positions.set(node.node_id, { x: 1180, y: 80 + index * 70 }));
 
   const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
   defs.innerHTML = `
@@ -125,6 +171,7 @@ const renderOntologyGraph = (projection) => {
     </marker>
   `;
   svg.append(defs);
+  svg.append(viewport);
 
   edges.forEach((edge) => {
     const source = positions.get(edge.source_node_id);
@@ -139,7 +186,7 @@ const renderOntologyGraph = (projection) => {
     const pending = edge.approval_status !== "approved";
     path.setAttribute("class", `ontology-edge${pending ? " pending" : ""}`);
     path.setAttribute("marker-end", pending ? "url(#arrow-pending)" : "url(#arrow-approved)");
-    svg.append(path);
+    viewport.append(path);
   });
 
   nodes.forEach((node) => {
@@ -163,8 +210,9 @@ const renderOntologyGraph = (projection) => {
     title.textContent = shortName(node.name);
     group.append(title);
 
-    svg.append(group);
+    viewport.append(group);
   });
+  applyOntologyTransform();
 };
 
 const renderOntologyDetail = (node) => {
@@ -388,6 +436,42 @@ el("schedule-form").addEventListener("submit", (event) => {
   applySchedule().catch(console.error);
 });
 el("schedule-run-now").addEventListener("click", () => runScheduleNow().catch(console.error));
+el("ontology-zoom-in").addEventListener("click", () => zoomOntology(1.2));
+el("ontology-zoom-out").addEventListener("click", () => zoomOntology(1 / 1.2));
+el("ontology-reset").addEventListener("click", resetOntologyView);
+el("ontology-graph").addEventListener(
+  "wheel",
+  (event) => {
+    event.preventDefault();
+    const point = svgPointFromEvent(el("ontology-graph"), event);
+    zoomOntology(event.deltaY < 0 ? 1.12 : 1 / 1.12, point.x, point.y);
+  },
+  { passive: false },
+);
+el("ontology-graph").addEventListener("pointerdown", (event) => {
+  state.ontologyView.dragging = true;
+  state.ontologyView.lastX = event.clientX;
+  state.ontologyView.lastY = event.clientY;
+  el("ontology-graph").classList.add("is-panning");
+  el("ontology-graph").setPointerCapture(event.pointerId);
+});
+el("ontology-graph").addEventListener("pointermove", (event) => {
+  if (!state.ontologyView.dragging) return;
+  const svg = el("ontology-graph");
+  const rect = svg.getBoundingClientRect();
+  const scaleX = 1280 / rect.width;
+  const scaleY = 720 / rect.height;
+  state.ontologyView.x += (event.clientX - state.ontologyView.lastX) * scaleX;
+  state.ontologyView.y += (event.clientY - state.ontologyView.lastY) * scaleY;
+  state.ontologyView.lastX = event.clientX;
+  state.ontologyView.lastY = event.clientY;
+  applyOntologyTransform();
+});
+el("ontology-graph").addEventListener("pointerup", (event) => {
+  state.ontologyView.dragging = false;
+  el("ontology-graph").classList.remove("is-panning");
+  el("ontology-graph").releasePointerCapture(event.pointerId);
+});
 document.querySelectorAll("[data-node-filter]").forEach((button) => {
   button.addEventListener("click", () => {
     document.querySelectorAll("[data-node-filter]").forEach((item) => {
