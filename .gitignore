@@ -46,6 +46,7 @@ pnpm-debug.log*
 data/
 artifacts/
 debug_artifacts/
+.local_artifacts/
 logs/
 
 # IDE / OS

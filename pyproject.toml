@@ -1,0 +1,43 @@
+[project]
+name = "se-1-rune-agent"
+version = "0.1.0"
+description = "Production-oriented MBSE traceability agent system with debuggable, feedback-driven workflows."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.124.0",
+    "pydantic>=2.12.0",
+    "pydantic-settings>=2.13.0",
+    "uvicorn>=0.38.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.0",
+    "mypy>=1.19.0",
+    "pytest>=9.0.0",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["src"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+packages = ["req_tracker"]
+strict = true
+warn_unused_configs = true
+warn_return_any = true
