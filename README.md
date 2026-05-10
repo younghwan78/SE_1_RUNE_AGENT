@@ -31,6 +31,16 @@ Health check:
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
 ```
 
+Configure periodic runs:
+
+```powershell
+Invoke-RestMethod -Method Put http://127.0.0.1:8000/api/v1/schedule `
+  -ContentType "application/json" `
+  -Body '{"enabled":true,"interval_seconds":3600,"project_key":"RUNE_CAM_ALPHA","scenario":"RUNE_MULTI_SOURCE","run_id_prefix":"sched"}'
+```
+
+Ubuntu server deployment details are in `README_ubuntu.md`.
+
 ## Current Implementation Stage
 
 Current local implementation:
@@ -44,3 +54,5 @@ Current local implementation:
 - approval queue, graph commit, feedback capture
 - replay diff and eval candidate grouping
 - static local operator UI
+- ontology graph view with pending/approved edge projection
+- periodic analysis scheduler for server operation

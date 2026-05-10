@@ -26,6 +26,20 @@ class Settings(BaseSettings):
     artifact_root: Path = Field(default=Path(".local_artifacts"), validation_alias="ARTIFACT_ROOT")
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
     enable_docs: bool = Field(default=True, validation_alias="ENABLE_DOCS")
+    scheduler_enabled: bool = Field(default=False, validation_alias="SCHEDULER_ENABLED")
+    scheduler_interval_seconds: int = Field(
+        default=3600,
+        ge=1,
+        validation_alias="SCHEDULER_INTERVAL_SECONDS",
+    )
+    scheduler_project_key: str = Field(
+        default="RUNE_CAM_ALPHA",
+        validation_alias="SCHEDULER_PROJECT_KEY",
+    )
+    scheduler_scenario: str = Field(
+        default="RUNE_MULTI_SOURCE",
+        validation_alias="SCHEDULER_SCENARIO",
+    )
 
     def new_id(self, prefix: str) -> str:
         """Generate a compact runtime id with a stable prefix."""
@@ -36,4 +50,3 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return cached settings."""
     return Settings()
-

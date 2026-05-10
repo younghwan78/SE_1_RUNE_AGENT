@@ -8,6 +8,8 @@ from req_tracker.approvals.service import ApprovalService
 from req_tracker.debug.artifacts import LocalArtifactStore
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.graph.memory_backend import MemoryGraphBackend
+from req_tracker.scheduler.models import ScheduleConfig
+from req_tracker.scheduler.service import RunScheduler
 from req_tracker.vector.memory_backend import MemoryVectorBackend
 from req_tracker.workflows.analysis_graph import AnalysisResult, LocalAnalysisWorkflow
 
@@ -23,9 +25,14 @@ class RuntimeState(BaseModel):
     vector: MemoryVectorBackend
     approvals: ApprovalService
     analyses: dict[str, AnalysisResult]
+    scheduler: RunScheduler
 
     @classmethod
-    def create(cls, artifact_root: Path) -> "RuntimeState":
+    def create(
+        cls,
+        artifact_root: Path,
+        schedule_config: ScheduleConfig | None = None,
+    ) -> "RuntimeState":
         """Create a local runtime state."""
         return cls(
             traces=InMemoryTraceRepository(),
@@ -34,6 +41,7 @@ class RuntimeState(BaseModel):
             vector=MemoryVectorBackend(),
             approvals=ApprovalService(),
             analyses={},
+            scheduler=RunScheduler(schedule_config),
         )
 
     def workflow(self) -> LocalAnalysisWorkflow:
@@ -46,3 +54,12 @@ class RuntimeState(BaseModel):
             approvals=self.approvals,
         )
 
+    def run_analysis(self, *, run_id: str, project_key: str, scenario: str) -> AnalysisResult:
+        """Run analysis and store the result."""
+        result = self.workflow().run(
+            run_id=run_id,
+            project_key=project_key,
+            scenario=scenario,
+        )
+        self.analyses[run_id] = result
+        return result

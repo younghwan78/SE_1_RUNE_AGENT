@@ -1,6 +1,7 @@
 """FastAPI application factory."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
@@ -14,19 +15,46 @@ from req_tracker.api.routes.ui import UI_ASSET_DIR
 from req_tracker.api.routes.ui import router as ui_router
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings, get_settings
+from req_tracker.scheduler.models import ScheduleConfig
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Create the API application."""
     resolved_settings = settings or get_settings()
+    runtime = RuntimeState.create(
+        resolved_settings.artifact_root,
+        ScheduleConfig(
+            enabled=resolved_settings.scheduler_enabled,
+            interval_seconds=resolved_settings.scheduler_interval_seconds,
+            project_key=resolved_settings.scheduler_project_key,
+            scenario=resolved_settings.scheduler_scenario,
+        ),
+    )
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        app.state.runtime = runtime
+        if runtime.scheduler.config.enabled:
+            await runtime.scheduler.start(
+                runner=lambda run_id, project_key, scenario: runtime.run_analysis(
+                    run_id=run_id,
+                    project_key=project_key,
+                    scenario=scenario,
+                ),
+                new_id=resolved_settings.new_id,
+            )
+        yield
+        await runtime.scheduler.stop()
+
     app = FastAPI(
         title="SE 1 RUNE Agent API",
         version="0.1.0",
         docs_url="/docs" if resolved_settings.enable_docs else None,
         redoc_url="/redoc" if resolved_settings.enable_docs else None,
+        lifespan=lifespan,
     )
     app.state.settings = resolved_settings
-    app.state.runtime = RuntimeState.create(resolved_settings.artifact_root)
+    app.state.runtime = runtime
 
     @app.middleware("http")
     async def add_correlation_id(

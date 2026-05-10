@@ -5,7 +5,10 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from req_tracker.api.state import RuntimeState
+from req_tracker.config.settings import Settings
 from req_tracker.debug.replay import ReplayService
+from req_tracker.scheduler.models import ScheduleConfig
 
 router = APIRouter(tags=["runs"])
 
@@ -32,12 +35,11 @@ def analyze(request: Request, payload: AnalyzeRunRequest) -> dict[str, Any]:
     runtime = request.app.state.runtime
     settings = request.app.state.settings
     run_id = payload.run_id or settings.new_id("run")
-    result = runtime.workflow().run(
+    result = runtime.run_analysis(
         run_id=run_id,
         project_key=payload.project_key,
         scenario=payload.scenario,
     )
-    runtime.analyses[run_id] = result
     return {
         "run": result.run.model_dump(mode="json"),
         "counts": {
@@ -111,3 +113,46 @@ def list_findings(request: Request) -> list[dict[str, Any]]:
     for result in runtime.analyses.values():
         findings.extend(finding.model_dump(mode="json") for finding in result.findings)
     return findings
+
+
+@router.get("/schedule")
+def get_schedule(request: Request) -> dict[str, Any]:
+    """Return periodic run schedule status."""
+    runtime: RuntimeState = request.app.state.runtime
+    result: dict[str, Any] = runtime.scheduler.status().model_dump(mode="json")
+    return result
+
+
+@router.put("/schedule")
+async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[str, Any]:
+    """Configure periodic analysis runs."""
+    runtime: RuntimeState = request.app.state.runtime
+    settings: Settings = request.app.state.settings
+    status = await runtime.scheduler.configure(
+        payload,
+        runner=lambda run_id, project_key, scenario: runtime.run_analysis(
+            run_id=run_id,
+            project_key=project_key,
+            scenario=scenario,
+        ),
+        new_id=settings.new_id,
+    )
+    result: dict[str, Any] = status.model_dump(mode="json")
+    return result
+
+
+@router.post("/schedule/run-now")
+async def run_schedule_now(request: Request) -> dict[str, Any]:
+    """Run one scheduled analysis immediately."""
+    runtime: RuntimeState = request.app.state.runtime
+    settings: Settings = request.app.state.settings
+    result = await runtime.scheduler.run_now(
+        runner=lambda run_id, project_key, scenario: runtime.run_analysis(
+            run_id=run_id,
+            project_key=project_key,
+            scenario=scenario,
+        ),
+        new_id=settings.new_id,
+    )
+    response: dict[str, Any] = result.model_dump(mode="json")
+    return response

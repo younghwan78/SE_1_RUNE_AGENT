@@ -45,3 +45,9 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
     graph = client.get("/api/v1/graph/subgraph?project_key=RUNE_CAM_ALPHA")
     assert graph.status_code == 200
     assert len(graph.json()["edges"]) == 1
+
+    projection = client.get("/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA")
+    assert projection.status_code == 200
+    assert len(projection.json()["nodes"]) == 10
+    assert len(projection.json()["approved_edges"]) == 1
+    assert len(projection.json()["pending_edges"]) >= 1

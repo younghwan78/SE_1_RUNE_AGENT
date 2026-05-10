@@ -50,13 +50,28 @@
           <span>Gate</span>
           <strong id="metric-gate">blocked</strong>
         </article>
+        <article>
+          <span>Schedule</span>
+          <strong id="metric-schedule">off</strong>
+        </article>
       </section>
 
       <section class="grid two">
         <article class="panel">
           <div class="panel-head">
-            <h2>Graph</h2>
+            <h2>Ontology View</h2>
             <span id="graph-run-label">no run</span>
+          </div>
+          <div class="ontology-toolbar">
+            <button class="chip active" data-node-filter="all" type="button">All</button>
+            <button class="chip" data-node-filter="Requirement" type="button">Requirement</button>
+            <button class="chip" data-node-filter="Design_Spec" type="button">Design</button>
+            <button class="chip" data-node-filter="Verification" type="button">Verification</button>
+            <button class="chip" data-node-filter="Decision" type="button">Decision</button>
+          </div>
+          <div class="ontology-layout">
+            <svg id="ontology-graph" role="img" aria-label="ontology graph view"></svg>
+            <aside id="ontology-detail" class="ontology-detail">No node selected</aside>
           </div>
           <div class="graph-area">
             <div>
@@ -76,6 +91,49 @@
             <span id="approval-count">0 pending</span>
           </div>
           <ul id="approvals" class="review-list"></ul>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Scheduler</h2>
+            <span id="schedule-label">disabled</span>
+          </div>
+          <form id="schedule-form" class="schedule-form">
+            <label>
+              <span>Interval seconds</span>
+              <input id="schedule-interval" type="number" min="1" value="3600" />
+            </label>
+            <label>
+              <span>Project</span>
+              <input id="schedule-project" type="text" value="RUNE_CAM_ALPHA" />
+            </label>
+            <label>
+              <span>Scenario</span>
+              <select id="schedule-scenario">
+                <option value="RUNE_MULTI_SOURCE">RUNE_MULTI_SOURCE</option>
+                <option value="RUNE_CAM_ALPHA">RUNE_CAM_ALPHA</option>
+                <option value="RUNE_SECURITY">RUNE_SECURITY</option>
+              </select>
+            </label>
+            <label class="toggle-row">
+              <input id="schedule-enabled" type="checkbox" />
+              <span>Enabled</span>
+            </label>
+            <div class="review-actions">
+              <button type="submit">Apply</button>
+              <button id="schedule-run-now" type="button">Run now</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Schedule Status</h2>
+            <span id="schedule-run-label">no run</span>
+          </div>
+          <pre id="schedule-status">[]</pre>
         </article>
       </section>
 

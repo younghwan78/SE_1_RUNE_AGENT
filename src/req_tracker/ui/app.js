@@ -1,6 +1,8 @@
 const state = {
   runs: [],
   currentRunId: null,
+  nodeFilter: "all",
+  graphProjection: { nodes: [], approved_edges: [], pending_edges: [] },
 };
 
 const api = async (path, options = {}) => {
@@ -29,6 +31,19 @@ const emptyRow = (label) => {
 
 const badge = (value, warning = false) =>
   `<span class="badge${warning ? " warning" : ""}">${value}</span>`;
+
+const nodeColors = {
+  Requirement: "#2f6fbb",
+  Architecture_Block: "#6b5fb5",
+  Design_Spec: "#2f8a65",
+  Verification: "#b2762f",
+  Issue: "#b54a4a",
+  Decision: "#5b7583",
+  Component: "#767b35",
+  Risk: "#9b5b65",
+};
+
+const shortName = (name) => (name.length > 28 ? `${name.slice(0, 25)}...` : name);
 
 const renderNodes = (nodes) => {
   const list = el("nodes");
@@ -62,6 +77,107 @@ const renderEdges = (edges) => {
     `;
     list.append(item);
   });
+};
+
+const renderOntologyGraph = (projection) => {
+  const svg = el("ontology-graph");
+  svg.replaceChildren();
+  const width = 980;
+  const height = 420;
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+  const nodes = projection.nodes.filter(
+    (node) => state.nodeFilter === "all" || node.node_type === state.nodeFilter,
+  );
+  const nodeIds = new Set(nodes.map((node) => node.node_id));
+  const edges = [...projection.approved_edges, ...projection.pending_edges].filter(
+    (edge) => nodeIds.has(edge.source_node_id) && nodeIds.has(edge.target_node_id),
+  );
+  const levels = [
+    ["Requirement"],
+    ["Architecture_Block", "Component"],
+    ["Design_Spec", "Decision", "Risk"],
+    ["Verification", "Issue"],
+  ];
+  const positions = new Map();
+
+  levels.forEach((types, column) => {
+    const group = nodes.filter((node) => types.includes(node.node_type));
+    const x = 95 + column * 265;
+    group.forEach((node, index) => {
+      const y = 55 + index * Math.max(42, Math.min(78, 310 / Math.max(group.length, 1)));
+      positions.set(node.node_id, { x, y });
+    });
+  });
+
+  const missing = nodes.filter((node) => !positions.has(node.node_id));
+  missing.forEach((node, index) => positions.set(node.node_id, { x: 880, y: 60 + index * 54 }));
+
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  defs.innerHTML = `
+    <marker id="arrow-approved" markerWidth="8" markerHeight="8" refX="7" refY="4"
+      orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,4 L0,8 z" fill="#77858d"></path>
+    </marker>
+    <marker id="arrow-pending" markerWidth="8" markerHeight="8" refX="7" refY="4"
+      orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,4 L0,8 z" fill="#8a5a19"></path>
+    </marker>
+  `;
+  svg.append(defs);
+
+  edges.forEach((edge) => {
+    const source = positions.get(edge.source_node_id);
+    const target = positions.get(edge.target_node_id);
+    if (!source || !target) return;
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const midX = (source.x + target.x) / 2;
+    path.setAttribute(
+      "d",
+      `M${source.x + 22},${source.y} C${midX},${source.y} ${midX},${target.y} ${target.x - 22},${target.y}`,
+    );
+    const pending = edge.approval_status !== "approved";
+    path.setAttribute("class", `ontology-edge${pending ? " pending" : ""}`);
+    path.setAttribute("marker-end", pending ? "url(#arrow-pending)" : "url(#arrow-approved)");
+    svg.append(path);
+  });
+
+  nodes.forEach((node) => {
+    const position = positions.get(node.node_id);
+    if (!position) return;
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.setAttribute("class", "ontology-node");
+    group.setAttribute("tabindex", "0");
+    group.addEventListener("click", () => renderOntologyDetail(node));
+
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", position.x);
+    circle.setAttribute("cy", position.y);
+    circle.setAttribute("r", "18");
+    circle.setAttribute("fill", nodeColors[node.node_type] || "#5b7583");
+    group.append(circle);
+
+    const title = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    title.setAttribute("x", position.x + 26);
+    title.setAttribute("y", position.y + 4);
+    title.textContent = shortName(node.name);
+    group.append(title);
+
+    svg.append(group);
+  });
+};
+
+const renderOntologyDetail = (node) => {
+  el("ontology-detail").innerHTML = `
+    <strong>${node.name}</strong>
+    ${badge(node.node_type)}
+    <div class="item-meta">
+      ${node.node_id}<br>
+      confidence=${node.confidence_score}<br>
+      source=${node.source_artifact_ids.join(", ")}<br><br>
+      ${node.description}
+    </div>
+  `;
 };
 
 const renderFindings = (findings) => {
@@ -155,18 +271,22 @@ const renderImprovements = (improvements) => {
 };
 
 const refresh = async () => {
-  const [graph, approvals, findings, evalCandidates, feedbackSummary, improvements, gate] =
+  const [graph, projection, approvals, findings, evalCandidates, feedbackSummary, improvements, gate, schedule] =
     await Promise.all([
       api("/graph/subgraph"),
+      api("/graph/projection"),
       api("/approvals"),
       api("/findings"),
       api("/eval/candidates"),
       api("/feedback/summary"),
       api("/improvements/candidates"),
       api("/eval/gate"),
+      api("/schedule"),
     ]);
+  state.graphProjection = projection;
   renderNodes(graph.nodes);
   renderEdges(graph.edges);
+  renderOntologyGraph(projection);
   renderApprovals(approvals);
   renderFindings(findings);
   renderEvalCandidates(evalCandidates);
@@ -181,11 +301,23 @@ const refresh = async () => {
     Object.values(feedbackSummary).reduce((sum, count) => sum + count, 0),
   );
   text("metric-gate", gate.status);
+  text("metric-schedule", schedule.enabled ? "on" : "off");
   text("gate-label", gate.eval_run_id);
   el("eval-gate").textContent = JSON.stringify(gate, null, 2);
+  renderSchedule(schedule);
   text("finding-count", `${findings.length} open`);
   text("graph-run-label", state.currentRunId || "no run");
   el("run-replay").disabled = !state.currentRunId;
+};
+
+const renderSchedule = (schedule) => {
+  text("schedule-label", schedule.running ? "running" : "disabled");
+  text("schedule-run-label", schedule.last_run_id || "no run");
+  el("schedule-interval").value = schedule.interval_seconds;
+  el("schedule-project").value = schedule.project_key;
+  el("schedule-scenario").value = schedule.scenario;
+  el("schedule-enabled").checked = schedule.enabled;
+  el("schedule-status").textContent = JSON.stringify(schedule, null, 2);
 };
 
 const runAnalysis = async () => {
@@ -223,6 +355,26 @@ const runReplay = async () => {
   await refresh();
 };
 
+const applySchedule = async () => {
+  const payload = {
+    enabled: el("schedule-enabled").checked,
+    interval_seconds: Number(el("schedule-interval").value || 3600),
+    project_key: el("schedule-project").value || "RUNE_CAM_ALPHA",
+    scenario: el("schedule-scenario").value || "RUNE_MULTI_SOURCE",
+    run_id_prefix: "sched",
+  };
+  await api("/schedule", { method: "PUT", body: JSON.stringify(payload) });
+  await refresh();
+};
+
+const runScheduleNow = async () => {
+  const result = await api("/schedule/run-now", { method: "POST", body: JSON.stringify({}) });
+  state.currentRunId = result.run_id;
+  state.runs.push(result.run_id);
+  text("status-line", `scheduled run complete: ${result.run_id}`);
+  await refresh();
+};
+
 el("run-analysis").addEventListener("click", () => runAnalysis().catch(console.error));
 el("refresh").addEventListener("click", () => refresh().catch(console.error));
 el("run-replay").addEventListener("click", () => runReplay().catch(console.error));
@@ -230,6 +382,21 @@ el("approvals").addEventListener("click", (event) => {
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
   decideApproval(target.dataset.id, target.dataset.action).catch(console.error);
+});
+el("schedule-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  applySchedule().catch(console.error);
+});
+el("schedule-run-now").addEventListener("click", () => runScheduleNow().catch(console.error));
+document.querySelectorAll("[data-node-filter]").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-node-filter]").forEach((item) => {
+      item.classList.remove("active");
+    });
+    button.classList.add("active");
+    state.nodeFilter = button.dataset.nodeFilter;
+    renderOntologyGraph(state.graphProjection);
+  });
 });
 
 refresh().catch(console.error);

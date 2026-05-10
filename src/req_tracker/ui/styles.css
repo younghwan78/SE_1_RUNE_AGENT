@@ -103,7 +103,7 @@ button:disabled {
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(7, minmax(120px, 1fr));
+  grid-template-columns: repeat(8, minmax(110px, 1fr));
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -161,6 +161,125 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
   padding: 14px;
+}
+
+.ontology-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 14px 0;
+}
+
+.chip {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.chip.active {
+  border-color: var(--accent);
+  background: #e5f1f2;
+  color: var(--accent);
+}
+
+.ontology-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+#ontology-graph {
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f9fbfb;
+}
+
+.ontology-node {
+  cursor: pointer;
+}
+
+.ontology-node circle {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.ontology-node text {
+  fill: var(--text);
+  font-size: 11px;
+  font-weight: 650;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 3px;
+}
+
+.ontology-edge {
+  fill: none;
+  stroke: #77858d;
+  stroke-width: 1.6;
+}
+
+.ontology-edge.pending {
+  stroke: var(--accent-2);
+  stroke-dasharray: 6 4;
+}
+
+.ontology-detail {
+  min-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfcfc;
+  color: var(--muted);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.ontology-detail strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.schedule-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+.schedule-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.schedule-form label span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.schedule-form input,
+.schedule-form select {
+  min-height: 34px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.toggle-row {
+  align-content: center;
+  grid-template-columns: auto 1fr;
+}
+
+.toggle-row input {
+  width: 18px;
 }
 
 .compact-list,
@@ -252,7 +371,8 @@ pre {
   .metrics,
   .grid.two,
   .grid.three,
-  .graph-area {
+  .graph-area,
+  .ontology-layout {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -270,7 +390,9 @@ pre {
   .metrics,
   .grid.two,
   .grid.three,
-  .graph-area {
+  .graph-area,
+  .ontology-layout,
+  .schedule-form {
     grid-template-columns: 1fr;
   }
 }
