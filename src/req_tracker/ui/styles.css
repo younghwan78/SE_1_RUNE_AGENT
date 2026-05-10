@@ -335,6 +335,48 @@ button:disabled {
   background: var(--surface);
 }
 
+.chain-detail {
+  margin-top: 14px;
+}
+
+.chain-summary {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.chain-list {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.chain-list li {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.chain-list li span:first-child {
+  display: inline-block;
+  min-width: 18px;
+  margin-right: 6px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.edge-chain li div {
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 .schedule-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

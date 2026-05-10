@@ -317,6 +317,10 @@ const renderOntologyDetail = (node) => {
     <div class="review-actions">
       <button id="focus-neighborhood" type="button">Focus Neighborhood</button>
     </div>
+    <div class="chain-detail">
+      <h3>Traceability Chain</h3>
+      <div id="chain-detail">Loading chain</div>
+    </div>
   `;
   el("focus-neighborhood").addEventListener("click", () => {
     state.graphMode = "neighborhood";
@@ -324,6 +328,9 @@ const renderOntologyDetail = (node) => {
       item.classList.toggle("active", item.dataset.graphMode === "neighborhood");
     });
     refresh().catch(console.error);
+  });
+  loadTraceabilityChain(node.node_id).catch((error) => {
+    el("chain-detail").textContent = error.message;
   });
 };
 
@@ -342,6 +349,53 @@ const renderEdgeDetail = (edge) => {
       ${edge.reasoning}
     </div>
     <pre class="detail-pre">${evidence}</pre>
+  `;
+};
+
+const loadTraceabilityChain = async (nodeId) => {
+  const query = new URLSearchParams({
+    depth: "3",
+    include_pending: "true",
+    direction: "both",
+  });
+  const chain = await api(`/traceability/chain/${encodeURIComponent(nodeId)}?${query.toString()}`);
+  if (state.selectedNodeId !== nodeId) return;
+  renderTraceabilityChain(chain);
+};
+
+const renderTraceabilityChain = (chain) => {
+  const target = el("chain-detail");
+  if (!chain.nodes.length) {
+    target.textContent = "No chain nodes";
+    return;
+  }
+  const nodes = chain.nodes
+    .map(
+      (node) => `
+        <li>
+          <span>${node.depth}</span>
+          <strong>${node.name}</strong>
+          ${badge(node.node_type)}
+          ${node.is_center ? badge("center", true) : ""}
+        </li>
+      `,
+    )
+    .join("");
+  const edges = chain.edges
+    .map(
+      (edge) => `
+        <li>
+          <span>${edge.relation}</span>
+          ${badge(edge.view_status, edge.view_status === "pending")}
+          <div>${edge.source_node_name || edge.source_node_id}<br>${edge.target_node_name || edge.target_node_id}</div>
+        </li>
+      `,
+    )
+    .join("");
+  target.innerHTML = `
+    <div class="chain-summary">${chain.nodes.length} nodes / ${chain.edges.length} edges</div>
+    <ul class="chain-list">${nodes}</ul>
+    <ul class="chain-list edge-chain">${edges || "<li>No visible edges</li>"}</ul>
   `;
 };
 

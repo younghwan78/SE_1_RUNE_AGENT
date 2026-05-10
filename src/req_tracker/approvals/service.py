@@ -1,5 +1,8 @@
 """Approval service."""
 
+import json
+from datetime import UTC, datetime
+
 from req_tracker.approvals.models import (
     ApprovalDecision,
     ApprovalItem,
@@ -7,7 +10,7 @@ from req_tracker.approvals.models import (
     GraphDeltaOperation,
 )
 from req_tracker.debug.hash import stable_hash
-from req_tracker.feedback.models import FeedbackEvent
+from req_tracker.feedback.models import FeedbackAction, FeedbackEvent
 from req_tracker.graph.memory_backend import MemoryGraphBackend
 from req_tracker.ontology.models import TraceabilityEdge
 
@@ -85,19 +88,79 @@ class ApprovalService:
         elif decision.action == "hold":
             status = "held"
         else:
+            if item.graph_delta_ref and decision.correction_payload:
+                delta = self._modified_delta(item, decision)
+                self.deltas[delta.delta_id] = delta
+                graph.apply_delta(
+                    delta,
+                    idempotency_key=f"{decision.approval_id}:{item.version}:modify",
+                )
             status = "modified_approved"
-        updated = item.model_copy(update={"status": status, "version": item.version + 1})
+        updated = item.model_copy(
+            update={
+                "status": status,
+                "version": item.version + 1,
+                "updated_at": datetime.now(UTC),
+            }
+        )
         self.items[item.approval_id] = updated
         self.feedback.append(
             FeedbackEvent(
                 feedback_id=f"fb_{stable_hash(decision)[:16]}",
                 target_type="edge",
                 target_id=item.proposal_ref,
-                action="approved" if status == "approved" else "rejected",
+                action=_feedback_action(status),
                 user_id=decision.decided_by,
                 user_role=item.owner_role,
                 reason_code=decision.reason_code,  # type: ignore[arg-type]
-                correction_text=None,
+                correction_text=_correction_text(decision),
             )
         )
         return updated
+
+    def _modified_delta(
+        self,
+        item: ApprovalItem,
+        decision: ApprovalDecision,
+    ) -> GraphDelta:
+        original = self.deltas[item.graph_delta_ref or ""]
+        operations: list[GraphDeltaOperation] = []
+        for operation in original.operations:
+            payload = dict(operation.payload)
+            payload.update(decision.correction_payload or {})
+            if operation.operation == "create_edge":
+                payload["approval_status"] = "approved"
+                payload["approved_by"] = decision.decided_by
+                payload["approved_at"] = decision.decided_at
+                edge = TraceabilityEdge.model_validate(payload)
+                payload = edge.model_dump(mode="json")
+            operations.append(
+                GraphDeltaOperation(
+                    operation=operation.operation,
+                    target_id=operation.target_id,
+                    payload=payload,
+                )
+            )
+        return GraphDelta(
+            delta_id=f"{original.delta_id}_modified_v{item.version}",
+            project_key=original.project_key,
+            operations=operations,
+            created_from_run_id=original.created_from_run_id,
+            created_from_step_id=original.created_from_step_id,
+        )
+
+
+def _feedback_action(status: str) -> FeedbackAction:
+    if status == "approved":
+        return "approved"
+    if status == "modified_approved":
+        return "modified"
+    if status == "held":
+        return "commented"
+    return "rejected"
+
+
+def _correction_text(decision: ApprovalDecision) -> str | None:
+    if not decision.correction_payload:
+        return None
+    return json.dumps(decision.correction_payload, sort_keys=True)

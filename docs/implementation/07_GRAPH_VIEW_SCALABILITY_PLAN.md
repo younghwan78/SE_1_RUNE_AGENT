@@ -252,12 +252,15 @@ Implemented:
 - node click detail with focus-neighborhood action
 - edge click detail with approval id, evidence, confidence, source, target, and reasoning
 - wider invisible SVG edge hit targets so graph edge click remains usable at large scale
+- traceability chain API and node detail chain panel for approved/pending local context review
 
 Validated:
 
 - contract test coverage for scale mode, orphan mode, pending mode, search, neighborhood, and pending edge metadata
+- contract test coverage for traceability chain pending context and missing-node handling
 - `RUNE_SCALE_150` API smoke with 150 nodes, 103 pending candidate edges, 47 findings, and 103 approval items
 - browser smoke for 120-node overview, search result narrowing to one node, node detail, and edge detail click
+- browser smoke for node detail traceability chain rendering
 
 Next renderer decision point:
 

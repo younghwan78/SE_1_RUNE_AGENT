@@ -546,3 +546,31 @@ Dummy 검증:
 완료 기준:
 
 - dummy integration test와 backend integration test가 같은 expected behavior를 검증
+
+## 17. Current Implementation Status
+
+현재 repo는 production backend 교체 전의 local/dummy validation stage에 있다.
+
+완료된 축:
+
+- FastAPI skeleton, health, run analyze, scheduler
+- core Pydantic contracts
+- local artifact store, trace repository, replay diff skeleton
+- dummy model gateway and dummy source adapter
+- ingestion normalization, masking, chunking, evidence span path
+- deterministic node extraction, source-link edge candidate generation, findings rules
+- pending approval queue and approved graph separation
+- approval approve/reject/hold/modify decision path
+- feedback summary, eval candidate, improvement candidate, eval gate block
+- scalable graph projection for 100+ dummy nodes
+- traceability chain API with approved/pending edge separation
+- static operator UI for graph, approval, findings, replay, scheduler, and node chain review
+
+아직 production 전환 전 남은 축:
+
+- persistent repositories: PostgreSQL, Neo4j, Qdrant
+- source connector implementations for JIRA, Confluence, and restricted decision/email flows
+- full debug workbench API/UI for stage artifact, LLM call, and graph delta inspection
+- audit event store and RBAC/SSO enforcement
+- React/React Flow migration decision after real graph shape validation
+- production deployment hardening, migrations, backup/restore, and load tests
