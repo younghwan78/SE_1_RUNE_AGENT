@@ -38,6 +38,8 @@ VECTOR_BACKEND=memory
 MODEL_GATEWAY_MODE=dummy
 ARTIFACT_STORE=local
 ARTIFACT_ROOT=/var/lib/rune-agent/artifacts
+STATE_STORE=sqlite
+SQLITE_STATE_PATH=/var/lib/rune-agent/rune_state.sqlite3
 LOG_LEVEL=INFO
 ENABLE_DOCS=false
 SCHEDULER_ENABLED=true
@@ -62,6 +64,7 @@ In another shell:
 curl -s http://127.0.0.1:8000/api/v1/health
 curl -s -X POST http://127.0.0.1:8000/api/v1/schedule/run-now
 curl -s http://127.0.0.1:8000/api/v1/schedule
+curl -s http://127.0.0.1:8000/api/v1/debug/runs
 ```
 
 ## 5. systemd Service

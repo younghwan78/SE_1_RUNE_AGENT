@@ -29,5 +29,6 @@ def decide_approval(
     if approval_id not in runtime.approvals.items:
         raise HTTPException(status_code=404, detail="approval not found")
     item = runtime.approvals.decide(decision, runtime.graph)
+    runtime.persist_approval_state()
     result: dict[str, Any] = item.model_dump(mode="json")
     return result

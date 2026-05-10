@@ -489,6 +489,56 @@ const renderImprovements = (improvements) => {
   });
 };
 
+const renderDebugSummary = async () => {
+  const list = el("debug-steps");
+  list.replaceChildren();
+  if (!state.currentRunId) {
+    text("debug-label", "no run");
+    text("debug-counts", "0 artifacts");
+    el("debug-detail").textContent = "[]";
+    list.append(emptyRow("Run an analysis to inspect debug traces"));
+    return;
+  }
+  const summary = await api(`/debug/runs/${state.currentRunId}/summary`);
+  text("debug-label", state.currentRunId);
+  text(
+    "debug-counts",
+    `${summary.counts.artifact_refs} artifacts / ${summary.counts.graph_deltas} deltas`,
+  );
+  if (!summary.steps.length) {
+    list.append(emptyRow("No debug steps"));
+  }
+  summary.steps.forEach((step) => {
+    const item = document.createElement("li");
+    item.innerHTML = `
+      <div class="item-title">
+        <span>${step.stage_name}</span>${badge(step.status, step.status !== "succeeded")}
+      </div>
+      <div class="item-meta">
+        ${step.step_id}<br>
+        input=${step.input_hash}<br>
+        output=${step.output_hash || "none"}<br>
+        artifact=${step.output_ref || "none"}
+      </div>
+    `;
+    item.addEventListener("click", () => {
+      el("debug-detail").textContent = JSON.stringify(step, null, 2);
+    });
+    list.append(item);
+  });
+  el("debug-detail").textContent = JSON.stringify(
+    {
+      run: summary.run,
+      counts: summary.counts,
+      graph_deltas: summary.graph_deltas,
+      llm_calls: summary.llm_calls,
+      artifact_refs: summary.artifact_refs,
+    },
+    null,
+    2,
+  );
+};
+
 const refresh = async () => {
   const query = new URLSearchParams({
     mode: state.graphMode,
@@ -547,6 +597,7 @@ const refresh = async () => {
     `${projection.mode} | visible ${projection.counts.visible_nodes} | orphan ${projection.counts.orphan_nodes} | pending ${projection.counts.pending_edges}`,
   );
   el("run-replay").disabled = !state.currentRunId;
+  await renderDebugSummary();
 };
 
 const renderSchedule = (schedule) => {

@@ -7,6 +7,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 
 from req_tracker.api.routes.approvals import router as approvals_router
+from req_tracker.api.routes.debug import router as debug_router
 from req_tracker.api.routes.feedback import router as feedback_router
 from req_tracker.api.routes.graph import router as graph_router
 from req_tracker.api.routes.health import router as health_router
@@ -16,11 +17,15 @@ from req_tracker.api.routes.ui import router as ui_router
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings, get_settings
 from req_tracker.scheduler.models import ScheduleConfig
+from req_tracker.storage.sqlite_store import SQLiteStateStore
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Create the API application."""
     resolved_settings = settings or get_settings()
+    state_store = None
+    if resolved_settings.state_store == "sqlite":
+        state_store = SQLiteStateStore(resolved_settings.sqlite_state_path)
     runtime = RuntimeState.create(
         resolved_settings.artifact_root,
         ScheduleConfig(
@@ -29,6 +34,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             project_key=resolved_settings.scheduler_project_key,
             scenario=resolved_settings.scheduler_scenario,
         ),
+        state_store=state_store,
     )
 
     @asynccontextmanager
@@ -73,6 +79,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(graph_router, prefix="/api/v1")
     app.include_router(approvals_router, prefix="/api/v1")
     app.include_router(feedback_router, prefix="/api/v1")
+    app.include_router(debug_router, prefix="/api/v1")
     app.include_router(ui_router)
     app.mount("/ui", StaticFiles(directory=UI_ASSET_DIR), name="ui")
     return app

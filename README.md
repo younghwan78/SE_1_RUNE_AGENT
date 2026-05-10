@@ -48,11 +48,29 @@ Current local implementation:
 - Pydantic core contracts
 - dummy/local runtime settings and FastAPI endpoints
 - local artifact store
+- optional SQLite state store for production-shaped persistence validation
 - in-memory trace recorder
 - dummy source adapter and fixture-backed analysis workflow
+- JIRA, Confluence, and restricted decision/email export-file adapters
 - in-memory graph/vector backends
 - approval queue, graph commit, feedback capture
 - replay diff and eval candidate grouping
 - static local operator UI
 - ontology graph view with pending/approved edge projection
+- traceability chain and run debug workbench
 - periodic analysis scheduler for server operation
+
+Enable local SQLite persistence:
+
+```powershell
+$env:STATE_STORE="sqlite"
+$env:SQLITE_STATE_PATH=".local_state/rune_state.sqlite3"
+uv run uvicorn req_tracker.api.app:app --host 127.0.0.1 --port 8000
+```
+
+Debug APIs:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/debug/runs
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/debug/runs/{run_id}/summary
+```

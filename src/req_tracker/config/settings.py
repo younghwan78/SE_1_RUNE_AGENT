@@ -15,6 +15,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     environment: str = Field(default="local", validation_alias="REQ_TRACKER_ENV")
@@ -24,6 +25,11 @@ class Settings(BaseSettings):
     model_gateway_mode: str = Field(default="dummy", validation_alias="MODEL_GATEWAY_MODE")
     artifact_store: str = Field(default="local", validation_alias="ARTIFACT_STORE")
     artifact_root: Path = Field(default=Path(".local_artifacts"), validation_alias="ARTIFACT_ROOT")
+    state_store: str = Field(default="memory", validation_alias="STATE_STORE")
+    sqlite_state_path: Path = Field(
+        default=Path(".local_state/rune_state.sqlite3"),
+        validation_alias="SQLITE_STATE_PATH",
+    )
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
     enable_docs: bool = Field(default=True, validation_alias="ENABLE_DOCS")
     scheduler_enabled: bool = Field(default=False, validation_alias="SCHEDULER_ENABLED")

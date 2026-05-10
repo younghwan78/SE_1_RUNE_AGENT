@@ -17,6 +17,7 @@ def record_feedback(request: Request, event: FeedbackEvent) -> dict[str, Any]:
     """Record feedback in local runtime state."""
     runtime = request.app.state.runtime
     runtime.approvals.feedback.append(event)
+    runtime.persist_approval_state()
     return event.model_dump(mode="json")
 
 

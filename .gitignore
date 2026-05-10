@@ -47,6 +47,7 @@ data/
 artifacts/
 debug_artifacts/
 .local_artifacts/
+.local_state/
 logs/
 run_server*.log
 .playwright-cli/

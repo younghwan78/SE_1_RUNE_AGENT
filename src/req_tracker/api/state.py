@@ -10,6 +10,7 @@ from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.graph.memory_backend import MemoryGraphBackend
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.scheduler.service import RunScheduler
+from req_tracker.storage.sqlite_store import SQLiteStateStore
 from req_tracker.vector.memory_backend import MemoryVectorBackend
 from req_tracker.workflows.analysis_graph import AnalysisResult, LocalAnalysisWorkflow
 
@@ -26,12 +27,14 @@ class RuntimeState(BaseModel):
     approvals: ApprovalService
     analyses: dict[str, AnalysisResult]
     scheduler: RunScheduler
+    state_store: SQLiteStateStore | None = None
 
     @classmethod
     def create(
         cls,
         artifact_root: Path,
         schedule_config: ScheduleConfig | None = None,
+        state_store: SQLiteStateStore | None = None,
     ) -> "RuntimeState":
         """Create a local runtime state."""
         return cls(
@@ -42,6 +45,7 @@ class RuntimeState(BaseModel):
             approvals=ApprovalService(),
             analyses={},
             scheduler=RunScheduler(schedule_config),
+            state_store=state_store,
         )
 
     def workflow(self) -> LocalAnalysisWorkflow:
@@ -62,4 +66,93 @@ class RuntimeState(BaseModel):
             scenario=scenario,
         )
         self.analyses[run_id] = result
+        self.persist_analysis_result(result)
         return result
+
+    def persist_analysis_result(self, result: AnalysisResult) -> None:
+        """Persist a completed local analysis into the configured state store."""
+        if self.state_store is None:
+            return
+        project_key = result.run.project_key
+        self.state_store.upsert(
+            collection="agent_runs",
+            entity_id=result.run.run_id,
+            project_key=project_key,
+            payload=result.run,
+        )
+        for step in result.steps:
+            self.state_store.upsert(
+                collection="agent_step_traces",
+                entity_id=step.step_id,
+                project_key=project_key,
+                payload=step,
+            )
+        for artifact in result.artifacts:
+            self.state_store.upsert(
+                collection="source_artifacts",
+                entity_id=artifact.artifact_id,
+                project_key=project_key,
+                payload=artifact,
+            )
+        for chunk in result.chunks:
+            self.state_store.upsert(
+                collection="artifact_chunks",
+                entity_id=chunk.chunk_id,
+                project_key=project_key,
+                payload=chunk,
+            )
+        for node in result.nodes:
+            self.state_store.upsert(
+                collection="graph_nodes",
+                entity_id=node.node_id,
+                project_key=project_key,
+                payload=node,
+            )
+        for edge in result.candidate_edges:
+            self.state_store.upsert(
+                collection="candidate_edges",
+                entity_id=edge.edge_id,
+                project_key=project_key,
+                payload=edge,
+            )
+        for finding in result.findings:
+            self.state_store.upsert(
+                collection="findings",
+                entity_id=finding.finding_id,
+                project_key=project_key,
+                payload=finding,
+            )
+        self.persist_approval_state()
+
+    def persist_approval_state(self) -> None:
+        """Persist approval queue, graph deltas, feedback, and approved edges."""
+        if self.state_store is None:
+            return
+        for approval in self.approvals.items.values():
+            self.state_store.upsert(
+                collection="approval_items",
+                entity_id=approval.approval_id,
+                project_key=approval.project_key,
+                payload=approval,
+            )
+        for delta in self.approvals.deltas.values():
+            self.state_store.upsert(
+                collection="graph_deltas",
+                entity_id=delta.delta_id,
+                project_key=delta.project_key,
+                payload=delta,
+            )
+        for feedback in self.approvals.feedback:
+            self.state_store.upsert(
+                collection="feedback_events",
+                entity_id=feedback.feedback_id,
+                payload=feedback,
+            )
+        for edge in self.graph.edges.values():
+            project_key = self.graph.nodes[edge.source_node_id].project_key
+            self.state_store.upsert(
+                collection="graph_edges",
+                entity_id=edge.edge_id,
+                project_key=project_key,
+                payload=edge,
+            )

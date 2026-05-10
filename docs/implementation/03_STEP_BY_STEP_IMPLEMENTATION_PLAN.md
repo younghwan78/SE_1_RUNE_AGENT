@@ -556,7 +556,9 @@ Dummy 검증:
 - FastAPI skeleton, health, run analyze, scheduler
 - core Pydantic contracts
 - local artifact store, trace repository, replay diff skeleton
+- SQLite state store for local persistence validation
 - dummy model gateway and dummy source adapter
+- export-file adapters for JIRA, Confluence, and restricted decision/email sources
 - ingestion normalization, masking, chunking, evidence span path
 - deterministic node extraction, source-link edge candidate generation, findings rules
 - pending approval queue and approved graph separation
@@ -564,13 +566,15 @@ Dummy 검증:
 - feedback summary, eval candidate, improvement candidate, eval gate block
 - scalable graph projection for 100+ dummy nodes
 - traceability chain API with approved/pending edge separation
-- static operator UI for graph, approval, findings, replay, scheduler, and node chain review
+- debug summary/artifact API
+- static operator UI for graph, approval, findings, replay, scheduler, node chain review, and run debug
 
 아직 production 전환 전 남은 축:
 
 - persistent repositories: PostgreSQL, Neo4j, Qdrant
-- source connector implementations for JIRA, Confluence, and restricted decision/email flows
-- full debug workbench API/UI for stage artifact, LLM call, and graph delta inspection
+- production-grade PostgreSQL table repositories, Neo4j backend, and Qdrant backend
+- direct production transport implementations behind the source skill/export boundary
+- full debug workbench UX for LLM call payload diff and graph delta side-by-side inspection
 - audit event store and RBAC/SSO enforcement
 - React/React Flow migration decision after real graph shape validation
 - production deployment hardening, migrations, backup/restore, and load tests
