@@ -195,7 +195,21 @@ const renderOntologyGraph = (projection) => {
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.setAttribute("class", "ontology-node");
     group.setAttribute("tabindex", "0");
-    group.addEventListener("click", () => renderOntologyDetail(node));
+    group.setAttribute("role", "button");
+    group.setAttribute("aria-label", node.name);
+    group.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+    });
+    group.addEventListener("click", (event) => {
+      event.stopPropagation();
+      renderOntologyDetail(node);
+    });
+    group.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        renderOntologyDetail(node);
+      }
+    });
 
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttribute("cx", position.x);

@@ -23,3 +23,4 @@ def test_static_assets_served(client: TestClient) -> None:
     assert "runAnalysis" in response.text
     assert "zoomOntology" in response.text
     assert "pointermove" in response.text
+    assert "renderOntologyDetail(node)" in response.text
