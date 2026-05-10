@@ -17,3 +17,18 @@ def test_dummy_adapter_fetches_incrementally() -> None:
     assert len(second.artifacts) == 3
     assert first.artifacts[0].external_id != second.artifacts[0].external_id
 
+
+def test_dummy_adapter_supports_multi_source_fixture() -> None:
+    adapter = DummySourceAdapter()
+
+    result = adapter.fetch_incremental(
+        SourceScope(project_key="RUNE_CAM_ALPHA", scenario="RUNE_MULTI_SOURCE", limit=100)
+    )
+
+    assert {artifact.source_type for artifact in result.artifacts} >= {
+        "confluence",
+        "email",
+        "decision_archive",
+        "dummy",
+    }
+    assert any(artifact.data_classification == "restricted" for artifact in result.artifacts)

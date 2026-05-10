@@ -44,3 +44,20 @@ def test_dummy_analysis_creates_findings_and_approvals(tmp_path) -> None:  # typ
     )
     assert len(graph.approved_edges()) == 1
 
+
+def test_multi_source_dummy_analysis_keeps_source_types(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    workflow, _graph, _approvals = _workflow(tmp_path)
+
+    result = workflow.run(
+        run_id="run_it_multi_001",
+        project_key="RUNE_CAM_ALPHA",
+        scenario="RUNE_MULTI_SOURCE",
+    )
+
+    assert result.run.status == "succeeded"
+    assert len(result.nodes) > 10
+    assert {artifact.source_type for artifact in result.artifacts} >= {
+        "confluence",
+        "email",
+        "decision_archive",
+    }

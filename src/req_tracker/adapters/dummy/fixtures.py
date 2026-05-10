@@ -3,7 +3,7 @@
 from typing import Any
 
 from req_tracker.adapters.base import RawSourceArtifact
-from req_tracker.ontology.models import DataClassification
+from req_tracker.ontology.models import DataClassification, SourceType
 
 
 def _raw(
@@ -15,11 +15,13 @@ def _raw(
     links: list[str] | None = None,
     metadata: dict[str, Any] | None = None,
     data_classification: DataClassification = "public_internal",
+    source_type: SourceType = "dummy",
+    source_url_prefix: str = "dummy://jira",
 ) -> RawSourceArtifact:
     return RawSourceArtifact(
         external_id=external_id,
-        source_type="dummy",
-        source_url=f"dummy://jira/{external_id}",
+        source_type=source_type,
+        source_url=f"{source_url_prefix}/{external_id}",
         project_key="RUNE_CAM_ALPHA",
         title=title,
         body_text=body_text,
@@ -145,11 +147,81 @@ def rune_cam_alpha() -> list[RawSourceArtifact]:
     ]
 
 
+def rune_multi_source() -> list[RawSourceArtifact]:
+    """Return JIRA, Confluence, Email, and decision archive shaped artifacts."""
+    return [
+        *rune_cam_alpha(),
+        _raw(
+            external_id="CONF-CAM-100",
+            title="Camera latency architecture decision",
+            body_text=(
+                "Confluence design page explains why CAM-ARCH-010 satisfies CAM-REQ-001 "
+                "and references CAM-DES-020 implementation constraints."
+            ),
+            labels=["confluence", "architecture", "decision"],
+            links=["CAM-ARCH-010", "CAM-REQ-001", "CAM-DES-020"],
+            metadata={
+                "mbse_type": "Decision",
+                "relations": {"CAM-ARCH-010": "decides", "CAM-REQ-001": "satisfies"},
+            },
+            source_type="confluence",
+            source_url_prefix="dummy://confluence/pages",
+        ),
+        _raw(
+            external_id="CONF-CAM-101",
+            title="Verification coverage note",
+            body_text=(
+                "Confluence verification note states CAM-VER-040 must cover CAM-REQ-001 "
+                "and privacy requirement CAM-REQ-002 needs a separate test."
+            ),
+            labels=["confluence", "verification"],
+            links=["CAM-VER-040", "CAM-REQ-001", "CAM-REQ-002"],
+            metadata={
+                "mbse_type": "Verification",
+                "relations": {"CAM-REQ-001": "verifies", "CAM-REQ-002": "verifies"},
+            },
+            source_type="confluence",
+            source_url_prefix="dummy://confluence/pages",
+        ),
+        _raw(
+            external_id="MAIL-CAM-200",
+            title="Decision mail for local-only biometric processing",
+            body_text=(
+                "Email decision confirms CAM-REQ-002 must block any cloud upload path "
+                "and asks architecture owners to add an explicit design trace."
+            ),
+            labels=["email", "decision", "privacy"],
+            links=["CAM-REQ-002"],
+            metadata={"mbse_type": "Decision", "relations": {"CAM-REQ-002": "decides"}},
+            source_type="email",
+            source_url_prefix="dummy://email/archive",
+            data_classification="restricted",
+        ),
+        _raw(
+            external_id="DEC-CAM-300",
+            title="Architecture review action record",
+            body_text=(
+                "Decision archive records that CAM-DES-022 affects CAM-REQ-001 and must "
+                "be reviewed before release."
+            ),
+            labels=["decision_archive", "risk"],
+            links=["CAM-DES-022", "CAM-REQ-001"],
+            metadata={
+                "mbse_type": "Risk",
+                "relations": {"CAM-DES-022": "affects", "CAM-REQ-001": "affects"},
+            },
+            source_type="decision_archive",
+            source_url_prefix="dummy://decision/archive",
+        ),
+    ]
+
+
 def fixture_by_name(name: str) -> list[RawSourceArtifact]:
     """Return a named fixture scenario."""
     if name == "RUNE_SECURITY":
         return [item for item in rune_cam_alpha() if item.external_id == "CAM-SEC-001"]
+    if name == "RUNE_MULTI_SOURCE":
+        return rune_multi_source()
     if name in {"RUNE_CAM_ALPHA", "RUNE_CAM_BETA", "RUNE_NOISE"}:
         return rune_cam_alpha()
     raise ValueError(f"unknown dummy scenario: {name}")
-
