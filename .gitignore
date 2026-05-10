@@ -48,6 +48,7 @@ artifacts/
 debug_artifacts/
 .local_artifacts/
 logs/
+run_server*.log
 
 # IDE / OS
 .vscode/
