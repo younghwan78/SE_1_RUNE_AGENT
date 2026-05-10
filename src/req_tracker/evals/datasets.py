@@ -24,6 +24,7 @@ class EvalDatasetCandidate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     dataset_path: str
+    reason_code: str
     feedback_ids: list[str] = Field(default_factory=list)
     target_ids: list[str] = Field(default_factory=list)
 
@@ -36,7 +37,7 @@ def build_eval_candidates(feedback: list[FeedbackEvent]) -> list[EvalDatasetCand
         dataset_path = _REASON_TO_DATASET.get(reason, _REASON_TO_DATASET["other"])
         candidate = grouped.setdefault(
             dataset_path,
-            EvalDatasetCandidate(dataset_path=dataset_path),
+            EvalDatasetCandidate(dataset_path=dataset_path, reason_code=reason),
         )
         candidate.feedback_ids.append(event.feedback_id)
         candidate.target_ids.append(event.target_id)
@@ -49,4 +50,3 @@ def feedback_counts_by_reason(feedback: list[FeedbackEvent]) -> dict[str, int]:
     for event in feedback:
         counts[event.reason_code or "other"] += 1
     return dict(counts)
-

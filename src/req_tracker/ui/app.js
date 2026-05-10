@@ -131,19 +131,46 @@ const renderEvalCandidates = (candidates) => {
   });
 };
 
+const renderImprovements = (improvements) => {
+  const list = el("improvements");
+  list.replaceChildren();
+  text("improvement-count", `${improvements.length} draft`);
+  if (!improvements.length) {
+    list.append(emptyRow("No improvement candidates"));
+    return;
+  }
+  improvements.forEach((candidate) => {
+    const item = document.createElement("li");
+    item.innerHTML = `
+      <div class="item-title">
+        <span>${candidate.candidate_type}</span>${badge(candidate.status, true)}
+      </div>
+      <div class="item-meta">
+        ${candidate.candidate_id}<br>
+        ${candidate.proposed_change_summary}
+      </div>
+    `;
+    list.append(item);
+  });
+};
+
 const refresh = async () => {
-  const [graph, approvals, findings, evalCandidates, feedbackSummary] = await Promise.all([
-    api("/graph/subgraph"),
-    api("/approvals"),
-    api("/findings"),
-    api("/eval/candidates"),
-    api("/feedback/summary"),
-  ]);
+  const [graph, approvals, findings, evalCandidates, feedbackSummary, improvements, gate] =
+    await Promise.all([
+      api("/graph/subgraph"),
+      api("/approvals"),
+      api("/findings"),
+      api("/eval/candidates"),
+      api("/feedback/summary"),
+      api("/improvements/candidates"),
+      api("/eval/gate"),
+    ]);
   renderNodes(graph.nodes);
   renderEdges(graph.edges);
   renderApprovals(approvals);
   renderFindings(findings);
   renderEvalCandidates(evalCandidates);
+  renderImprovements(improvements);
   text("metric-runs", state.runs.length);
   text("metric-nodes", graph.nodes.length);
   text("metric-edges", graph.edges.length);
@@ -153,6 +180,9 @@ const refresh = async () => {
     "metric-feedback",
     Object.values(feedbackSummary).reduce((sum, count) => sum + count, 0),
   );
+  text("metric-gate", gate.status);
+  text("gate-label", gate.eval_run_id);
+  el("eval-gate").textContent = JSON.stringify(gate, null, 2);
   text("finding-count", `${findings.length} open`);
   text("graph-run-label", state.currentRunId || "no run");
   el("run-replay").disabled = !state.currentRunId;

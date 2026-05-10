@@ -35,3 +35,9 @@ def test_replay_and_feedback_eval_api(client: TestClient) -> None:
     candidates = client.get("/api/v1/eval/candidates")
     assert candidates.json()[0]["dataset_path"] == "edge_linking/rejected_edges.jsonl"
 
+    improvements = client.get("/api/v1/improvements/candidates")
+    assert improvements.status_code == 200
+    candidate_id = improvements.json()[0]["candidate_id"]
+    blocked = client.post(f"/api/v1/improvements/{candidate_id}/activate")
+    assert blocked.status_code == 409
+    assert blocked.json()["detail"]["message"] == "eval gate blocked activation"
