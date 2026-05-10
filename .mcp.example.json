@@ -1,0 +1,24 @@
+{
+  "jira-internal": {
+    "type": "http",
+    "url": "${RUNE_JIRA_MCP_URL}",
+    "headers": {
+      "Authorization": "Bearer ${RUNE_JIRA_MCP_TOKEN}"
+    }
+  },
+  "confluence-internal": {
+    "type": "http",
+    "url": "${RUNE_CONFLUENCE_MCP_URL}",
+    "headers": {
+      "Authorization": "Bearer ${RUNE_CONFLUENCE_MCP_TOKEN}"
+    }
+  },
+  "decision-archive-internal": {
+    "type": "http",
+    "url": "${RUNE_DECISION_ARCHIVE_MCP_URL}",
+    "headers": {
+      "Authorization": "Bearer ${RUNE_DECISION_ARCHIVE_MCP_TOKEN}"
+    }
+  }
+}
+

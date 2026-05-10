@@ -25,6 +25,7 @@ Core product principles:
 - Support internal models, self-hosted models, and external model APIs through a model gateway.
 - Use user feedback to create improvement candidates, not to mutate production behavior immediately.
 - Promote prompt/model/rule/retrieval changes only through eval, review, canary, and rollback.
+- Manage JIRA, Confluence, and Email source-access procedures as Claude Code skills where possible. MCP may be used inside those skills, but MCP tool names must not leak into core application code.
 
 ## 3. Non-Negotiable Architecture Rules
 
@@ -33,6 +34,7 @@ Core product principles:
 - All LLM calls must be traceable by `run_id`, `step_id`, `model_profile_id`, `prompt_version_id`, request hash, response hash, and validation status.
 - Every agent stage must persist or reference intermediate outputs.
 - Model-specific SDK calls must be hidden behind the model gateway.
+- Source-specific access details for JIRA, Confluence, and Email must be hidden behind source adapters and Claude Code source skills.
 - No secrets, tokens, passwords, or internal endpoint credentials may be hardcoded.
 - No unmasked confidential data may be sent to a model gateway.
 - AI must not write back to JIRA, Confluence, or Email in the first production release.
@@ -44,7 +46,7 @@ Follow this order unless the user explicitly changes scope:
 1. Common contracts, Pydantic models, FastAPI skeleton, and CI.
 2. Model gateway, prompt/model registry, LLM call trace, and replay skeleton.
 3. Persistence layer: PostgreSQL, Neo4j, Qdrant, artifact/debug storage abstractions.
-4. JIRA production connector with incremental sync and source snapshots.
+4. Claude Code source skills plus JIRA production connector with incremental sync and source snapshots.
 5. Ingestion, masking, evidence, chunking, and embedding pipeline.
 6. Deterministic traceability baseline and graph rules.
 7. LLM-assisted extraction, linking, reasoning, and confidence scoring.
@@ -60,6 +62,11 @@ Follow this order unless the user explicitly changes scope:
 Prefer the structure defined in `PRODUCTION_EXECUTION_PLAN.md`:
 
 ```text
+.claude/
+  skills/
+    rune-source-jira/
+    rune-source-confluence/
+    rune-source-email/
 src/req_tracker/
   adapters/
   api/
@@ -96,6 +103,12 @@ ops/
 ```
 
 Do not add large new framework choices without a concrete reason grounded in the production plan.
+
+Source integration rule:
+
+- Claude Code source skills define how humans/agents access JIRA, Confluence, and Email in a given company environment.
+- Python application code defines stable adapters and contracts.
+- MCP is a transport choice configured by Claude Code skills and local `.mcp.json`, not a product-layer dependency.
 
 ## 6. Coding Standards
 
@@ -186,4 +199,3 @@ Release blockers:
 - Do not reintroduce removed PRD files.
 - Do not commit local secrets, `.env`, virtual environments, local database files, or generated debug artifacts.
 - When changing contracts, update tests and relevant docs in the same change.
-

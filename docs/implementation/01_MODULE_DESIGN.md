@@ -117,6 +117,21 @@ src/req_tracker/adapters/confluence/
 src/req_tracker/adapters/email/
 ```
 
+Claude Code source skills:
+
+```text
+.claude/skills/rune-source-jira/
+.claude/skills/rune-source-confluence/
+.claude/skills/rune-source-email/
+.claude/skills/rune-source-skill-pattern/
+```
+
+역할 분리:
+
+- Claude Code skill: 사내 환경에서 source에 접근하는 절차, MCP/REST/export/dummy transport 선택, local configuration 규칙을 관리한다.
+- Python adapter: 이미 접근 가능한 source payload를 production contract로 정규화하고 pipeline에 전달한다.
+- Core workflow: source가 MCP인지 REST인지 알지 않는다.
+
 핵심 interface:
 
 ```python
@@ -145,6 +160,7 @@ Dummy adapter 요구:
 - production JIRA connector와 같은 interface를 사용한다.
 - deterministic fixture를 반환한다.
 - pagination, deleted item, moved item, permission-denied item, malformed item을 옵션으로 재현할 수 있어야 한다.
+- Claude Code source skill에서 export한 fixture와 같은 schema를 사용해야 한다.
 
 POC 참고:
 
@@ -475,4 +491,3 @@ src/req_tracker/evals/reports.py
 - eval report 생성
 
 Eval은 실제 model 연결 전에도 dummy model fixture로 돌아야 한다.
-

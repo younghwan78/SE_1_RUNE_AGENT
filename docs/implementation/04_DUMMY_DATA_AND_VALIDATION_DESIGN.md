@@ -71,6 +71,17 @@ tests/fixtures/dummy/
 
 Fixture는 production contract와 같은 schema를 사용한다. 별도 demo-only schema를 만들지 않는다.
 
+Claude Code source skill 검증용 export 위치:
+
+```text
+tests/fixtures/dummy/source_exports/
+  jira/
+  confluence/
+  decision_archive/
+```
+
+이 export는 `.claude/skills/rune-source-*`가 live source 대신 사용할 수 있는 형태여야 한다. MCP가 없어도 같은 변환 절차를 검증하기 위해서다.
+
 ## 4. Scenario A: `RUNE_CAM_ALPHA`
 
 목적: Camera SoC traceability의 정상/오류/누락/충돌을 모두 검증한다.
@@ -327,6 +338,7 @@ tests/fixtures/dummy/model_responses/
 | commit | approved only, idempotent |
 | feedback | eval dataset candidates created |
 | replay | diff generated for model/prompt/source changes |
+| source_skill | MCP/REST/export/dummy transport 선택이 같은 SourceArtifact shape를 만든다 |
 
 ## 13. Minimum Test Set
 
@@ -359,4 +371,3 @@ Dummy validation이 충분하다고 판단하는 기준:
 - masking/security fixture가 release blocker를 검증한다.
 - model response fixture로 validation failure, timeout, low confidence를 재현한다.
 - replay diff가 source change, prompt change, model change를 구분한다.
-

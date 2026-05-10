@@ -11,6 +11,7 @@
 - 모든 agent 판단은 단계별 중간 결과, 근거, prompt/model version, retrieval context, graph delta를 남겨 디버깅 가능해야 한다.
 - AI 제안은 승인 전까지 운영 graph 원장에 반영하지 않는다.
 - 자율 개선은 무통제 자동 변경이 아니라 feedback -> eval -> improvement candidate -> review -> canary -> release -> rollback 가능한 통제 루프이다.
+- 사내 Claude Code 환경에서는 JIRA, Confluence, Email 접근 절차를 project-local skill로 관리한다. MCP는 사용할 수 있지만 core application code에 MCP tool name이나 사내 endpoint를 직접 결합하지 않는다.
 
 ## 1. 시스템 목표
 
@@ -68,6 +69,12 @@ Connector Layer
   ├─ Incremental sync cursor
   ├─ Raw snapshot store
   └─ Source permission mapping
+
+Claude Code Source Skill Layer
+  ├─ JIRA source skill
+  ├─ Confluence source skill
+  ├─ Email / decision source skill
+  └─ MCP / REST / export / dummy transport selection
 
 Ingestion & Evidence Layer
   ├─ Normalizer
@@ -868,10 +875,12 @@ ops/
 
 ### Step 5. JIRA Production Connector
 
-목표: 실제 JIRA 데이터를 incremental하게 수집한다.
+목표: 실제 JIRA 데이터를 incremental하게 수집한다. 사내 Claude Code 환경에서는 JIRA 접근 절차를 `.claude/skills/rune-source-jira`에서 관리하고, Python application code는 안정적인 `SourceAdapter` interface만 사용한다.
 
 작업:
 
+- Claude Code JIRA source skill과 adapter contract 정렬
+- MCP, REST, export, dummy transport 선택 규칙 문서화
 - JIRA auth 방식 구현
 - JQL 기반 project/component/release scope
 - pagination, retry, rate limit 처리
@@ -884,6 +893,7 @@ ops/
 - 같은 sync를 재실행해도 중복 artifact가 생기지 않는다.
 - 권한 오류, rate limit, partial failure가 명확히 기록된다.
 - source snapshot을 기준으로 replay 가능한 입력이 저장된다.
+- MCP tool name, 사내 endpoint, token이 core Python module에 하드코딩되지 않는다.
 
 ### Step 6. Ingestion, Masking, Evidence Pipeline
 
@@ -1036,6 +1046,7 @@ ops/
 
 작업:
 
+- `.claude/skills/rune-source-confluence` 기준으로 MCP/REST/export 접근 절차 관리
 - Confluence page sync
 - section hierarchy 보존
 - table parser
@@ -1055,6 +1066,7 @@ ops/
 
 작업:
 
+- `.claude/skills/rune-source-email` 기준으로 decision archive 또는 제한된 mailbox 접근 절차 관리
 - decision archive 범위 확정
 - thread metadata masking
 - decision node extraction
@@ -1203,4 +1215,3 @@ ops/
 - 자율 개선은 운영 안전장치를 가진 release process다. 시스템이 스스로 개선 후보를 만들 수는 있지만, 운영 active 버전 변경은 eval과 reviewer 승인이 필요하다.
 - 승인되지 않은 AI 후보와 승인된 graph 원장은 물리적/논리적으로 분리한다.
 - 상용 품질의 첫 기준은 "정답을 항상 맞히는 agent"가 아니라 "틀렸을 때 원인과 수정 경로가 명확한 agent"이다.
-

@@ -22,9 +22,15 @@ env/
 .env
 .env.*
 !.env.example
+.mcp.json
 *.pem
 *.key
 *.crt
+
+# Claude Code local state
+.claude/settings.local.json
+.claude/.cache/
+.claude/logs/
 
 # Node / frontend
 node_modules/
@@ -47,4 +53,3 @@ logs/
 .idea/
 Thumbs.db
 Desktop.ini
-

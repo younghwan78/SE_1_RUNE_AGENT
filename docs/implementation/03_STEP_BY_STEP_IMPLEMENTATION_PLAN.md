@@ -213,11 +213,14 @@ Dummy response cases:
 
 ## 7. Step 5: Dummy Source Adapter and Fixture Loader
 
-목표: 실제 JIRA 없이 production source contract를 검증한다.
+목표: 실제 JIRA 없이 production source contract를 검증하고, Claude Code source skill이 만든 fixture/export를 같은 adapter contract로 읽게 한다.
 
 주요 파일:
 
 ```text
+.claude/skills/rune-source-jira/SKILL.md
+.claude/skills/rune-source-confluence/SKILL.md
+.claude/skills/rune-source-email/SKILL.md
 src/req_tracker/adapters/base.py
 src/req_tracker/adapters/dummy/adapter.py
 src/req_tracker/adapters/dummy/fixtures.py
@@ -235,6 +238,8 @@ tests/unit/adapters/test_dummy_adapter.py
 - pagination simulation
 - malformed artifact option
 - permission denied artifact option
+- source skill에서 MCP/REST/export/dummy transport 선택 원칙 문서화
+- `.mcp.example.json` 유지, 실제 `.mcp.json`은 local-only
 
 Dummy dataset:
 
@@ -248,6 +253,7 @@ Dummy dataset:
 - incremental sync cursor가 동작
 - 같은 fixture를 두 번 fetch해도 content hash 동일
 - malformed item은 run warning 또는 failed artifact로 분리됨
+- MCP tool name이나 사내 endpoint가 Python application code에 등장하지 않음
 
 ## 8. Step 6: Ingestion Pipeline
 
@@ -540,4 +546,3 @@ Dummy 검증:
 완료 기준:
 
 - dummy integration test와 backend integration test가 같은 expected behavior를 검증
-

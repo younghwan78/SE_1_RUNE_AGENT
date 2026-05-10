@@ -33,12 +33,13 @@ POC에서 그대로 가져오지 않을 것:
 | `03_STEP_BY_STEP_IMPLEMENTATION_PLAN.md` | 단계별 구현 순서, 산출물, 검증 기준 |
 | `04_DUMMY_DATA_AND_VALIDATION_DESIGN.md` | 실제 데이터 없이 검증하기 위한 dummy dataset과 test strategy |
 | `05_DEBUG_REPLAY_FEEDBACK_DESIGN.md` | debug trace, replay, feedback 기반 개선 설계 |
+| `06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Claude Code skill과 MCP/REST/export/dummy source 접근 설계 |
 
 ## 첫 구현 원칙
 
 - 실제 JIRA가 없어도 전체 pipeline shape가 검증되어야 한다.
 - dummy source도 production contract와 같은 `SourceArtifact`, `EvidenceSpan`, `AgentRun`, `AgentStepTrace`를 사용해야 한다.
 - dummy LLM도 model gateway 뒤에 있어야 한다. 코드가 특정 모델 SDK를 직접 호출하지 않도록 초기에 차단한다.
+- JIRA/Confluence/Email 접근 절차는 `.claude/skills/`의 source skill로 관리한다. MCP는 skill 내부 transport로만 취급한다.
 - graph commit은 승인된 proposal만 반영한다. dummy mode에서도 이 규칙은 예외 없이 지킨다.
 - 모든 stage는 `input_hash`, `output_hash`, `output_ref`를 남긴다.
-
