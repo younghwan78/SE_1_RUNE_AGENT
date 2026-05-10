@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel, ConfigDict
 
-from req_tracker.adapters.base import SourceScope
+from req_tracker.adapters.base import SourceFetchResult, SourceScope
 from req_tracker.adapters.dummy.adapter import DummySourceAdapter
 from req_tracker.approvals.models import ApprovalItem
 from req_tracker.approvals.service import ApprovalService
@@ -84,9 +84,7 @@ class LocalAnalysisWorkflow:
             stage_name="source_fetch",
             input_payload={"scenario": scenario},
         )
-        fetch = self.adapter.fetch_incremental(
-            SourceScope(project_key=project_key, scenario=scenario)
-        )
+        fetch = self._fetch_all(project_key=project_key, scenario=scenario)
         fetch_ref = self.artifact_store.write_json(run_id, "source_fetch", fetch)
         self.traces.finish_step(
             step_id=fetch_step.step_id,
@@ -201,3 +199,23 @@ class LocalAnalysisWorkflow:
             approvals=approvals,
         )
 
+    def _fetch_all(self, *, project_key: str, scenario: str) -> SourceFetchResult:
+        """Fetch all source pages for a local analysis run."""
+        scope = SourceScope(project_key=project_key, scenario=scenario)
+        first_page = self.adapter.fetch_incremental(scope)
+        artifacts = list(first_page.artifacts)
+        warnings = list(first_page.source_warnings)
+        partial_failure = first_page.partial_failure
+        cursor = first_page.next_cursor
+        while cursor is not None:
+            page = self.adapter.fetch_incremental(scope, cursor)
+            artifacts.extend(page.artifacts)
+            warnings.extend(page.source_warnings)
+            partial_failure = partial_failure or page.partial_failure
+            cursor = page.next_cursor
+        return SourceFetchResult(
+            artifacts=artifacts,
+            next_cursor=None,
+            source_warnings=warnings,
+            partial_failure=partial_failure,
+        )

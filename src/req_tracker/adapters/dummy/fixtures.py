@@ -216,12 +216,101 @@ def rune_multi_source() -> list[RawSourceArtifact]:
     ]
 
 
+def rune_scale_150() -> list[RawSourceArtifact]:
+    """Return a 150-node scale fixture with mixed connected and orphan nodes."""
+    artifacts: list[RawSourceArtifact] = []
+
+    for index in range(1, 41):
+        external_id = f"SCL-REQ-{index:03d}"
+        artifacts.append(
+            _raw(
+                external_id=external_id,
+                title=f"Scaled requirement {index:03d}",
+                body_text=(
+                    f"Requirement {external_id} defines camera platform behavior "
+                    "for scaled graph validation."
+                ),
+                labels=["requirement", "scale"],
+                metadata={"mbse_type": "Requirement", "priority": "P1"},
+            )
+        )
+
+    for index in range(1, 16):
+        req_id = f"SCL-REQ-{((index - 1) % 40) + 1:03d}"
+        external_id = f"SCL-ARCH-{index:03d}"
+        artifacts.append(
+            _raw(
+                external_id=external_id,
+                title=f"Scaled architecture block {index:03d}",
+                body_text=f"Architecture {external_id} satisfies {req_id}.",
+                labels=["architecture", "scale"],
+                links=[req_id],
+                metadata={"mbse_type": "Architecture_Block", "relations": {req_id: "satisfies"}},
+            )
+        )
+
+    for index in range(1, 46):
+        arch_id = f"SCL-ARCH-{((index - 1) % 15) + 1:03d}"
+        external_id = f"SCL-DES-{index:03d}"
+        links = [] if index % 11 == 0 else [arch_id]
+        relations = {} if index % 11 == 0 else {arch_id: "implements"}
+        artifacts.append(
+            _raw(
+                external_id=external_id,
+                title=f"Scaled design spec {index:03d}",
+                body_text=(
+                    f"Design {external_id} implements {arch_id} unless intentionally "
+                    "left orphan for graph validation."
+                ),
+                labels=["design", "scale"],
+                links=links,
+                metadata={"mbse_type": "Design_Spec", "relations": relations},
+            )
+        )
+
+    for index in range(1, 41):
+        req_id = f"SCL-REQ-{((index - 1) % 40) + 1:03d}"
+        external_id = f"SCL-VER-{index:03d}"
+        links = [] if index % 13 == 0 else [req_id]
+        relations = {} if index % 13 == 0 else {req_id: "verifies"}
+        artifacts.append(
+            _raw(
+                external_id=external_id,
+                title=f"Scaled verification {index:03d}",
+                body_text=f"Verification {external_id} covers {req_id}.",
+                labels=["verification", "scale"],
+                links=links,
+                metadata={"mbse_type": "Verification", "relations": relations},
+            )
+        )
+
+    for index in range(1, 11):
+        req_id = f"SCL-REQ-{((index * 3 - 1) % 40) + 1:03d}"
+        external_id = f"SCL-DEC-{index:03d}"
+        artifacts.append(
+            _raw(
+                external_id=external_id,
+                title=f"Scaled decision {index:03d}",
+                body_text=f"Decision {external_id} records rationale for {req_id}.",
+                labels=["decision", "scale"],
+                links=[req_id],
+                metadata={"mbse_type": "Decision", "relations": {req_id: "decides"}},
+                source_type="decision_archive",
+                source_url_prefix="dummy://decision/archive",
+            )
+        )
+
+    return artifacts
+
+
 def fixture_by_name(name: str) -> list[RawSourceArtifact]:
     """Return a named fixture scenario."""
     if name == "RUNE_SECURITY":
         return [item for item in rune_cam_alpha() if item.external_id == "CAM-SEC-001"]
     if name == "RUNE_MULTI_SOURCE":
         return rune_multi_source()
+    if name == "RUNE_SCALE_150":
+        return rune_scale_150()
     if name in {"RUNE_CAM_ALPHA", "RUNE_CAM_BETA", "RUNE_NOISE"}:
         return rune_cam_alpha()
     raise ValueError(f"unknown dummy scenario: {name}")

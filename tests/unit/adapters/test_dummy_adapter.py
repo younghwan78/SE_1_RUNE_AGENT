@@ -32,3 +32,14 @@ def test_dummy_adapter_supports_multi_source_fixture() -> None:
         "dummy",
     }
     assert any(artifact.data_classification == "restricted" for artifact in result.artifacts)
+
+
+def test_dummy_adapter_supports_scale_fixture() -> None:
+    adapter = DummySourceAdapter()
+
+    result = adapter.fetch_incremental(
+        SourceScope(project_key="RUNE_CAM_ALPHA", scenario="RUNE_SCALE_150", limit=200)
+    )
+
+    assert len(result.artifacts) == 150
+    assert any(not artifact.links for artifact in result.artifacts)

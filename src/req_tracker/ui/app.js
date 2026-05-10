@@ -2,7 +2,16 @@ const state = {
   runs: [],
   currentRunId: null,
   nodeFilter: "all",
-  graphProjection: { nodes: [], approved_edges: [], pending_edges: [] },
+  graphMode: "overview",
+  selectedNodeId: null,
+  graphProjection: {
+    nodes: [],
+    approved_edges: [],
+    pending_edges: [],
+    edges: [],
+    counts: {},
+    groups: [],
+  },
   ontologyView: {
     scale: 1,
     x: 0,
@@ -145,9 +154,14 @@ const renderOntologyGraph = (projection) => {
   const positions = new Map();
   const viewport = document.createElementNS("http://www.w3.org/2000/svg", "g");
   viewport.setAttribute("id", "ontology-viewport");
+  const orphanNodes = nodes.filter((node) => node.is_orphan);
+  orphanNodes.forEach((node, index) => {
+    const y = 70 + index * 62;
+    positions.set(node.node_id, { x: 1180, y });
+  });
 
   levels.forEach((types, column) => {
-    const group = nodes.filter((node) => types.includes(node.node_type));
+    const group = nodes.filter((node) => types.includes(node.node_type) && !node.is_orphan);
     const x = 110 + column * 340;
     group.forEach((node, index) => {
       const spacing = Math.max(58, Math.min(108, 560 / Math.max(group.length, 1)));
@@ -193,7 +207,15 @@ const renderOntologyGraph = (projection) => {
     const position = positions.get(node.node_id);
     if (!position) return;
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    group.setAttribute("class", "ontology-node");
+    const statusClasses = [
+      "ontology-node",
+      node.is_orphan ? "orphan" : "",
+      node.has_pending_edges ? "pending" : "",
+      node.finding_count > 0 ? "finding" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    group.setAttribute("class", statusClasses);
     group.setAttribute("tabindex", "0");
     group.setAttribute("role", "button");
     group.setAttribute("aria-label", node.name);
@@ -230,12 +252,18 @@ const renderOntologyGraph = (projection) => {
 };
 
 const renderOntologyDetail = (node) => {
+  state.selectedNodeId = node.node_id;
   el("ontology-detail").innerHTML = `
     <strong>${node.name}</strong>
     ${badge(node.node_type)}
+    ${node.is_orphan ? badge("orphan", true) : ""}
+    ${node.has_pending_edges ? badge("pending", true) : ""}
     <div class="item-meta">
       ${node.node_id}<br>
       confidence=${node.confidence_score}<br>
+      risk=${node.risk_level} findings=${node.finding_count}<br>
+      approved in/out=${node.approved_in_degree}/${node.approved_out_degree}<br>
+      pending in/out=${node.pending_in_degree}/${node.pending_out_degree}<br>
       source=${node.source_artifact_ids.join(", ")}<br><br>
       ${node.description}
     </div>
@@ -333,10 +361,18 @@ const renderImprovements = (improvements) => {
 };
 
 const refresh = async () => {
+  const query = new URLSearchParams({
+    mode: state.graphMode,
+    limit_nodes: "120",
+  });
+  if (state.graphMode === "neighborhood" && state.selectedNodeId) {
+    query.set("center_node_id", state.selectedNodeId);
+    query.set("hops", "1");
+  }
   const [graph, projection, approvals, findings, evalCandidates, feedbackSummary, improvements, gate, schedule] =
     await Promise.all([
       api("/graph/subgraph"),
-      api("/graph/projection"),
+      api(`/graph/projection?${query.toString()}`),
       api("/approvals"),
       api("/findings"),
       api("/eval/candidates"),
@@ -346,7 +382,7 @@ const refresh = async () => {
       api("/schedule"),
     ]);
   state.graphProjection = projection;
-  renderNodes(graph.nodes);
+  renderNodes(projection.nodes);
   renderEdges(graph.edges);
   renderOntologyGraph(projection);
   renderApprovals(approvals);
@@ -354,8 +390,8 @@ const refresh = async () => {
   renderEvalCandidates(evalCandidates);
   renderImprovements(improvements);
   text("metric-runs", state.runs.length);
-  text("metric-nodes", graph.nodes.length);
-  text("metric-edges", graph.edges.length);
+  text("metric-nodes", `${projection.counts.visible_nodes}/${projection.counts.total_nodes}`);
+  text("metric-edges", projection.counts.visible_approved_edges);
   text("metric-approvals", approvals.length);
   text("metric-findings", findings.length);
   text(
@@ -368,7 +404,10 @@ const refresh = async () => {
   el("eval-gate").textContent = JSON.stringify(gate, null, 2);
   renderSchedule(schedule);
   text("finding-count", `${findings.length} open`);
-  text("graph-run-label", state.currentRunId || "no run");
+  text(
+    "graph-run-label",
+    `${projection.mode} | orphan ${projection.counts.orphan_nodes} | pending ${projection.counts.pending_edges}`,
+  );
   el("run-replay").disabled = !state.currentRunId;
 };
 
@@ -494,6 +533,16 @@ document.querySelectorAll("[data-node-filter]").forEach((button) => {
     button.classList.add("active");
     state.nodeFilter = button.dataset.nodeFilter;
     renderOntologyGraph(state.graphProjection);
+  });
+});
+document.querySelectorAll("[data-graph-mode]").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-graph-mode]").forEach((item) => {
+      item.classList.remove("active");
+    });
+    button.classList.add("active");
+    state.graphMode = button.dataset.graphMode;
+    refresh().catch(console.error);
   });
 });
 

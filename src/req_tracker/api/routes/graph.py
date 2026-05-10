@@ -4,6 +4,9 @@ from typing import Any
 
 from fastapi import APIRouter, Request
 
+from req_tracker.graph.projection import GraphViewMode, build_graph_projection
+from req_tracker.ontology.models import TraceabilityEdge
+
 router = APIRouter(tags=["graph"])
 
 
@@ -22,11 +25,20 @@ def subgraph(
 def graph_projection(
     request: Request,
     project_key: str = "RUNE_CAM_ALPHA",
-) -> dict[str, list[dict[str, Any]]]:
+    mode: GraphViewMode = "overview",
+    center_node_id: str | None = None,
+    hops: int = 1,
+    limit_nodes: int = 120,
+) -> dict[str, Any]:
     """Return approved nodes plus approved and pending edge projection."""
     runtime = request.app.state.runtime
-    graph: dict[str, list[dict[str, Any]]] = runtime.graph.subgraph(project_key)
-    pending_edges: list[dict[str, Any]] = []
+    nodes = [node for node in runtime.graph.nodes.values() if node.project_key == project_key]
+    approved_edges = [
+        edge
+        for edge in runtime.graph.edges.values()
+        if edge.source_node_id in runtime.graph.nodes and edge.target_node_id in runtime.graph.nodes
+    ]
+    pending_edges: list[TraceabilityEdge] = []
     pending_delta_ids = {
         item.graph_delta_ref
         for item in runtime.approvals.items.values()
@@ -41,9 +53,22 @@ def graph_projection(
                 edge["approval_status"] = "pending"
                 edge["approved_by"] = None
                 edge["approved_at"] = None
-                pending_edges.append(edge)
-    return {
-        "nodes": graph["nodes"],
-        "approved_edges": graph["edges"],
-        "pending_edges": pending_edges,
-    }
+                pending_edges.append(TraceabilityEdge.model_validate(edge))
+    findings = [
+        finding
+        for analysis in runtime.analyses.values()
+        if analysis.run.project_key == project_key
+        for finding in analysis.findings
+    ]
+    projection = build_graph_projection(
+        nodes=nodes,
+        approved_edges=approved_edges,
+        pending_edges=pending_edges,
+        findings=findings,
+        mode=mode,
+        center_node_id=center_node_id,
+        hops=hops,
+        limit_nodes=limit_nodes,
+    )
+    result: dict[str, Any] = projection.model_dump(mode="json")
+    return result

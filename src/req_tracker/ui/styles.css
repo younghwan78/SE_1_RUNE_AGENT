@@ -227,6 +227,20 @@ button:disabled {
   stroke-width: 2;
 }
 
+.ontology-node.orphan circle {
+  stroke: var(--danger);
+  stroke-width: 4;
+}
+
+.ontology-node.pending circle {
+  stroke: var(--accent-2);
+  stroke-width: 3;
+}
+
+.ontology-node.finding circle {
+  filter: drop-shadow(0 0 5px rgba(162, 59, 59, 0.35));
+}
+
 .ontology-node text {
   fill: var(--text);
   font-size: 11px;

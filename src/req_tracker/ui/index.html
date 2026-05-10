@@ -70,6 +70,13 @@
               <button class="chip" data-node-filter="Verification" type="button">Verification</button>
               <button class="chip" data-node-filter="Decision" type="button">Decision</button>
             </div>
+            <div class="chip-group" aria-label="graph modes">
+              <button class="chip active" data-graph-mode="overview" type="button">Overview</button>
+              <button class="chip" data-graph-mode="orphans" type="button">Orphans</button>
+              <button class="chip" data-graph-mode="pending" type="button">Pending</button>
+              <button class="chip" data-graph-mode="neighborhood" type="button">Neighborhood</button>
+              <button class="chip" data-graph-mode="full" type="button">Full</button>
+            </div>
             <div class="chip-group" aria-label="graph view controls">
               <button class="chip" id="ontology-zoom-out" type="button">Zoom Out</button>
               <button class="chip" id="ontology-zoom-in" type="button">Zoom In</button>
@@ -124,6 +131,7 @@
                 <option value="RUNE_MULTI_SOURCE">RUNE_MULTI_SOURCE</option>
                 <option value="RUNE_CAM_ALPHA">RUNE_CAM_ALPHA</option>
                 <option value="RUNE_SECURITY">RUNE_SECURITY</option>
+                <option value="RUNE_SCALE_150">RUNE_SCALE_150</option>
               </select>
             </label>
             <label class="toggle-row">
