@@ -1,0 +1,46 @@
+"""Dummy analysis pipeline integration tests."""
+
+from req_tracker.approvals.models import ApprovalDecision
+from req_tracker.approvals.service import ApprovalService
+from req_tracker.debug.artifacts import LocalArtifactStore
+from req_tracker.debug.traces import InMemoryTraceRepository
+from req_tracker.graph.memory_backend import MemoryGraphBackend
+from req_tracker.vector.memory_backend import MemoryVectorBackend
+from req_tracker.workflows.analysis_graph import LocalAnalysisWorkflow
+
+
+def _workflow(tmp_path) -> tuple[LocalAnalysisWorkflow, MemoryGraphBackend, ApprovalService]:  # type: ignore[no-untyped-def]
+    graph = MemoryGraphBackend()
+    approvals = ApprovalService()
+    workflow = LocalAnalysisWorkflow(
+        traces=InMemoryTraceRepository(),
+        artifact_store=LocalArtifactStore(tmp_path),
+        graph=graph,
+        vector=MemoryVectorBackend(),
+        approvals=approvals,
+    )
+    return workflow, graph, approvals
+
+
+def test_dummy_analysis_creates_findings_and_approvals(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    workflow, graph, approvals = _workflow(tmp_path)
+    result = workflow.run(run_id="run_it_001", project_key="RUNE_CAM_ALPHA")
+
+    assert result.run.status == "succeeded"
+    assert len(result.nodes) == 10
+    assert len(result.candidate_edges) >= 6
+    assert any(f.finding_type == "conflict" for f in result.findings)
+    assert len(result.approvals) == len(result.candidate_edges)
+    assert graph.approved_edges() == []
+
+    first = result.approvals[0]
+    approvals.decide(
+        ApprovalDecision(
+            approval_id=first.approval_id,
+            action="approve",
+            decided_by="reviewer",
+        ),
+        graph,
+    )
+    assert len(graph.approved_edges()) == 1
+

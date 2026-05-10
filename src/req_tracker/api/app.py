@@ -4,7 +4,11 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request, Response
 
+from req_tracker.api.routes.approvals import router as approvals_router
+from req_tracker.api.routes.graph import router as graph_router
 from req_tracker.api.routes.health import router as health_router
+from req_tracker.api.routes.runs import router as runs_router
+from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings, get_settings
 
 
@@ -18,6 +22,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url="/redoc" if resolved_settings.enable_docs else None,
     )
     app.state.settings = resolved_settings
+    app.state.runtime = RuntimeState.create(resolved_settings.artifact_root)
 
     @app.middleware("http")
     async def add_correlation_id(
@@ -32,6 +37,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return response
 
     app.include_router(health_router, prefix="/api/v1")
+    app.include_router(runs_router, prefix="/api/v1")
+    app.include_router(graph_router, prefix="/api/v1")
+    app.include_router(approvals_router, prefix="/api/v1")
     return app
 
 
