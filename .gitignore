@@ -49,6 +49,7 @@ debug_artifacts/
 .local_artifacts/
 logs/
 run_server*.log
+.playwright-cli/
 
 # IDE / OS
 .vscode/
