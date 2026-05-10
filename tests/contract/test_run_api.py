@@ -51,3 +51,4 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
     assert len(projection.json()["nodes"]) == 10
     assert len(projection.json()["approved_edges"]) == 1
     assert len(projection.json()["pending_edges"]) >= 1
+    assert projection.json()["pending_edges"][0]["approval_status"] == "pending"
