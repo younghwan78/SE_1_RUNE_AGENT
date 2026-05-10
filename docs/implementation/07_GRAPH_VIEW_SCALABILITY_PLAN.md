@@ -237,3 +237,30 @@ Required checks:
 5. Add tests for projection counts, orphan status, and scale fixture.
 6. Reassess renderer choice after real data shape is known.
 
+## 8. Implemented Scope
+
+Current implementation keeps the zero-build static UI but moves graph semantics into the API.
+
+Implemented:
+
+- `/api/v1/graph/projection` with `overview`, `neighborhood`, `orphans`, `pending`, and `full` modes
+- API-side `search_query`, `edge_filter`, `center_node_id`, `hops`, and `limit_nodes`
+- node metadata for approved/pending degree, finding count, risk level, orphan state, and pending-edge state
+- edge metadata for source/target display names, pending/approved view status, and pending approval id
+- scalable `RUNE_SCALE_150` fixture with 150 nodes, connected edges, orphan nodes, findings, and pending approvals
+- UI controls for mode selection, node type filtering, search, hop count, edge filtering, zoom, pan, and reset
+- node click detail with focus-neighborhood action
+- edge click detail with approval id, evidence, confidence, source, target, and reasoning
+- wider invisible SVG edge hit targets so graph edge click remains usable at large scale
+
+Validated:
+
+- contract test coverage for scale mode, orphan mode, pending mode, search, neighborhood, and pending edge metadata
+- `RUNE_SCALE_150` API smoke with 150 nodes, 103 pending candidate edges, 47 findings, and 103 approval items
+- browser smoke for 120-node overview, search result narrowing to one node, node detail, and edge detail click
+
+Next renderer decision point:
+
+- keep SVG while visible graph is capped under a few hundred nodes
+- migrate to React Flow when the operator UI becomes component-heavy
+- migrate to Cytoscape.js if graph algorithms, compound groups, and larger local analysis become first-class workflows

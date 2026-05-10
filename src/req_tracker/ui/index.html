@@ -31,7 +31,7 @@
           <strong id="metric-nodes">0</strong>
         </article>
         <article>
-          <span>Edges</span>
+          <span>Edges A/P</span>
           <strong id="metric-edges">0</strong>
         </article>
         <article>
@@ -77,6 +77,32 @@
               <button class="chip" data-graph-mode="neighborhood" type="button">Neighborhood</button>
               <button class="chip" data-graph-mode="full" type="button">Full</button>
             </div>
+            <div class="graph-controls" aria-label="graph search and edge filters">
+              <label>
+                <span>Search</span>
+                <input id="graph-search" type="search" placeholder="Node id or name" />
+              </label>
+              <button class="chip" id="graph-search-apply" type="button">Apply</button>
+              <button class="chip" id="graph-search-clear" type="button">Clear</button>
+              <label>
+                <span>Hops</span>
+                <select id="graph-hops">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+              </label>
+              <label>
+                <span>Edges</span>
+                <select id="edge-filter">
+                  <option value="all">All</option>
+                  <option value="approved">Approved</option>
+                  <option value="pending">Pending</option>
+                  <option value="incoming">Incoming</option>
+                  <option value="outgoing">Outgoing</option>
+                </select>
+              </label>
+            </div>
             <div class="chip-group" aria-label="graph view controls">
               <button class="chip" id="ontology-zoom-out" type="button">Zoom Out</button>
               <button class="chip" id="ontology-zoom-in" type="button">Zoom In</button>
@@ -93,7 +119,7 @@
               <ul id="nodes" class="compact-list"></ul>
             </div>
             <div>
-              <h3>Approved Edges</h3>
+              <h3>Visible Edges</h3>
               <ul id="edges" class="compact-list"></ul>
             </div>
           </div>

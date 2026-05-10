@@ -3,7 +3,11 @@ const state = {
   currentRunId: null,
   nodeFilter: "all",
   graphMode: "overview",
+  searchQuery: "",
+  edgeFilter: "all",
+  hops: 1,
   selectedNodeId: null,
+  selectedEdgeId: null,
   graphProjection: {
     nodes: [],
     approved_edges: [],
@@ -118,15 +122,21 @@ const renderEdges = (edges) => {
   const list = el("edges");
   list.replaceChildren();
   if (!edges.length) {
-    list.append(emptyRow("No approved edges"));
+    list.append(emptyRow("No visible edges"));
     return;
   }
   edges.forEach((edge) => {
     const item = document.createElement("li");
     item.innerHTML = `
-      <div class="item-title"><span>${edge.relation}</span>${badge(edge.approval_status)}</div>
-      <div class="item-meta">${edge.source_node_id}<br>${edge.target_node_id}</div>
+      <div class="item-title">
+        <span>${edge.relation}</span>${badge(edge.view_status, edge.view_status === "pending")}
+      </div>
+      <div class="item-meta">
+        ${edge.source_node_name || edge.source_node_id}<br>
+        ${edge.target_node_name || edge.target_node_id}
+      </div>
     `;
+    item.addEventListener("click", () => renderEdgeDetail(edge));
     list.append(item);
   });
 };
@@ -142,7 +152,7 @@ const renderOntologyGraph = (projection) => {
     (node) => state.nodeFilter === "all" || node.node_type === state.nodeFilter,
   );
   const nodeIds = new Set(nodes.map((node) => node.node_id));
-  const edges = [...projection.approved_edges, ...projection.pending_edges].filter(
+  const edges = projection.edges.filter(
     (edge) => nodeIds.has(edge.source_node_id) && nodeIds.has(edge.target_node_id),
   );
   const levels = [
@@ -191,14 +201,44 @@ const renderOntologyGraph = (projection) => {
     const source = positions.get(edge.source_node_id);
     const target = positions.get(edge.target_node_id);
     if (!source || !target) return;
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
     const midX = (source.x + target.x) / 2;
-    path.setAttribute(
-      "d",
-      `M${source.x + 22},${source.y} C${midX},${source.y} ${midX},${target.y} ${target.x - 22},${target.y}`,
-    );
+    const pathData = `M${source.x + 22},${source.y} C${midX},${source.y} ${midX},${target.y} ${
+      target.x - 22
+    },${target.y}`;
     const pending = edge.approval_status !== "approved";
-    path.setAttribute("class", `ontology-edge${pending ? " pending" : ""}`);
+    const selected = state.selectedEdgeId === edge.edge_id;
+    const selectEdge = (event) => {
+      event.stopPropagation();
+      renderEdgeDetail(edge);
+      renderOntologyGraph(state.graphProjection);
+    };
+    const hitPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    hitPath.setAttribute("d", pathData);
+    hitPath.setAttribute("class", "ontology-edge-hit");
+    hitPath.setAttribute("role", "button");
+    hitPath.setAttribute("tabindex", "0");
+    hitPath.setAttribute(
+      "aria-label",
+      `${edge.relation} ${edge.source_node_id} to ${edge.target_node_id}`,
+    );
+    hitPath.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+    });
+    hitPath.addEventListener("click", selectEdge);
+    hitPath.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectEdge(event);
+      }
+    });
+    viewport.append(hitPath);
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathData);
+    path.setAttribute(
+      "class",
+      `ontology-edge${pending ? " pending" : ""}${selected ? " selected" : ""}`,
+    );
     path.setAttribute("marker-end", pending ? "url(#arrow-pending)" : "url(#arrow-approved)");
     viewport.append(path);
   });
@@ -225,11 +265,17 @@ const renderOntologyGraph = (projection) => {
     group.addEventListener("click", (event) => {
       event.stopPropagation();
       renderOntologyDetail(node);
+      if (state.graphMode === "neighborhood") {
+        refresh().catch(console.error);
+      }
     });
     group.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         renderOntologyDetail(node);
+        if (state.graphMode === "neighborhood") {
+          refresh().catch(console.error);
+        }
       }
     });
 
@@ -253,6 +299,7 @@ const renderOntologyGraph = (projection) => {
 
 const renderOntologyDetail = (node) => {
   state.selectedNodeId = node.node_id;
+  state.selectedEdgeId = null;
   el("ontology-detail").innerHTML = `
     <strong>${node.name}</strong>
     ${badge(node.node_type)}
@@ -267,6 +314,34 @@ const renderOntologyDetail = (node) => {
       source=${node.source_artifact_ids.join(", ")}<br><br>
       ${node.description}
     </div>
+    <div class="review-actions">
+      <button id="focus-neighborhood" type="button">Focus Neighborhood</button>
+    </div>
+  `;
+  el("focus-neighborhood").addEventListener("click", () => {
+    state.graphMode = "neighborhood";
+    document.querySelectorAll("[data-graph-mode]").forEach((item) => {
+      item.classList.toggle("active", item.dataset.graphMode === "neighborhood");
+    });
+    refresh().catch(console.error);
+  });
+};
+
+const renderEdgeDetail = (edge) => {
+  state.selectedEdgeId = edge.edge_id;
+  const evidence = edge.evidence?.length ? JSON.stringify(edge.evidence, null, 2) : "[]";
+  el("ontology-detail").innerHTML = `
+    <strong>${edge.relation}</strong>
+    ${badge(edge.view_status, edge.view_status === "pending")}
+    <div class="item-meta">
+      ${edge.edge_id}<br>
+      source=${edge.source_node_name || edge.source_node_id}<br>
+      target=${edge.target_node_name || edge.target_node_id}<br>
+      confidence=${edge.confidence_score}<br>
+      approval=${edge.approval_status}${edge.approval_id ? ` / ${edge.approval_id}` : ""}<br><br>
+      ${edge.reasoning}
+    </div>
+    <pre class="detail-pre">${evidence}</pre>
   `;
 };
 
@@ -363,15 +438,21 @@ const renderImprovements = (improvements) => {
 const refresh = async () => {
   const query = new URLSearchParams({
     mode: state.graphMode,
+    edge_filter: state.edgeFilter,
     limit_nodes: "120",
+    hops: String(state.hops),
   });
-  if (state.graphMode === "neighborhood" && state.selectedNodeId) {
-    query.set("center_node_id", state.selectedNodeId);
-    query.set("hops", "1");
+  if (state.searchQuery) {
+    query.set("search_query", state.searchQuery);
   }
-  const [graph, projection, approvals, findings, evalCandidates, feedbackSummary, improvements, gate, schedule] =
+  if (
+    state.selectedNodeId &&
+    (state.graphMode === "neighborhood" || state.edgeFilter === "incoming" || state.edgeFilter === "outgoing")
+  ) {
+    query.set("center_node_id", state.selectedNodeId);
+  }
+  const [projection, approvals, findings, evalCandidates, feedbackSummary, improvements, gate, schedule] =
     await Promise.all([
-      api("/graph/subgraph"),
       api(`/graph/projection?${query.toString()}`),
       api("/approvals"),
       api("/findings"),
@@ -383,7 +464,7 @@ const refresh = async () => {
     ]);
   state.graphProjection = projection;
   renderNodes(projection.nodes);
-  renderEdges(graph.edges);
+  renderEdges(projection.edges);
   renderOntologyGraph(projection);
   renderApprovals(approvals);
   renderFindings(findings);
@@ -391,7 +472,10 @@ const refresh = async () => {
   renderImprovements(improvements);
   text("metric-runs", state.runs.length);
   text("metric-nodes", `${projection.counts.visible_nodes}/${projection.counts.total_nodes}`);
-  text("metric-edges", projection.counts.visible_approved_edges);
+  text(
+    "metric-edges",
+    `${projection.counts.visible_approved_edges}/${projection.counts.visible_pending_edges}`,
+  );
   text("metric-approvals", approvals.length);
   text("metric-findings", findings.length);
   text(
@@ -406,7 +490,7 @@ const refresh = async () => {
   text("finding-count", `${findings.length} open`);
   text(
     "graph-run-label",
-    `${projection.mode} | orphan ${projection.counts.orphan_nodes} | pending ${projection.counts.pending_edges}`,
+    `${projection.mode} | visible ${projection.counts.visible_nodes} | orphan ${projection.counts.orphan_nodes} | pending ${projection.counts.pending_edges}`,
   );
   el("run-replay").disabled = !state.currentRunId;
 };
@@ -492,6 +576,30 @@ el("schedule-run-now").addEventListener("click", () => runScheduleNow().catch(co
 el("ontology-zoom-in").addEventListener("click", () => zoomOntology(1.2));
 el("ontology-zoom-out").addEventListener("click", () => zoomOntology(1 / 1.2));
 el("ontology-reset").addEventListener("click", resetOntologyView);
+el("graph-search-apply").addEventListener("click", () => {
+  state.searchQuery = el("graph-search").value.trim();
+  refresh().catch(console.error);
+});
+el("graph-search-clear").addEventListener("click", () => {
+  state.searchQuery = "";
+  el("graph-search").value = "";
+  refresh().catch(console.error);
+});
+el("graph-search").addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  state.searchQuery = el("graph-search").value.trim();
+  refresh().catch(console.error);
+});
+el("graph-hops").addEventListener("change", () => {
+  state.hops = Number(el("graph-hops").value || 1);
+  if (state.graphMode === "neighborhood") {
+    refresh().catch(console.error);
+  }
+});
+el("edge-filter").addEventListener("change", () => {
+  state.edgeFilter = el("edge-filter").value;
+  refresh().catch(console.error);
+});
 el("ontology-graph").addEventListener(
   "wheel",
   (event) => {

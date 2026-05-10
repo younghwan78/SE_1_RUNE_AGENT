@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, Request
 
-from req_tracker.graph.projection import GraphViewMode, build_graph_projection
+from req_tracker.graph.projection import GraphEdgeFilter, GraphViewMode, build_graph_projection
 from req_tracker.ontology.models import TraceabilityEdge
 
 router = APIRouter(tags=["graph"])
@@ -29,6 +29,8 @@ def graph_projection(
     center_node_id: str | None = None,
     hops: int = 1,
     limit_nodes: int = 120,
+    search_query: str | None = None,
+    edge_filter: GraphEdgeFilter = "all",
 ) -> dict[str, Any]:
     """Return approved nodes plus approved and pending edge projection."""
     runtime = request.app.state.runtime
@@ -39,10 +41,15 @@ def graph_projection(
         if edge.source_node_id in runtime.graph.nodes and edge.target_node_id in runtime.graph.nodes
     ]
     pending_edges: list[TraceabilityEdge] = []
-    pending_delta_ids = {
-        item.graph_delta_ref
+    pending_approval_by_edge_id: dict[str, str] = {}
+    approval_by_delta = {
+        item.graph_delta_ref: item.approval_id
         for item in runtime.approvals.items.values()
         if item.project_key == project_key and item.status == "pending" and item.graph_delta_ref
+    }
+    pending_delta_ids = {
+        delta_id
+        for delta_id in approval_by_delta
     }
     for delta in runtime.approvals.deltas.values():
         if delta.project_key != project_key or delta.delta_id not in pending_delta_ids:
@@ -53,7 +60,11 @@ def graph_projection(
                 edge["approval_status"] = "pending"
                 edge["approved_by"] = None
                 edge["approved_at"] = None
-                pending_edges.append(TraceabilityEdge.model_validate(edge))
+                pending_edge = TraceabilityEdge.model_validate(edge)
+                pending_edges.append(pending_edge)
+                pending_approval_by_edge_id[pending_edge.edge_id] = approval_by_delta[
+                    delta.delta_id
+                ]
     findings = [
         finding
         for analysis in runtime.analyses.values()
@@ -69,6 +80,9 @@ def graph_projection(
         center_node_id=center_node_id,
         hops=hops,
         limit_nodes=limit_nodes,
+        search_query=search_query,
+        edge_filter=edge_filter,
+        pending_approval_by_edge_id=pending_approval_by_edge_id,
     )
     result: dict[str, Any] = projection.model_dump(mode="json")
     return result

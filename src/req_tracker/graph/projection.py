@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from req_tracker.ontology.models import Finding, OntologyNode, Severity, TraceabilityEdge
 
 GraphViewMode = Literal["overview", "neighborhood", "orphans", "pending", "full"]
+GraphEdgeFilter = Literal["all", "approved", "pending", "incoming", "outgoing"]
 
 _SEVERITY_RANK: dict[Severity, int] = {
     "low": 1,
@@ -52,7 +53,9 @@ class GraphEdgeView(BaseModel):
 
     edge_id: str
     source_node_id: str
+    source_node_name: str | None = None
     target_node_id: str
+    target_node_name: str | None = None
     relation: str
     reasoning: str
     evidence: list[dict[str, Any]] = Field(default_factory=list)
@@ -64,6 +67,7 @@ class GraphEdgeView(BaseModel):
     version: int
     schema_version: str
     view_status: Literal["approved", "pending"]
+    approval_id: str | None = None
 
 
 class GraphGroupView(BaseModel):
@@ -102,6 +106,11 @@ class GraphProjection(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     mode: GraphViewMode
+    center_node_id: str | None = None
+    hops: int
+    limit_nodes: int
+    search_query: str | None = None
+    edge_filter: GraphEdgeFilter
     nodes: list[GraphNodeView]
     approved_edges: list[GraphEdgeView]
     pending_edges: list[GraphEdgeView]
@@ -120,13 +129,18 @@ def build_graph_projection(
     center_node_id: str | None = None,
     hops: int = 1,
     limit_nodes: int = 120,
+    search_query: str | None = None,
+    edge_filter: GraphEdgeFilter = "all",
+    pending_approval_by_edge_id: dict[str, str] | None = None,
 ) -> GraphProjection:
     """Build a graph view projection with node status metadata."""
     capped_hops = min(max(hops, 1), 3)
     capped_limit = min(max(limit_nodes, 1), 500)
     node_map = {node.node_id: node for node in nodes}
+    node_names = {node.node_id: node.name for node in nodes}
     approved = [edge for edge in approved_edges if _edge_nodes_exist(edge, node_map)]
     pending = [edge for edge in pending_edges if _edge_nodes_exist(edge, node_map)]
+    pending_approvals = pending_approval_by_edge_id or {}
     finding_by_node = _finding_by_node(findings)
     risk_by_node = _risk_by_node(findings)
     degree = _degree_by_node(approved, pending)
@@ -148,21 +162,50 @@ def build_graph_projection(
         center_node_id=center_node_id,
         hops=capped_hops,
         limit_nodes=capped_limit,
+        search_query=search_query,
     )
     selected_ids = {node.node_id for node in selected}
-    visible_approved = [
-        _edge_view(edge, "approved")
+    selected_approved = [
+        edge
         for edge in approved
         if edge.source_node_id in selected_ids and edge.target_node_id in selected_ids
     ]
-    visible_pending = [
-        _edge_view(edge, "pending")
+    selected_pending = [
+        edge
         for edge in pending
         if edge.source_node_id in selected_ids and edge.target_node_id in selected_ids
+    ]
+    filtered_approved = [] if edge_filter == "pending" else _filter_edges(
+        selected_approved,
+        edge_filter,
+        center_node_id,
+    )
+    filtered_pending = [] if edge_filter == "approved" else _filter_edges(
+        selected_pending,
+        edge_filter,
+        center_node_id,
+    )
+    visible_approved = [
+        _edge_view(edge, "approved", node_names=node_names)
+        for edge in filtered_approved
+    ]
+    visible_pending = [
+        _edge_view(
+            edge,
+            "pending",
+            node_names=node_names,
+            approval_id=pending_approvals.get(edge.edge_id),
+        )
+        for edge in filtered_pending
     ]
     groups = _groups(node_views)
     return GraphProjection(
         mode=mode,
+        center_node_id=center_node_id,
+        hops=capped_hops,
+        limit_nodes=capped_limit,
+        search_query=_normalize_search(search_query),
+        edge_filter=edge_filter,
         nodes=selected,
         approved_edges=visible_approved,
         pending_edges=visible_pending,
@@ -251,8 +294,14 @@ def _node_view(
 def _edge_view(
     edge: TraceabilityEdge,
     view_status: Literal["approved", "pending"],
+    *,
+    node_names: dict[str, str],
+    approval_id: str | None = None,
 ) -> GraphEdgeView:
     payload = edge.model_dump(mode="json")
+    payload["source_node_name"] = node_names.get(edge.source_node_id)
+    payload["target_node_name"] = node_names.get(edge.target_node_id)
+    payload["approval_id"] = approval_id
     if view_status == "pending":
         payload["approval_status"] = "pending"
         payload["approved_by"] = None
@@ -269,17 +318,66 @@ def _select_nodes(
     center_node_id: str | None,
     hops: int,
     limit_nodes: int,
+    search_query: str | None,
 ) -> list[GraphNodeView]:
+    filtered_nodes = _search_nodes(nodes, search_query)
     if mode == "full":
-        return _sort_nodes(nodes)[:limit_nodes]
+        return _sort_nodes(filtered_nodes)[:limit_nodes]
     if mode == "orphans":
-        return _sort_nodes([node for node in nodes if node.is_orphan])[:limit_nodes]
+        return _sort_nodes([node for node in filtered_nodes if node.is_orphan])[:limit_nodes]
     if mode == "pending":
-        return _sort_nodes([node for node in nodes if node.has_pending_edges])[:limit_nodes]
+        pending_nodes = [node for node in filtered_nodes if node.has_pending_edges]
+        return _sort_nodes(pending_nodes)[:limit_nodes]
     if mode == "neighborhood" and center_node_id:
         neighbor_ids = _neighborhood_ids(center_node_id, [*approved_edges, *pending_edges], hops)
-        return _sort_nodes([node for node in nodes if node.node_id in neighbor_ids])[:limit_nodes]
-    return _sort_nodes(nodes)[:limit_nodes]
+        neighbor_nodes = [node for node in filtered_nodes if node.node_id in neighbor_ids]
+        return _sort_nodes(neighbor_nodes)[:limit_nodes]
+    return _sort_nodes(filtered_nodes)[:limit_nodes]
+
+
+def _filter_edges(
+    edges: list[TraceabilityEdge],
+    edge_filter: GraphEdgeFilter,
+    center_node_id: str | None,
+) -> list[TraceabilityEdge]:
+    if edge_filter in {"all", "approved", "pending"}:
+        return edges
+    if not center_node_id:
+        return edges
+    if edge_filter == "incoming":
+        return [edge for edge in edges if edge.target_node_id == center_node_id]
+    return [edge for edge in edges if edge.source_node_id == center_node_id]
+
+
+def _normalize_search(search_query: str | None) -> str | None:
+    if not search_query:
+        return None
+    normalized = search_query.strip()
+    return normalized or None
+
+
+def _search_nodes(
+    nodes: list[GraphNodeView],
+    search_query: str | None,
+) -> list[GraphNodeView]:
+    normalized = _normalize_search(search_query)
+    if normalized is None:
+        return nodes
+    needle = normalized.casefold()
+    return [node for node in nodes if _node_matches(node, needle)]
+
+
+def _node_matches(node: GraphNodeView, needle: str) -> bool:
+    searchable = [
+        node.node_id,
+        node.node_type,
+        node.name,
+        node.description,
+        node.project_key,
+        node.domain or "",
+        *node.source_artifact_ids,
+    ]
+    return any(needle in value.casefold() for value in searchable)
 
 
 def _neighborhood_ids(
