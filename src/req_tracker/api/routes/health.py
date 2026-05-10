@@ -19,5 +19,5 @@ def health(request: Request) -> dict[str, Any]:
         "vector_backend": settings.vector_backend,
         "model_gateway_mode": settings.model_gateway_mode,
         "artifact_store": settings.artifact_store,
+        "state_store": settings.state_store,
     }
-

@@ -49,6 +49,7 @@ Current local implementation:
 - dummy/local runtime settings and FastAPI endpoints
 - local artifact store
 - optional SQLite state store for production-shaped persistence validation
+- PostgreSQL state repository with package migrations for production persistence foundation
 - in-memory trace recorder
 - dummy source adapter and fixture-backed analysis workflow
 - JIRA, Confluence, and restricted decision/email export-file adapters
@@ -66,6 +67,14 @@ Enable local SQLite persistence:
 ```powershell
 $env:STATE_STORE="sqlite"
 $env:SQLITE_STATE_PATH=".local_state/rune_state.sqlite3"
+uv run uvicorn req_tracker.api.app:app --host 127.0.0.1 --port 8000
+```
+
+Enable PostgreSQL persistence:
+
+```powershell
+$env:STATE_STORE="postgres"
+$env:POSTGRES_DSN="postgresql://rune:rune@127.0.0.1:5432/rune_agent"
 uv run uvicorn req_tracker.api.app:app --host 127.0.0.1 --port 8000
 ```
 

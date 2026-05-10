@@ -557,6 +557,7 @@ Dummy 검증:
 - core Pydantic contracts
 - local artifact store, trace repository, replay diff skeleton
 - SQLite state store for local persistence validation
+- PostgreSQL state repository and package migration foundation
 - dummy model gateway and dummy source adapter
 - export-file adapters for JIRA, Confluence, and restricted decision/email sources
 - ingestion normalization, masking, chunking, evidence span path
@@ -572,8 +573,8 @@ Dummy 검증:
 
 아직 production 전환 전 남은 축:
 
-- persistent repositories: PostgreSQL, Neo4j, Qdrant
-- production-grade PostgreSQL table repositories, Neo4j backend, and Qdrant backend
+- production-grade typed PostgreSQL table repositories beyond the current JSONB state foundation
+- Neo4j backend and Qdrant backend
 - direct production transport implementations behind the source skill/export boundary
 - full debug workbench UX for LLM call payload diff and graph delta side-by-side inspection
 - typed production audit event store and RBAC/SSO enforcement

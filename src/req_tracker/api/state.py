@@ -11,7 +11,7 @@ from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.graph.memory_backend import MemoryGraphBackend
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.scheduler.service import RunScheduler
-from req_tracker.storage.sqlite_store import SQLiteStateStore
+from req_tracker.storage.state_store import StateStore
 from req_tracker.vector.memory_backend import MemoryVectorBackend
 from req_tracker.workflows.analysis_graph import AnalysisResult, LocalAnalysisWorkflow
 
@@ -29,14 +29,14 @@ class RuntimeState(BaseModel):
     audit: AuditService
     analyses: dict[str, AnalysisResult]
     scheduler: RunScheduler
-    state_store: SQLiteStateStore | None = None
+    state_store: StateStore | None = None
 
     @classmethod
     def create(
         cls,
         artifact_root: Path,
         schedule_config: ScheduleConfig | None = None,
-        state_store: SQLiteStateStore | None = None,
+        state_store: StateStore | None = None,
     ) -> "RuntimeState":
         """Create a local runtime state."""
         return cls(

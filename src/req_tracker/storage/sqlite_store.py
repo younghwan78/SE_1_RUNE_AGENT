@@ -6,9 +6,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel
-
 from req_tracker.debug.hash import stable_hash
+from req_tracker.storage.state_store import jsonable
 
 
 class SQLiteStateStore:
@@ -32,7 +31,7 @@ class SQLiteStateStore:
         project_key: str | None = None,
     ) -> None:
         """Insert or update a serialized entity."""
-        normalized = _jsonable(payload)
+        normalized = jsonable(payload)
         payload_json = json.dumps(normalized, ensure_ascii=False, sort_keys=True)
         now = datetime.now(UTC).isoformat()
         with self._connect() as conn:
@@ -135,13 +134,3 @@ class SQLiteStateStore:
                 ON state_entities(collection, project_key)
                 """
             )
-
-
-def _jsonable(payload: Any) -> Any:
-    if isinstance(payload, BaseModel):
-        return payload.model_dump(mode="json")
-    if isinstance(payload, list):
-        return [_jsonable(item) for item in payload]
-    if isinstance(payload, dict):
-        return {str(key): _jsonable(value) for key, value in payload.items()}
-    return payload

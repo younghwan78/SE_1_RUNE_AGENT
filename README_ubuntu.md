@@ -40,6 +40,7 @@ ARTIFACT_STORE=local
 ARTIFACT_ROOT=/var/lib/rune-agent/artifacts
 STATE_STORE=sqlite
 SQLITE_STATE_PATH=/var/lib/rune-agent/rune_state.sqlite3
+POSTGRES_DSN=
 LOG_LEVEL=INFO
 ENABLE_DOCS=false
 SCHEDULER_ENABLED=true
@@ -49,6 +50,18 @@ SCHEDULER_SCENARIO=RUNE_MULTI_SOURCE
 ```
 
 For actual company deployment, keep JIRA, Confluence, and Email credentials outside this repo and expose them through the company-approved Claude Code skill/MCP setup.
+
+To use PostgreSQL instead of SQLite, create the database/user with your company
+standard policy and switch only these values:
+
+```env
+STATE_STORE=postgres
+POSTGRES_DSN=postgresql://rune:${RUNE_POSTGRES_PASSWORD}@127.0.0.1:5432/rune_agent
+```
+
+On startup, the app applies packaged PostgreSQL migrations through
+`schema_migrations` and stores production-shaped contract payloads in
+`state_entities`.
 
 ## 4. Smoke Test
 

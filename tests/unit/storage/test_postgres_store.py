@@ -1,0 +1,126 @@
+"""PostgreSQL state repository tests."""
+
+from typing import Any
+
+from psycopg.types.json import Jsonb
+
+from req_tracker.debug.models import AgentRun
+from req_tracker.storage.postgres_store import PostgreSQLStateStore, load_postgres_migrations
+
+
+class FakeCursor:
+    def __init__(
+        self,
+        *,
+        one: dict[str, Any] | tuple[int] | None = None,
+        many: list[dict[str, Any]] | None = None,
+    ) -> None:
+        self._one = one
+        self._many = many or []
+
+    def fetchone(self) -> dict[str, Any] | tuple[int] | None:
+        return self._one
+
+    def fetchall(self) -> list[dict[str, Any]]:
+        return self._many
+
+
+class FakePostgresConnection:
+    def __init__(self) -> None:
+        self.entities: dict[tuple[str, str], dict[str, Any]] = {}
+        self.migrations: set[str] = set()
+        self.executed_sql: list[str] = []
+
+    def __enter__(self) -> "FakePostgresConnection":
+        return self
+
+    def __exit__(self, *_exc: object) -> bool:
+        return False
+
+    def execute(self, query: str, params: object = None) -> FakeCursor:
+        sql = " ".join(query.lower().split())
+        self.executed_sql.append(sql)
+        if "select 1 from schema_migrations" in sql:
+            version = _params(params)[0]
+            return FakeCursor(one=(1,) if version in self.migrations else None)
+        if "insert into schema_migrations" in sql:
+            version = str(_params(params)[0])
+            self.migrations.add(version)
+            return FakeCursor()
+        if "insert into state_entities" in sql:
+            collection, entity_id, project_key, payload_json, payload_hash, *_ = _params(params)
+            assert isinstance(payload_json, Jsonb)
+            self.entities[(str(collection), str(entity_id))] = {
+                "collection": collection,
+                "entity_id": entity_id,
+                "project_key": project_key,
+                "payload_json": payload_json.obj,
+                "payload_hash": payload_hash,
+            }
+            return FakeCursor()
+        if "select payload_json from state_entities" in sql and "order by entity_id" not in sql:
+            collection, entity_id = _params(params)
+            row = self.entities.get((str(collection), str(entity_id)))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if "select payload_json from state_entities" in sql:
+            values = [
+                row
+                for row in self.entities.values()
+                if row["collection"] == _params(params)[0]
+                and (len(_params(params)) == 1 or row["project_key"] == _params(params)[1])
+            ]
+            rows = [
+                {"payload_json": row["payload_json"]}
+                for row in sorted(values, key=lambda row: row["entity_id"])
+            ]
+            return FakeCursor(many=rows)
+        if "select collection, count(*) as count" in sql:
+            counts: dict[str, int] = {}
+            for row in self.entities.values():
+                counts[str(row["collection"])] = counts.get(str(row["collection"]), 0) + 1
+            rows = [
+                {"collection": collection, "count": count}
+                for collection, count in sorted(counts.items())
+            ]
+            return FakeCursor(many=rows)
+        return FakeCursor()
+
+
+def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
+    migrations = load_postgres_migrations()
+
+    assert [migration.version for migration in migrations] == ["001"]
+    assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
+    assert "JSONB" in migrations[0].sql
+
+
+def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+    run = AgentRun(
+        run_id="run_postgres_1",
+        run_type="analysis",
+        project_key="RUNE_CAM_ALPHA",
+        triggered_by="tester",
+        trigger_source="manual",
+    )
+
+    store.upsert(
+        collection="agent_runs",
+        entity_id=run.run_id,
+        project_key=run.project_key,
+        payload=run,
+    )
+
+    assert fake.migrations == {"001"}
+    stored = store.get("agent_runs", run.run_id)
+    assert stored is not None
+    assert stored["run_id"] == "run_postgres_1"
+    stored_runs = store.list("agent_runs", project_key="RUNE_CAM_ALPHA")
+    assert stored_runs[0]["project_key"] == "RUNE_CAM_ALPHA"
+    assert store.counts_by_collection() == {"agent_runs": 1}
+
+
+def _params(params: object) -> tuple[Any, ...]:
+    assert isinstance(params, list | tuple)
+    return tuple(params)

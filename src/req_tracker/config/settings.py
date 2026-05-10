@@ -30,6 +30,7 @@ class Settings(BaseSettings):
         default=Path(".local_state/rune_state.sqlite3"),
         validation_alias="SQLITE_STATE_PATH",
     )
+    postgres_dsn: str = Field(default="", validation_alias="POSTGRES_DSN")
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
     enable_docs: bool = Field(default=True, validation_alias="ENABLE_DOCS")
     scheduler_enabled: bool = Field(default=False, validation_alias="SCHEDULER_ENABLED")

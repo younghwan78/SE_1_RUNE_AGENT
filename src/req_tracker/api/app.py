@@ -18,15 +18,21 @@ from req_tracker.api.routes.ui import router as ui_router
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings, get_settings
 from req_tracker.scheduler.models import ScheduleConfig
+from req_tracker.storage.postgres_store import PostgreSQLStateStore
 from req_tracker.storage.sqlite_store import SQLiteStateStore
+from req_tracker.storage.state_store import StateStore
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Create the API application."""
     resolved_settings = settings or get_settings()
-    state_store = None
+    state_store: StateStore | None = None
     if resolved_settings.state_store == "sqlite":
         state_store = SQLiteStateStore(resolved_settings.sqlite_state_path)
+    elif resolved_settings.state_store == "postgres":
+        state_store = PostgreSQLStateStore(resolved_settings.postgres_dsn)
+    elif resolved_settings.state_store != "memory":
+        raise ValueError(f"unsupported STATE_STORE: {resolved_settings.state_store}")
     runtime = RuntimeState.create(
         resolved_settings.artifact_root,
         ScheduleConfig(
