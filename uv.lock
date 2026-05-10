@@ -580,7 +580,7 @@ wheels = [
 [[package]]
 name = "se-1-rune-agent"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "pydantic" },
