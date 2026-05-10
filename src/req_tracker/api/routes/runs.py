@@ -5,6 +5,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from req_tracker.debug.replay import ReplayService
+
 router = APIRouter(tags=["runs"])
 
 
@@ -14,6 +16,14 @@ class AnalyzeRunRequest(BaseModel):
     project_key: str = "RUNE_CAM_ALPHA"
     scenario: str = "RUNE_CAM_ALPHA"
     run_id: str | None = Field(default=None)
+
+
+class ReplayRunRequest(BaseModel):
+    """Replay a previous analysis run."""
+
+    replay_run_id: str | None = None
+    replay_mode: str = "same_model_same_prompt"
+    scenario: str = "RUNE_CAM_ALPHA"
 
 
 @router.post("/runs/analyze")
@@ -72,6 +82,25 @@ def get_graph_delta(request: Request, run_id: str) -> list[dict[str, Any]]:
         for delta in runtime.approvals.deltas.values()
         if delta.created_from_run_id == run_id
     ]
+
+
+@router.post("/runs/{run_id}/replay")
+def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict[str, Any]:
+    """Replay a run and return object-level diff."""
+    runtime = request.app.state.runtime
+    settings = request.app.state.settings
+    if run_id not in runtime.analyses:
+        raise HTTPException(status_code=404, detail="run not found")
+    source = runtime.analyses[run_id]
+    replay_run_id = payload.replay_run_id or settings.new_id("replay")
+    result = ReplayService(runtime.workflow(), runtime.analyses).replay(
+        source_run_id=run_id,
+        replay_run_id=replay_run_id,
+        project_key=source.run.project_key,
+        scenario=payload.scenario,
+        replay_mode=payload.replay_mode,
+    )
+    return result.model_dump(mode="json")
 
 
 @router.get("/findings")

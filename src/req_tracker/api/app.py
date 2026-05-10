@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from fastapi import FastAPI, Request, Response
 
 from req_tracker.api.routes.approvals import router as approvals_router
+from req_tracker.api.routes.feedback import router as feedback_router
 from req_tracker.api.routes.graph import router as graph_router
 from req_tracker.api.routes.health import router as health_router
 from req_tracker.api.routes.runs import router as runs_router
@@ -40,6 +41,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(runs_router, prefix="/api/v1")
     app.include_router(graph_router, prefix="/api/v1")
     app.include_router(approvals_router, prefix="/api/v1")
+    app.include_router(feedback_router, prefix="/api/v1")
     return app
 
 
