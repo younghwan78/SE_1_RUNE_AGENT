@@ -539,6 +539,32 @@ const renderDebugSummary = async () => {
   );
 };
 
+const renderAuditEvents = (events) => {
+  const list = el("audit-events");
+  list.replaceChildren();
+  text("audit-count", `${events.length} events`);
+  if (!events.length) {
+    list.append(emptyRow("No audit events"));
+    return;
+  }
+  events.forEach((event) => {
+    const item = document.createElement("li");
+    item.innerHTML = `
+      <div class="item-title">
+        <span>${event.action}</span>${badge(event.outcome, event.outcome !== "succeeded")}
+      </div>
+      <div class="item-meta">
+        ${event.audit_id}<br>
+        actor=${event.actor_id}${event.actor_role ? ` / ${event.actor_role}` : ""}<br>
+        target=${event.target_type}:${event.target_id}<br>
+        ${event.reason_code ? `reason=${event.reason_code}<br>` : ""}
+        ${event.created_at}
+      </div>
+    `;
+    list.append(item);
+  });
+};
+
 const refresh = async () => {
   const query = new URLSearchParams({
     mode: state.graphMode,
@@ -555,7 +581,7 @@ const refresh = async () => {
   ) {
     query.set("center_node_id", state.selectedNodeId);
   }
-  const [projection, approvals, findings, evalCandidates, feedbackSummary, improvements, gate, schedule] =
+  const [projection, approvals, findings, evalCandidates, feedbackSummary, improvements, gate, schedule, auditEvents] =
     await Promise.all([
       api(`/graph/projection?${query.toString()}`),
       api("/approvals"),
@@ -565,6 +591,7 @@ const refresh = async () => {
       api("/improvements/candidates"),
       api("/eval/gate"),
       api("/schedule"),
+      api("/audit/events?limit=20"),
     ]);
   state.graphProjection = projection;
   renderNodes(projection.nodes);
@@ -574,6 +601,7 @@ const refresh = async () => {
   renderFindings(findings);
   renderEvalCandidates(evalCandidates);
   renderImprovements(improvements);
+  renderAuditEvents(auditEvents);
   text("metric-runs", state.runs.length);
   text("metric-nodes", `${projection.counts.visible_nodes}/${projection.counts.total_nodes}`);
   text(

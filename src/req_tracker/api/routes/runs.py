@@ -137,6 +137,16 @@ async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[
         ),
         new_id=settings.new_id,
     )
+    runtime.audit.record(
+        action="schedule_configured",
+        actor_id="local_operator",
+        actor_role="operator",
+        project_key=payload.project_key,
+        target_type="schedule",
+        target_id="default",
+        metadata=payload.model_dump(mode="json"),
+    )
+    runtime.persist_approval_state()
     result: dict[str, Any] = status.model_dump(mode="json")
     return result
 
@@ -154,5 +164,15 @@ async def run_schedule_now(request: Request) -> dict[str, Any]:
         ),
         new_id=settings.new_id,
     )
+    runtime.audit.record(
+        action="schedule_run_now",
+        actor_id="local_operator",
+        actor_role="operator",
+        project_key=runtime.scheduler.config.project_key,
+        target_type="run",
+        target_id=result.run_id,
+        metadata=result.model_dump(mode="json"),
+    )
+    runtime.persist_approval_state()
     response: dict[str, Any] = result.model_dump(mode="json")
     return response

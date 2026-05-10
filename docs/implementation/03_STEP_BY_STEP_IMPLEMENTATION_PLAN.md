@@ -567,7 +567,8 @@ Dummy 검증:
 - scalable graph projection for 100+ dummy nodes
 - traceability chain API with approved/pending edge separation
 - debug summary/artifact API
-- static operator UI for graph, approval, findings, replay, scheduler, node chain review, and run debug
+- audit event capture/API for run completion, approval decisions, feedback, debug artifact reads, and scheduler operations
+- static operator UI for graph, approval, findings, replay, scheduler, node chain review, run debug, and audit events
 
 아직 production 전환 전 남은 축:
 
@@ -575,6 +576,6 @@ Dummy 검증:
 - production-grade PostgreSQL table repositories, Neo4j backend, and Qdrant backend
 - direct production transport implementations behind the source skill/export boundary
 - full debug workbench UX for LLM call payload diff and graph delta side-by-side inspection
-- audit event store and RBAC/SSO enforcement
+- typed production audit event store and RBAC/SSO enforcement
 - React/React Flow migration decision after real graph shape validation
 - production deployment hardening, migrations, backup/restore, and load tests

@@ -5,6 +5,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from req_tracker.approvals.service import ApprovalService
+from req_tracker.audit.service import AuditService
 from req_tracker.debug.artifacts import LocalArtifactStore
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.graph.memory_backend import MemoryGraphBackend
@@ -25,6 +26,7 @@ class RuntimeState(BaseModel):
     graph: MemoryGraphBackend
     vector: MemoryVectorBackend
     approvals: ApprovalService
+    audit: AuditService
     analyses: dict[str, AnalysisResult]
     scheduler: RunScheduler
     state_store: SQLiteStateStore | None = None
@@ -43,6 +45,7 @@ class RuntimeState(BaseModel):
             graph=MemoryGraphBackend(),
             vector=MemoryVectorBackend(),
             approvals=ApprovalService(),
+            audit=AuditService(),
             analyses={},
             scheduler=RunScheduler(schedule_config),
             state_store=state_store,
@@ -66,6 +69,21 @@ class RuntimeState(BaseModel):
             scenario=scenario,
         )
         self.analyses[run_id] = result
+        self.audit.record(
+            action="run_completed",
+            actor_id="local",
+            actor_role="system",
+            project_key=project_key,
+            target_type="run",
+            target_id=run_id,
+            metadata={
+                "scenario": scenario,
+                "nodes": len(result.nodes),
+                "candidate_edges": len(result.candidate_edges),
+                "findings": len(result.findings),
+                "approvals": len(result.approvals),
+            },
+        )
         self.persist_analysis_result(result)
         return result
 
@@ -147,6 +165,13 @@ class RuntimeState(BaseModel):
                 collection="feedback_events",
                 entity_id=feedback.feedback_id,
                 payload=feedback,
+            )
+        for event in self.audit.events.values():
+            self.state_store.upsert(
+                collection="audit_events",
+                entity_id=event.audit_id,
+                project_key=event.project_key,
+                payload=event,
             )
         for edge in self.graph.edges.values():
             project_key = self.graph.nodes[edge.source_node_id].project_key

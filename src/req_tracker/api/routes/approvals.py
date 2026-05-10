@@ -29,6 +29,20 @@ def decide_approval(
     if approval_id not in runtime.approvals.items:
         raise HTTPException(status_code=404, detail="approval not found")
     item = runtime.approvals.decide(decision, runtime.graph)
+    runtime.audit.record(
+        action="approval_decided",
+        actor_id=decision.decided_by,
+        actor_role=item.owner_role,
+        project_key=item.project_key,
+        target_type="approval",
+        target_id=approval_id,
+        reason_code=decision.reason_code,
+        metadata={
+            "decision_action": decision.action,
+            "result_status": item.status,
+            "proposal_ref": item.proposal_ref,
+        },
+    )
     runtime.persist_approval_state()
     result: dict[str, Any] = item.model_dump(mode="json")
     return result

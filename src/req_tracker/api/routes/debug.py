@@ -54,6 +54,28 @@ def read_debug_artifact(
     """Read a local JSON debug artifact by artifact ref."""
     runtime = request.app.state.runtime
     try:
-        return runtime.artifact_store.read_json(artifact_ref)
+        artifact = runtime.artifact_store.read_json(artifact_ref)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail="artifact not found") from exc
+    runtime.audit.record(
+        action="debug_artifact_read",
+        actor_id="local_debugger",
+        actor_role="developer",
+        project_key=_project_key_from_ref(runtime, artifact_ref),
+        target_type="debug_artifact",
+        target_id=artifact_ref,
+        metadata={"artifact_ref": artifact_ref},
+    )
+    runtime.persist_approval_state()
+    return artifact
+
+
+def _project_key_from_ref(runtime: Any, artifact_ref: str) -> str | None:
+    for step in runtime.traces.steps.values():
+        if step.output_ref != artifact_ref:
+            continue
+        run = runtime.traces.runs.get(step.run_id)
+        if run is not None:
+            project_key: str = run.project_key
+            return project_key
+    return None

@@ -54,10 +54,11 @@ Current local implementation:
 - JIRA, Confluence, and restricted decision/email export-file adapters
 - in-memory graph/vector backends
 - approval queue, graph commit, feedback capture
+- audit event capture for approval, feedback, debug artifact, scheduler, and run completion
 - replay diff and eval candidate grouping
 - static local operator UI
 - ontology graph view with pending/approved edge projection
-- traceability chain and run debug workbench
+- traceability chain, run debug workbench, and audit events panel
 - periodic analysis scheduler for server operation
 
 Enable local SQLite persistence:
