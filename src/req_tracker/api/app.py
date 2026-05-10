@@ -3,12 +3,15 @@
 from collections.abc import Awaitable, Callable
 
 from fastapi import FastAPI, Request, Response
+from fastapi.staticfiles import StaticFiles
 
 from req_tracker.api.routes.approvals import router as approvals_router
 from req_tracker.api.routes.feedback import router as feedback_router
 from req_tracker.api.routes.graph import router as graph_router
 from req_tracker.api.routes.health import router as health_router
 from req_tracker.api.routes.runs import router as runs_router
+from req_tracker.api.routes.ui import UI_ASSET_DIR
+from req_tracker.api.routes.ui import router as ui_router
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings, get_settings
 
@@ -42,6 +45,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(graph_router, prefix="/api/v1")
     app.include_router(approvals_router, prefix="/api/v1")
     app.include_router(feedback_router, prefix="/api/v1")
+    app.include_router(ui_router)
+    app.mount("/ui", StaticFiles(directory=UI_ASSET_DIR), name="ui")
     return app
 
 

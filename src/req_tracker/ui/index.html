@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SE 1 RUNE Agent</title>
+    <link rel="stylesheet" href="/ui/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>SE 1 RUNE Agent</h1>
+        <p id="status-line">local dummy runtime</p>
+      </div>
+      <nav class="toolbar" aria-label="workspace actions">
+        <button id="run-analysis" type="button">Run</button>
+        <button id="refresh" type="button">Refresh</button>
+        <button id="run-replay" type="button" disabled>Replay</button>
+      </nav>
+    </header>
+
+    <main class="workspace">
+      <section class="metrics" aria-label="run metrics">
+        <article>
+          <span>Runs</span>
+          <strong id="metric-runs">0</strong>
+        </article>
+        <article>
+          <span>Nodes</span>
+          <strong id="metric-nodes">0</strong>
+        </article>
+        <article>
+          <span>Edges</span>
+          <strong id="metric-edges">0</strong>
+        </article>
+        <article>
+          <span>Approvals</span>
+          <strong id="metric-approvals">0</strong>
+        </article>
+        <article>
+          <span>Findings</span>
+          <strong id="metric-findings">0</strong>
+        </article>
+        <article>
+          <span>Feedback</span>
+          <strong id="metric-feedback">0</strong>
+        </article>
+      </section>
+
+      <section class="grid two">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Graph</h2>
+            <span id="graph-run-label">no run</span>
+          </div>
+          <div class="graph-area">
+            <div>
+              <h3>Nodes</h3>
+              <ul id="nodes" class="compact-list"></ul>
+            </div>
+            <div>
+              <h3>Approved Edges</h3>
+              <ul id="edges" class="compact-list"></ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Approvals</h2>
+            <span id="approval-count">0 pending</span>
+          </div>
+          <ul id="approvals" class="review-list"></ul>
+        </article>
+      </section>
+
+      <section class="grid three">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Findings</h2>
+            <span id="finding-count">0 open</span>
+          </div>
+          <ul id="findings" class="compact-list"></ul>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Replay Diff</h2>
+            <span id="replay-label">not run</span>
+          </div>
+          <pre id="replay-diff">[]</pre>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Eval Candidates</h2>
+            <span id="eval-count">0 groups</span>
+          </div>
+          <ul id="eval-candidates" class="compact-list"></ul>
+        </article>
+      </section>
+    </main>
+
+    <script src="/ui/app.js" defer></script>
+  </body>
+</html>
