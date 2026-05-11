@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `6d5cce8 Add trusted proxy rehearsal runner`
 - `c499394 Add model gateway rehearsal runner`
 - `8b80d0f Add company source rehearsal runner`
 - `91b1d1e Add load smoke to full stack rehearsal`
@@ -59,7 +60,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25684450778` for `c499394`: completed successfully
+- GitHub Actions `CI` run `25684690465` for `6d5cce8`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
