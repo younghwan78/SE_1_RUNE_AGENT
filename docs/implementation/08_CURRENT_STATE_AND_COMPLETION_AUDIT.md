@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `149bb81 Require observability staging evidence`
 - `7ac8a0a Refresh audit after observability assets`
 - `2e530f3 Add observability deployment assets`
 - `405a0bb Require masked restricted model requests`
@@ -147,7 +148,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25697689042` for `7ac8a0a`: completed successfully
+- GitHub Actions `CI` run `25697872197` for `149bb81`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
