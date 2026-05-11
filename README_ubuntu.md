@@ -249,6 +249,13 @@ Validate that PostgreSQL typed mirror specs still match packaged migration DDL:
 uv run python ops/rehearsal/validate_postgres_typed_mirrors.py
 ```
 
+Validate that every packaged PostgreSQL migration has a rollback script covering
+its created tables:
+
+```bash
+uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py
+```
+
 After real staging rehearsals, run:
 
 ```bash
