@@ -128,6 +128,8 @@ def test_load_manual_evidence_from_json(tmp_path) -> None:  # type: ignore[no-un
         """
         {
           "schema_version": "v1",
+          "reviewed_by": "release-owner@example.com",
+          "reviewed_at": "2026-05-12T00:00:00Z",
           "checks": [
             {
               "check_id": "local_regression_gates",
@@ -146,6 +148,84 @@ def test_load_manual_evidence_from_json(tmp_path) -> None:  # type: ignore[no-un
     assert len(evidence) == 1
     assert evidence[0].check_id == "local_regression_gates"
     assert evidence[0].status == "passed"
+
+
+def test_load_manual_evidence_rejects_passed_without_review_metadata(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text(
+        """
+        {
+          "schema_version": "v1",
+          "checks": [
+            {
+              "check_id": "company_postgres_rehearsal",
+              "status": "passed",
+              "summary": "Reviewed staging run passed.",
+              "evidence": ["staging-ci:postgres:run-1"]
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="reviewed_by"):
+        checker.load_manual_evidence(evidence_path)
+
+
+def test_load_manual_evidence_rejects_passed_todo_review_metadata(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text(
+        """
+        {
+          "schema_version": "v1",
+          "reviewed_by": "TODO: release owner email",
+          "reviewed_at": "2026-05-12T00:00:00Z",
+          "checks": [
+            {
+              "check_id": "company_postgres_rehearsal",
+              "status": "passed",
+              "summary": "Reviewed staging run passed.",
+              "evidence": ["staging-ci:postgres:run-1"]
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="reviewed_by cannot contain TODO"):
+        checker.load_manual_evidence(evidence_path)
+
+
+def test_load_manual_evidence_allows_failed_template_metadata(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text(
+        """
+        {
+          "schema_version": "v1",
+          "reviewed_by": "TODO: release owner email",
+          "reviewed_at": "TODO: ISO-8601 UTC timestamp",
+          "checks": [
+            {
+              "check_id": "company_postgres_rehearsal",
+              "status": "failed",
+              "summary": "TODO: replace after staging run.",
+              "evidence": ["TODO: attach reviewed CI run id"]
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    evidence = checker.load_manual_evidence(evidence_path)
+
+    assert len(evidence) == 1
+    assert evidence[0].status == "failed"
 
 
 def test_load_manual_evidence_rejects_passed_todo_placeholder(tmp_path) -> None:  # type: ignore[no-untyped-def]

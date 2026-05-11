@@ -141,7 +141,26 @@ def load_manual_evidence(path: Path) -> list[ManualEvidence]:
                 evidence=evidence,
             )
         )
+    _validate_review_metadata(payload, records)
     return records
+
+
+def _validate_review_metadata(
+    payload: Mapping[str, Any],
+    records: Sequence[ManualEvidence],
+) -> None:
+    if not any(record.status == "passed" for record in records):
+        return
+    for field_name in ("reviewed_by", "reviewed_at"):
+        value = payload.get(field_name)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(
+                f"{field_name} must be a non-empty string when passed manual evidence is present"
+            )
+        if _contains_todo_placeholder([value]):
+            raise ValueError(
+                f"{field_name} cannot contain TODO when passed manual evidence is present"
+            )
 
 
 def build_manual_evidence_template(env: Mapping[str, str]) -> dict[str, Any]:
