@@ -10,6 +10,9 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `ab21131 Validate readiness example evidence arrays`
+- `72f103a Tighten readiness evidence example validation`
+- `e843b48 Reject duplicate readiness evidence checks`
 - `81f05c5 Tighten readiness evidence pass validation`
 - `6dd7410 Require UTC readiness review timestamps`
 - `f3fd0ee Require reviewed readiness evidence metadata`
@@ -124,7 +127,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25694371326` for `81f05c5`: completed successfully
+- GitHub Actions `CI` run `25694929143` for `ab21131`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
