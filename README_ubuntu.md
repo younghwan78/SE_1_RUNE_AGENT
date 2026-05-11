@@ -226,10 +226,18 @@ restore, and load-test targets. Use `--run-local-gates` on a development or
 staging host when you want it to execute the local regression command list. The
 release gate passes only when there are no failed, warning, or manual-required
 checks.
-After real staging rehearsals, copy
-`ops/rehearsal/production_readiness_evidence.example.json` outside the repo,
-replace the placeholder evidence references with reviewed CI/artifact IDs, and
-run:
+
+Generate a review-safe evidence template from the currently unresolved manual
+gates:
+
+```bash
+uv run python ops/rehearsal/check_production_readiness.py \
+  --write-evidence-template /secure/path/production_readiness_evidence.json
+```
+
+The generated template intentionally marks every unresolved gate as `failed`
+until a release owner replaces the TODO fields with reviewed CI/artifact IDs or
+approval records. After real staging rehearsals, run:
 
 ```bash
 uv run python ops/rehearsal/check_production_readiness.py \

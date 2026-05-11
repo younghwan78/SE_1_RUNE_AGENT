@@ -137,6 +137,32 @@ def load_manual_evidence(path: Path) -> list[ManualEvidence]:
     return records
 
 
+def build_manual_evidence_template(env: Mapping[str, str]) -> dict[str, Any]:
+    """Build a review-safe template for unresolved manual production gates."""
+    report = build_readiness_report(env)
+    checks = [
+        {
+            "check_id": check["check_id"],
+            "status": "failed",
+            "summary": (
+                "TODO: replace after completing and reviewing this gate. "
+                f"Required action: {check.get('next_action') or check['summary']}"
+            ),
+            "evidence": [
+                "TODO: attach reviewed CI run id, artifact reference, or approval record"
+            ],
+        }
+        for check in report["checks"]
+        if check["status"] == "manual_required"
+    ]
+    return {
+        "schema_version": "v1",
+        "reviewed_by": "TODO: release owner email or approval record",
+        "reviewed_at": "TODO: ISO-8601 UTC timestamp",
+        "checks": checks,
+    }
+
+
 def _environment_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
     return [
         _expect_mode(
@@ -533,7 +559,27 @@ def main() -> int:
         default=None,
         help="Optional reviewed manual-gate evidence JSON file.",
     )
+    parser.add_argument(
+        "--write-evidence-template",
+        type=Path,
+        default=None,
+        help=(
+            "Write a review-safe manual evidence template for unresolved "
+            "company/staging gates. Use '-' to print to stdout."
+        ),
+    )
     args = parser.parse_args()
+    if args.write_evidence_template is not None:
+        template = build_manual_evidence_template(os.environ)
+        template_json = json.dumps(template, indent=2, sort_keys=True)
+        if str(args.write_evidence_template) == "-":
+            print(template_json)
+        else:
+            args.write_evidence_template.write_text(
+                template_json + "\n",
+                encoding="utf-8",
+            )
+        return 0
     manual_evidence = load_manual_evidence(args.evidence_file) if args.evidence_file else []
     report = build_readiness_report(
         os.environ,

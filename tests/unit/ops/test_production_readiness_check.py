@@ -146,6 +146,30 @@ def test_load_manual_evidence_from_json(tmp_path) -> None:  # type: ignore[no-un
     assert evidence[0].status == "passed"
 
 
+def test_manual_evidence_template_only_contains_unresolved_manual_gates() -> None:
+    checker = _load_checker_module()
+
+    template = checker.build_manual_evidence_template({})
+
+    check_ids = {check["check_id"] for check in template["checks"]}
+    assert "postgres_state_store" not in check_ids
+    assert "company_postgres_rehearsal" in check_ids
+    assert "local_regression_gates" in check_ids
+    assert "kubernetes_helm_rehearsal" not in check_ids
+    assert {check["status"] for check in template["checks"]} == {"failed"}
+    assert "TODO:" in str(template)
+    assert "secret" not in str(template)
+
+
+def test_manual_evidence_template_includes_helm_gate_when_kubernetes_selected() -> None:
+    checker = _load_checker_module()
+
+    template = checker.build_manual_evidence_template({"DEPLOYMENT_TARGET": "kubernetes"})
+
+    check_ids = {check["check_id"] for check in template["checks"]}
+    assert "kubernetes_helm_rehearsal" in check_ids
+
+
 def test_readiness_report_passes_with_complete_env_and_reviewed_evidence() -> None:
     checker = _load_checker_module()
 
