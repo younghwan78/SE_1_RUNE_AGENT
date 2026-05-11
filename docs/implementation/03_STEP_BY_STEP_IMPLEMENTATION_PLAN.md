@@ -558,6 +558,7 @@ Dummy 검증:
 - local artifact store, trace repository, replay diff skeleton
 - SQLite state store for local persistence validation
 - PostgreSQL state repository and package migration foundation
+- typed PostgreSQL core table migration and mirror upsert foundation
 - dummy model gateway and dummy source adapter
 - export-file adapters for JIRA, Confluence, and restricted decision/email sources
 - ingestion normalization, masking, chunking, evidence span path
@@ -573,7 +574,7 @@ Dummy 검증:
 
 아직 production 전환 전 남은 축:
 
-- production-grade typed PostgreSQL table repositories beyond the current JSONB state foundation
+- production-grade typed PostgreSQL read repositories and rollback migrations
 - Neo4j backend and Qdrant backend
 - direct production transport implementations behind the source skill/export boundary
 - full debug workbench UX for LLM call payload diff and graph delta side-by-side inspection

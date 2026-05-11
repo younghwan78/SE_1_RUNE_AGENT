@@ -89,9 +89,11 @@ class FakePostgresConnection:
 def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     migrations = load_postgres_migrations()
 
-    assert [migration.version for migration in migrations] == ["001"]
+    assert [migration.version for migration in migrations] == ["001", "002"]
     assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
     assert "JSONB" in migrations[0].sql
+    assert "CREATE TABLE IF NOT EXISTS agent_runs" in migrations[1].sql
+    assert "CREATE TABLE IF NOT EXISTS audit_events" in migrations[1].sql
 
 
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
@@ -112,7 +114,8 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
         payload=run,
     )
 
-    assert fake.migrations == {"001"}
+    assert fake.migrations == {"001", "002"}
+    assert any("insert into agent_runs" in sql for sql in fake.executed_sql)
     stored = store.get("agent_runs", run.run_id)
     assert stored is not None
     assert stored["run_id"] == "run_postgres_1"

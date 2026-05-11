@@ -25,6 +25,191 @@ class PostgresMigration:
     sql: str
 
 
+@dataclass(frozen=True)
+class TypedCollectionSpec:
+    """Mapping from a serialized collection payload to a typed PostgreSQL table."""
+
+    table: str
+    id_column: str
+    columns: tuple[tuple[str, str], ...]
+
+
+TYPED_COLLECTIONS: dict[str, TypedCollectionSpec] = {
+    "agent_runs": TypedCollectionSpec(
+        table="agent_runs",
+        id_column="run_id",
+        columns=(
+            ("run_id", "run_id"),
+            ("project_key", "project_key"),
+            ("run_type", "run_type"),
+            ("status", "status"),
+            ("triggered_by", "triggered_by"),
+            ("trigger_source", "trigger_source"),
+            ("model_profile_id", "model_profile_id"),
+            ("started_at", "started_at"),
+            ("completed_at", "completed_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "agent_step_traces": TypedCollectionSpec(
+        table="agent_step_traces",
+        id_column="step_id",
+        columns=(
+            ("step_id", "step_id"),
+            ("run_id", "run_id"),
+            ("stage_name", "stage_name"),
+            ("status", "status"),
+            ("output_ref", "output_ref"),
+            ("started_at", "started_at"),
+            ("completed_at", "completed_at"),
+            ("retry_count", "retry_count"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "source_artifacts": TypedCollectionSpec(
+        table="source_artifacts",
+        id_column="artifact_id",
+        columns=(
+            ("artifact_id", "artifact_id"),
+            ("source_type", "source_type"),
+            ("external_id", "external_id"),
+            ("project_key", "project_key"),
+            ("title", "title"),
+            ("content_hash", "content_hash"),
+            ("data_classification", "data_classification"),
+            ("updated_at", "updated_at"),
+            ("ingested_at", "ingested_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "artifact_chunks": TypedCollectionSpec(
+        table="artifact_chunks",
+        id_column="chunk_id",
+        columns=(
+            ("chunk_id", "chunk_id"),
+            ("artifact_id", "artifact_id"),
+            ("project_key", "project_key"),
+            ("chunk_index", "index"),
+            ("content_hash", "content_hash"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "graph_nodes": TypedCollectionSpec(
+        table="graph_nodes",
+        id_column="node_id",
+        columns=(
+            ("node_id", "node_id"),
+            ("node_type", "node_type"),
+            ("name", "name"),
+            ("project_key", "project_key"),
+            ("lifecycle_state", "lifecycle_state"),
+            ("created_by", "created_by"),
+            ("confidence_score", "confidence_score"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "candidate_edges": TypedCollectionSpec(
+        table="candidate_edges",
+        id_column="edge_id",
+        columns=(
+            ("edge_id", "edge_id"),
+            ("source_node_id", "source_node_id"),
+            ("target_node_id", "target_node_id"),
+            ("relation", "relation"),
+            ("approval_status", "approval_status"),
+            ("confidence_score", "confidence_score"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "graph_edges": TypedCollectionSpec(
+        table="graph_edges",
+        id_column="edge_id",
+        columns=(
+            ("edge_id", "edge_id"),
+            ("source_node_id", "source_node_id"),
+            ("target_node_id", "target_node_id"),
+            ("relation", "relation"),
+            ("approval_status", "approval_status"),
+            ("approved_by", "approved_by"),
+            ("approved_at", "approved_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "graph_deltas": TypedCollectionSpec(
+        table="graph_deltas",
+        id_column="delta_id",
+        columns=(
+            ("delta_id", "delta_id"),
+            ("project_key", "project_key"),
+            ("created_from_run_id", "created_from_run_id"),
+            ("created_from_step_id", "created_from_step_id"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "approval_items": TypedCollectionSpec(
+        table="approval_items",
+        id_column="approval_id",
+        columns=(
+            ("approval_id", "approval_id"),
+            ("project_key", "project_key"),
+            ("proposal_type", "proposal_type"),
+            ("proposal_ref", "proposal_ref"),
+            ("graph_delta_ref", "graph_delta_ref"),
+            ("status", "status"),
+            ("risk_level", "risk_level"),
+            ("owner_role", "owner_role"),
+            ("created_from_run_id", "created_from_run_id"),
+            ("updated_at", "updated_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "findings": TypedCollectionSpec(
+        table="findings",
+        id_column="finding_id",
+        columns=(
+            ("finding_id", "finding_id"),
+            ("finding_type", "finding_type"),
+            ("severity", "severity"),
+            ("detection_method", "detection_method"),
+            ("approval_status", "approval_status"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "feedback_events": TypedCollectionSpec(
+        table="feedback_events",
+        id_column="feedback_id",
+        columns=(
+            ("feedback_id", "feedback_id"),
+            ("target_type", "target_type"),
+            ("target_id", "target_id"),
+            ("action", "action"),
+            ("user_id", "user_id"),
+            ("user_role", "user_role"),
+            ("reason_code", "reason_code"),
+            ("created_at", "created_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "audit_events": TypedCollectionSpec(
+        table="audit_events",
+        id_column="audit_id",
+        columns=(
+            ("audit_id", "audit_id"),
+            ("action", "action"),
+            ("actor_id", "actor_id"),
+            ("actor_role", "actor_role"),
+            ("project_key", "project_key"),
+            ("target_type", "target_type"),
+            ("target_id", "target_id"),
+            ("outcome", "outcome"),
+            ("reason_code", "reason_code"),
+            ("created_at", "created_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+}
+
+
 def load_postgres_migrations() -> list[PostgresMigration]:
     """Load PostgreSQL migrations in filename order."""
     root = files(MIGRATIONS_PACKAGE)
@@ -129,6 +314,7 @@ class PostgreSQLStateStore:
                     now,
                 ),
             )
+            _upsert_typed_entity(conn, collection, normalized)
 
     def get(self, collection: str, entity_id: str) -> dict[str, Any] | None:
         """Return one serialized entity payload."""
@@ -192,3 +378,24 @@ def _payload_from_row(row: dict[str, Any]) -> dict[str, Any]:
 
 def _split_sql_statements(script: str) -> list[str]:
     return [statement.strip() for statement in script.split(";") if statement.strip()]
+
+
+def _upsert_typed_entity(conn: Any, collection: str, payload: Any) -> None:
+    if not isinstance(payload, dict):
+        return
+    spec = TYPED_COLLECTIONS.get(collection)
+    if spec is None:
+        return
+    columns = [column for column, _payload_key in spec.columns]
+    insert_columns = [*columns, "payload_json"]
+    placeholders = ", ".join(["%s"] * len(insert_columns))
+    assignments = ", ".join(
+        f"{column} = excluded.{column}" for column in insert_columns if column != spec.id_column
+    )
+    sql = (
+        f"INSERT INTO {spec.table} ({', '.join(insert_columns)}) "
+        f"VALUES ({placeholders}) "
+        f"ON CONFLICT({spec.id_column}) DO UPDATE SET {assignments}"
+    )
+    values = [payload.get(payload_key) for _column, payload_key in spec.columns]
+    conn.execute(sql, (*values, Jsonb(payload)))

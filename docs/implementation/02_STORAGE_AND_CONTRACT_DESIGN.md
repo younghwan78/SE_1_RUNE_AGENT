@@ -415,7 +415,10 @@ Artifact store는 raw snapshot, masked payload, stage output, raw LLM response, 
 단, public interface와 Pydantic contract는 production과 동일하게 유지한다.
 
 현재 구현된 PostgreSQL foundation은 `schema_migrations`와 `state_entities` JSONB
-원장을 사용한다. 이는 SQLite state store와 같은 `StateStore` contract를 공유해서
-dummy/local regression을 production persistence path에도 적용하기 위한 1차 단계다.
-이후 production-grade typed table repository는 같은 contract 뒤에서 단계적으로
-추가한다.
+원장을 사용한다. 또한 `agent_runs`, `agent_step_traces`, `source_artifacts`,
+`artifact_chunks`, `graph_nodes`, `candidate_edges`, `graph_edges`, `graph_deltas`,
+`approval_items`, `findings`, `feedback_events`, `audit_events` typed table migration과
+mirror upsert를 제공한다. 이는 SQLite state store와 같은 `StateStore` contract를
+공유해서 dummy/local regression을 production persistence path에도 적용하기 위한
+단계다. 이후 repository는 typed table query/read model과 rollback migration으로
+확장한다.
