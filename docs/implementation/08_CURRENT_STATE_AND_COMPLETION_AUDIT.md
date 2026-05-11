@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `81f05c5 Tighten readiness evidence pass validation`
 - `6dd7410 Require UTC readiness review timestamps`
 - `f3fd0ee Require reviewed readiness evidence metadata`
 - `844b52e Link rollback validator to release blockers`
@@ -123,7 +124,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25694201079` for `6dd7410`: completed successfully
+- GitHub Actions `CI` run `25694371326` for `81f05c5`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
