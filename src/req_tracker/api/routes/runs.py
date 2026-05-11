@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from req_tracker.api.security import require_project, require_role
@@ -53,6 +53,25 @@ def analyze(request: Request, payload: AnalyzeRunRequest) -> dict[str, Any]:
             "approvals": len(result.approvals),
         },
     }
+
+
+@router.get("/runs")
+def list_runs(
+    request: Request,
+    project_key: str | None = Query(default=None),
+) -> list[dict[str, Any]]:
+    """Return project-visible run summaries."""
+    user = require_role(request, "viewer")
+    runtime = request.app.state.runtime
+    runs = sorted(runtime.traces.runs.values(), key=lambda run: run.started_at, reverse=True)
+    visible_runs = []
+    for run in runs:
+        if project_key is not None and run.project_key != project_key:
+            continue
+        if "*" not in user.project_keys and run.project_key not in user.project_keys:
+            continue
+        visible_runs.append(run.model_dump(mode="json"))
+    return visible_runs
 
 
 @router.get("/runs/{run_id}")

@@ -286,7 +286,10 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
             },
         )
         missing_findings_key = client.get("/api/v1/findings")
+        missing_runs_key = client.get("/api/v1/runs")
         viewer_findings = client.get("/api/v1/findings", headers=viewer_headers)
+        viewer_runs = client.get("/api/v1/runs", headers=viewer_headers)
+        wrong_project_runs = client.get("/api/v1/runs", headers=wrong_project_headers)
         developer_findings = client.get("/api/v1/findings", headers=developer_headers)
         wrong_project_findings = client.get("/api/v1/findings", headers=wrong_project_headers)
         missing_schedule_key = client.get("/api/v1/schedule")
@@ -316,7 +319,12 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
 
     assert run.status_code == 200
     assert missing_findings_key.status_code == 401
+    assert missing_runs_key.status_code == 401
     assert viewer_findings.status_code == 403
+    assert viewer_runs.status_code == 200
+    assert any(run["run_id"] == "run_query_auth" for run in viewer_runs.json())
+    assert wrong_project_runs.status_code == 200
+    assert wrong_project_runs.json() == []
     assert developer_findings.status_code == 200
     assert wrong_project_findings.status_code == 200
     assert wrong_project_findings.json() == []

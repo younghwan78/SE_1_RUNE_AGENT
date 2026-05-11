@@ -18,6 +18,11 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
     assert counts["nodes"] == 10
     assert counts["approvals"] >= 1
 
+    runs = client.get("/api/v1/runs?project_key=RUNE_CAM_ALPHA")
+    assert runs.status_code == 200
+    assert runs.json()[0]["run_id"] == "run_api_1"
+    assert runs.json()[0]["project_key"] == "RUNE_CAM_ALPHA"
+
     steps = client.get("/api/v1/runs/run_api_1/steps")
     assert steps.status_code == 200
     assert {step["stage_name"] for step in steps.json()} >= {
