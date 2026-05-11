@@ -115,6 +115,7 @@ Current local implementation:
 - ontology graph view with pending/approved edge projection
 - traceability chain, run debug workbench, and audit events panel
 - debug side-by-side panes for LLM payloads and graph delta previews
+- debug artifact store root access policy with blocked-read audit events
 - periodic analysis scheduler for server operation
 
 Enable local SQLite persistence:

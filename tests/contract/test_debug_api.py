@@ -51,6 +51,18 @@ def test_debug_run_summary_requires_existing_run(client: TestClient) -> None:
     assert diff_view.status_code == 404
 
 
+def test_debug_artifact_read_blocks_paths_outside_store(client: TestClient, tmp_path) -> None:  # type: ignore[no-untyped-def]
+    outside = tmp_path / "outside.json"
+    outside.write_text("{}", encoding="utf-8")
+
+    response = client.get(f"/api/v1/debug/artifact?artifact_ref={quote(str(outside))}")
+
+    assert response.status_code == 403
+    audit = client.get("/api/v1/audit/events?action=debug_artifact_read")
+    assert audit.json()[0]["outcome"] == "blocked"
+    assert audit.json()[0]["reason_code"] == "artifact_ref_outside_store"
+
+
 def test_debug_approval_lineage_links_run_step_delta_feedback_and_audit(
     client: TestClient,
 ) -> None:

@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from req_tracker.api.security import require_role
+from req_tracker.debug.artifacts import ArtifactAccessError
 
 router = APIRouter(tags=["debug"])
 
@@ -170,6 +171,20 @@ def read_debug_artifact(
     runtime = request.app.state.runtime
     try:
         artifact = runtime.artifact_store.read_json(artifact_ref)
+    except ArtifactAccessError as exc:
+        runtime.audit.record(
+            action="debug_artifact_read",
+            actor_id="local_debugger",
+            actor_role="developer",
+            project_key=None,
+            target_type="debug_artifact",
+            target_id=artifact_ref,
+            outcome="blocked",
+            reason_code="artifact_ref_outside_store",
+            metadata={"artifact_ref": artifact_ref},
+        )
+        runtime.persist_approval_state()
+        raise HTTPException(status_code=403, detail="artifact ref outside store") from exc
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail="artifact not found") from exc
     runtime.audit.record(
@@ -190,7 +205,7 @@ def _read_optional_artifact(runtime: Any, artifact_ref: str | None) -> Any:
         return None
     try:
         return runtime.artifact_store.read_json(artifact_ref)
-    except FileNotFoundError:
+    except (ArtifactAccessError, FileNotFoundError):
         return None
 
 

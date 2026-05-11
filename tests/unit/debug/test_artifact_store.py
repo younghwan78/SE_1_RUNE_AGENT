@@ -1,6 +1,8 @@
 """Local artifact store tests."""
 
-from req_tracker.debug.artifacts import LocalArtifactStore
+import pytest
+
+from req_tracker.debug.artifacts import ArtifactAccessError, LocalArtifactStore
 
 
 def test_write_and_read_json_round_trip(tmp_path) -> None:  # type: ignore[no-untyped-def]
@@ -21,3 +23,11 @@ def test_same_payload_hash_is_stable(tmp_path) -> None:  # type: ignore[no-untyp
     second = store.write_json("run_001", "b", {"a": 2, "b": 1})
     assert first.content_hash == second.content_hash
 
+
+def test_read_json_blocks_paths_outside_store(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    store = LocalArtifactStore(tmp_path / "artifacts")
+    outside = tmp_path / "outside.json"
+    outside.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(ArtifactAccessError):
+        store.read_json(str(outside))
