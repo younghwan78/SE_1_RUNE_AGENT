@@ -34,6 +34,8 @@ def test_dummy_analysis_creates_findings_and_approvals(tmp_path) -> None:  # typ
     assert graph.approved_edges() == []
     assert result.run.model_profile_id == "dummy-local"
     assert result.run.prompt_version_ids == ["pv_edge_linking_v1"]
+    assert len(result.run.input_snapshot_ids) == len(result.artifacts)
+    assert result.run.input_snapshot_ids[0].startswith("src_")
     assert len(workflow.traces.llm_calls) == 1
     assert list(workflow.traces.llm_calls.values())[0].validation_status == "passed"
 

@@ -112,6 +112,10 @@ class LocalAnalysisWorkflow:
             input_payload=fetch.model_dump(mode="json"),
         )
         artifacts = [normalize_raw_artifact(raw) for raw in fetch.artifacts]
+        self._record_input_snapshots(
+            run_id=run_id,
+            input_snapshot_ids=[artifact.artifact_id for artifact in artifacts],
+        )
         evidence_by_external = {
             raw.external_id: build_artifact_evidence(artifact.artifact_id, raw)
             for raw, artifact in zip(fetch.artifacts, artifacts, strict=True)
@@ -347,4 +351,10 @@ class LocalAnalysisWorkflow:
                 "model_profile_id": model_profile_id,
                 "prompt_version_ids": prompt_ids,
             }
+        )
+
+    def _record_input_snapshots(self, *, run_id: str, input_snapshot_ids: list[str]) -> None:
+        run = self.traces.runs[run_id]
+        self.traces.runs[run_id] = run.model_copy(
+            update={"input_snapshot_ids": list(dict.fromkeys(input_snapshot_ids))}
         )

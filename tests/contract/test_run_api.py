@@ -13,6 +13,7 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
         },
     )
     assert response.status_code == 200
+    assert response.json()["run"]["input_snapshot_ids"]
     counts = response.json()["counts"]
     assert counts["nodes"] == 10
     assert counts["approvals"] >= 1
