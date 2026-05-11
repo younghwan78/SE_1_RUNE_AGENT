@@ -29,7 +29,7 @@ Latest GitHub verification:
 | Requirement | Current evidence | Status |
 | --- | --- | --- |
 | Production plan is the source of truth | `PRODUCTION_EXECUTION_PLAN.md`, `docs/implementation/03_STEP_BY_STEP_IMPLEMENTATION_PLAN.md` | Complete |
-| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design and export path complete; live source access pending |
+| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design and export path complete; JIRA REST foundation complete; Confluence/Email live access pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider and policy | Local dummy complete; real provider profiles pending |
@@ -65,7 +65,7 @@ Latest GitHub verification:
 
 ### P2: JIRA Production Connector
 
-- Implement live JIRA connector behind the source adapter contract.
+- Run JIRA connector against a disposable or sandbox JIRA project.
 - Keep MCP/REST/export selection inside Claude Code source skills and local
   config, not in core Python workflow code.
 - Add sync cursor, rate limit, retry, permission mapping, and partial failure

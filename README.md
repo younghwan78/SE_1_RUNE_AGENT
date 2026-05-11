@@ -118,6 +118,10 @@ $env:QDRANT_COLLECTION="rune_chunks"
 uv run uvicorn req_tracker.api.app:app --host 127.0.0.1 --port 8000
 ```
 
+JIRA source access remains behind `.claude/skills/rune-source-jira/`. The
+application provides a `JiraRestSourceAdapter` for company-approved REST
+transport, while MCP tool names and credentials stay outside core code.
+
 Enable PostgreSQL persistence:
 
 ```powershell

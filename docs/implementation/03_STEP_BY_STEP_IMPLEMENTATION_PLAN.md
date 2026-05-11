@@ -562,6 +562,7 @@ Dummy 검증:
 - typed PostgreSQL core table migration, mirror upsert, read path, and rollback foundation
 - dummy model gateway and dummy source adapter
 - export-file adapters for JIRA, Confluence, and restricted decision/email sources
+- JIRA REST source adapter foundation behind the shared `SourceAdapter` contract
 - ingestion normalization, masking, chunking, evidence span path
 - deterministic node extraction, source-link edge candidate generation, findings rules
 - graph/vector backend protocols for production backend replacement
