@@ -19,4 +19,12 @@ class ModelPolicy:
                 f"data classification '{request.data_classification}' is not allowed for "
                 f"model profile '{profile.model_profile_id}'"
             )
-
+        if request.data_classification in {"restricted", "confidential"}:
+            if not request.masking_applied:
+                raise ModelPolicyError(
+                    f"data classification '{request.data_classification}' requires masking"
+                )
+            if not request.access_checked:
+                raise ModelPolicyError(
+                    f"data classification '{request.data_classification}' requires access check"
+                )

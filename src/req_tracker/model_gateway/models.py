@@ -62,6 +62,8 @@ class ModelRequest(GatewayModel):
     prompt_version_id: str
     payload: dict[str, Any]
     data_classification: str
+    masking_applied: bool = False
+    access_checked: bool = False
     schema_version: str = SCHEMA_VERSION
 
 
@@ -84,4 +86,3 @@ class StructuredValidationResult(GatewayModel):
     error_message: str | None = None
     repaired_output: dict[str, Any] | None = None
     schema_version: str = SCHEMA_VERSION
-

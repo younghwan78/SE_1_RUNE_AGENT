@@ -145,6 +145,46 @@ def test_model_policy_blocks_disallowed_data_class() -> None:
         client.complete(run_id="run_001", step_id="step_001", request=request)
 
 
+def test_model_policy_requires_masking_and_access_for_restricted_payloads() -> None:
+    client = ModelGatewayClient(
+        provider=DummyModelProvider(fixtures={"valid": {"node_id": "node_001"}}),
+        profile=profile(),
+        prompt=prompt(),
+    )
+    unmasked_request = ModelRequest(
+        model_profile_id="dummy-fast",
+        prompt_version_id="pv_node_v1",
+        payload={"fixture_name": "valid", "text": "restricted project source"},
+        data_classification="restricted",
+    )
+    masked_without_access = unmasked_request.model_copy(update={"masking_applied": True})
+    allowed_request = unmasked_request.model_copy(
+        update={"masking_applied": True, "access_checked": True}
+    )
+
+    with pytest.raises(ModelPolicyError, match="requires masking"):
+        client.complete(
+            run_id="run_restricted",
+            step_id="step_restricted",
+            request=unmasked_request,
+        )
+    with pytest.raises(ModelPolicyError, match="requires access check"):
+        client.complete(
+            run_id="run_restricted",
+            step_id="step_restricted",
+            request=masked_without_access,
+        )
+
+    response, _parsed, validation = client.complete(
+        run_id="run_restricted",
+        step_id="step_restricted",
+        request=allowed_request,
+    )
+
+    assert validation.status == "passed"
+    assert response.output == {"node_id": "node_001"}
+
+
 def test_dummy_gateway_records_timeout_failure() -> None:
     traces = InMemoryTraceRepository()
     client = ModelGatewayClient(

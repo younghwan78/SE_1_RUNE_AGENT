@@ -386,6 +386,8 @@ class LocalAnalysisWorkflow:
                 "candidate_edge_ids": [edge.edge_id for edge in edges],
             },
             data_classification="restricted",
+            masking_applied=True,
+            access_checked=True,
         )
         _response, parsed, validation = client.complete(
             run_id=run_id,
