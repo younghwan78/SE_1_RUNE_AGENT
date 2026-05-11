@@ -13,6 +13,7 @@ from req_tracker.debug.hash import stable_hash
 from req_tracker.feedback.models import FeedbackAction, FeedbackEvent
 from req_tracker.graph.base import GraphBackend
 from req_tracker.ontology.models import TraceabilityEdge
+from req_tracker.reasoning.scoring import approval_risk_for_edge
 
 
 class ApprovalService:
@@ -57,7 +58,7 @@ class ApprovalService:
                 proposal_type="edge",
                 proposal_ref=edge.edge_id,
                 graph_delta_ref=delta.delta_id,
-                risk_level="medium",
+                risk_level=approval_risk_for_edge(edge),
                 owner_role="System Architect",
                 created_from_run_id=run_id,
                 created_from_step_id=step_id,

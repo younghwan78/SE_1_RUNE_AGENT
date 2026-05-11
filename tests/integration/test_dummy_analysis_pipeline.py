@@ -31,6 +31,12 @@ def test_dummy_analysis_creates_findings_and_approvals(tmp_path) -> None:  # typ
     assert len(result.candidate_edges) >= 6
     assert any(f.finding_type == "conflict" for f in result.findings)
     assert len(result.approvals) == len(result.candidate_edges)
+    assert {approval.risk_level for approval in result.approvals} <= {
+        "low",
+        "medium",
+        "high",
+        "critical",
+    }
     assert graph.approved_edges() == []
     assert result.run.model_profile_id == "dummy-local"
     assert result.run.prompt_version_ids == ["pv_edge_linking_v1"]
