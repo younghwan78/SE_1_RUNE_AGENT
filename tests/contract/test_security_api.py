@@ -301,6 +301,32 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
             "/api/v1/debug/runs",
             headers=wrong_project_headers,
         )
+        viewer_steps = client.get(
+            "/api/v1/runs/run_query_auth/steps",
+            headers=viewer_headers,
+        )
+        developer_steps = client.get(
+            "/api/v1/runs/run_query_auth/steps",
+            headers=developer_headers,
+        )
+        viewer_graph_delta = client.get(
+            "/api/v1/runs/run_query_auth/graph-delta",
+            headers=viewer_headers,
+        )
+        developer_graph_delta = client.get(
+            "/api/v1/runs/run_query_auth/graph-delta",
+            headers=developer_headers,
+        )
+        viewer_replay = client.post(
+            "/api/v1/runs/run_query_auth/replay",
+            headers=viewer_headers,
+            json={"replay_run_id": "replay_viewer_blocked"},
+        )
+        developer_replay = client.post(
+            "/api/v1/runs/run_query_auth/replay",
+            headers=developer_headers,
+            json={"replay_run_id": "replay_developer_allowed"},
+        )
         configured = client.put(
             "/api/v1/schedule",
             headers=operator_headers,
@@ -336,6 +362,12 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
     assert len(developer_debug_runs.json()) == 1
     assert wrong_project_debug_runs.status_code == 200
     assert wrong_project_debug_runs.json() == []
+    assert viewer_steps.status_code == 403
+    assert developer_steps.status_code == 200
+    assert viewer_graph_delta.status_code == 403
+    assert developer_graph_delta.status_code == 200
+    assert viewer_replay.status_code == 403
+    assert developer_replay.status_code == 200
     assert configured.status_code == 200
     assert any(
         event["action"] == "schedule_configured"

@@ -93,7 +93,7 @@ def get_steps(request: Request, run_id: str) -> list[dict[str, Any]]:
     run = runtime.traces.runs.get(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="run not found")
-    require_project(request, run.project_key)
+    require_project(request, run.project_key, "developer")
     return [step.model_dump(mode="json") for step in runtime.traces.list_steps(run_id)]
 
 
@@ -141,7 +141,7 @@ def get_graph_delta(request: Request, run_id: str) -> list[dict[str, Any]]:
     run = runtime.traces.runs.get(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="run not found")
-    require_project(request, run.project_key)
+    require_project(request, run.project_key, "developer")
     return [
         delta.model_dump(mode="json")
         for delta in runtime.approvals.deltas.values()
@@ -157,7 +157,7 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
     if run_id not in runtime.analyses:
         raise HTTPException(status_code=404, detail="run not found")
     source = runtime.analyses[run_id]
-    require_project(request, source.run.project_key)
+    require_project(request, source.run.project_key, "developer")
     replay_run_id = payload.replay_run_id or settings.new_id("replay")
     result = ReplayService(runtime.workflow(), runtime.analyses).replay(
         source_run_id=run_id,
