@@ -480,6 +480,48 @@ class RuntimeState(BaseModel):
             payload=result,
         )
 
+    def persist_replay_analysis_trace(self, result: AnalysisResult) -> None:
+        """Persist replay run traces without mutating operational graph state."""
+        if self.state_store is None:
+            return
+        project_key = result.run.project_key
+        self.state_store.upsert(
+            collection="agent_runs",
+            entity_id=result.run.run_id,
+            project_key=project_key,
+            payload=result.run,
+        )
+        for step in result.steps:
+            self.state_store.upsert(
+                collection="agent_step_traces",
+                entity_id=step.step_id,
+                project_key=project_key,
+                payload=step,
+            )
+        for llm_call in self.traces.llm_calls.values():
+            if llm_call.run_id != result.run.run_id:
+                continue
+            self.state_store.upsert(
+                collection="llm_call_traces",
+                entity_id=llm_call.llm_call_id,
+                project_key=project_key,
+                payload=llm_call,
+            )
+        for artifact in result.artifacts:
+            self.state_store.upsert(
+                collection="source_artifacts",
+                entity_id=artifact.artifact_id,
+                project_key=project_key,
+                payload=artifact,
+            )
+        for chunk in result.chunks:
+            self.state_store.upsert(
+                collection="artifact_chunks",
+                entity_id=chunk.chunk_id,
+                project_key=project_key,
+                payload=chunk,
+            )
+
     def record_idempotency_result(
         self,
         *,

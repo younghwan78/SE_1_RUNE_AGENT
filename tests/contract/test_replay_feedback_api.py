@@ -15,8 +15,22 @@ def test_replay_and_feedback_eval_api(client: TestClient) -> None:
     assert replay.status_code == 200
     replay_run = client.get("/api/v1/runs/replay_rf_1")
     assert replay_run.status_code == 200
+    assert replay_run.json()["run_type"] == "replay"
     assert replay_run.json()["triggered_by"] == "replay"
     assert replay_run.json()["trigger_source"] == "system"
+    audit = client.get("/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
+    replay_audit = [
+        event for event in audit.json() if event["target_id"] == "replay_rf_1"
+    ]
+    assert {event["action"] for event in replay_audit} == {
+        "run_started",
+        "run_completed",
+    }
+    completed_replay_audit = next(
+        event for event in replay_audit if event["action"] == "run_completed"
+    )
+    assert completed_replay_audit["metadata"]["run_type"] == "replay"
+    assert completed_replay_audit["metadata"]["source_run_id"] == "run_rf_1"
     diff = replay.json()["diff"]
     assert diff["node_diff"]["added"] == []
     assert diff["edge_diff"]["removed"] == []

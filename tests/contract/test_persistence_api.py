@@ -138,12 +138,15 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
         restored_improvements = client.get("/api/v1/improvements/candidates")
         llm_calls = client.get("/api/v1/runs/run_restore_1/llm-calls")
         steps = client.get("/api/v1/runs/run_restore_1/steps")
+        replay_steps = client.get("/api/v1/runs/replay_restore_1/steps")
         replay_diff = client.get("/api/v1/replays/replay_restore_1/diff")
         findings = client.get("/api/v1/findings")
         finding_detail = client.get(f"/api/v1/findings/{finding['finding_id']}")
 
     assert runs.status_code == 200
-    assert runs.json()[0]["run_id"] == "run_restore_1"
+    restored_runs = {run["run_id"]: run for run in runs.json()}
+    assert restored_runs["run_restore_1"]["run_type"] == "analysis"
+    assert restored_runs["replay_restore_1"]["run_type"] == "replay"
     assert graph.status_code == 200
     assert graph.json()["counts"]["visible_approved_edges"] == 1
     assert approvals.status_code == 200
@@ -156,6 +159,10 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     )
     assert restored_llm_step["retrieval_context_ref"] == "candidate_edges"
     assert restored_llm_step["validation_result"]["status"] == "passed"
+    assert replay_steps.status_code == 200
+    assert any(
+        step["stage_name"] == "llm_assisted_reasoning" for step in replay_steps.json()
+    )
     assert replay_diff.status_code == 200
     assert replay_diff.json()["source_run_id"] == "run_restore_1"
     assert replay_diff.json()["replay_run_id"] == "replay_restore_1"
@@ -178,10 +185,19 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
         "finding_status_changed",
     }
     restored_run_started = next(
-        event for event in audit.json() if event["action"] == "run_started"
+        event
+        for event in audit.json()
+        if event["action"] == "run_started" and event["target_id"] == "run_restore_1"
     )
     assert restored_run_started["metadata"]["run_type"] == "analysis"
     assert restored_run_started["metadata"]["trigger_source"] == "api"
+    restored_replay_completed = next(
+        event
+        for event in audit.json()
+        if event["action"] == "run_completed" and event["target_id"] == "replay_restore_1"
+    )
+    assert restored_replay_completed["metadata"]["run_type"] == "replay"
+    assert restored_replay_completed["metadata"]["source_run_id"] == "run_restore_1"
     assert activation_audit.status_code == 200
     assert activation_audit.json()[0]["action"] == "prompt_version_activated"
     assert rollback_audit.status_code == 200

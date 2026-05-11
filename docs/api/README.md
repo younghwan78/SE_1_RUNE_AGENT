@@ -46,6 +46,9 @@ runs even when a later stage needs failure triage.
 If a run raises during execution, the runtime marks the run as `failed`, stores
 `failure_code` and `failure_message`, and records a failed `run_completed`
 audit event before re-raising the error to the API layer.
+Replay executions are stored as `run_type="replay"` with their own audit
+boundary events and restart-safe run/step/LLM traces. Replay trace persistence
+does not overwrite reviewed operational findings or graph state.
 
 Run step responses include step-level `retrieval_context_ref`,
 `validation_status`, and `validation_result` fields so debug screens can show

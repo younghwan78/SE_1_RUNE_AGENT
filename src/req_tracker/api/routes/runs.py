@@ -260,14 +260,51 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
     if idempotency.cached_response is not None:
         return idempotency.cached_response
     replay_run_id = payload.replay_run_id or settings.new_id("replay")
-    result = ReplayService(runtime.workflow(), runtime.analyses).replay(
-        source_run_id=run_id,
-        replay_run_id=replay_run_id,
+    runtime._record_run_started(
+        run_id=replay_run_id,
         project_key=source.run.project_key,
         scenario=payload.scenario,
-        replay_mode=payload.replay_mode,
+        run_type="replay",
+        triggered_by="replay",
+        trigger_source="system",
     )
+    try:
+        result = ReplayService(runtime.workflow(), runtime.analyses).replay(
+            source_run_id=run_id,
+            replay_run_id=replay_run_id,
+            project_key=source.run.project_key,
+            scenario=payload.scenario,
+            replay_mode=payload.replay_mode,
+        )
+    except Exception as exc:
+        runtime._record_run_failed(
+            run_id=replay_run_id,
+            project_key=source.run.project_key,
+            scenario=payload.scenario,
+            run_type="replay",
+            triggered_by="replay",
+            trigger_source="system",
+            exc=exc,
+        )
+        raise
+    completed_event = runtime.audit.record(
+        action="run_completed",
+        actor_id="replay",
+        actor_role="system",
+        project_key=source.run.project_key,
+        target_type="run",
+        target_id=replay_run_id,
+        metadata={
+            "scenario": payload.scenario,
+            "run_type": "replay",
+            "trigger_source": "system",
+            "source_run_id": run_id,
+            "replay_mode": payload.replay_mode,
+        },
+    )
+    runtime._persist_audit_event(completed_event)
     runtime.replays[replay_run_id] = result
+    runtime.persist_replay_analysis_trace(runtime.analyses[replay_run_id])
     runtime.persist_replay_result(result)
     response = result.model_dump(mode="json")
     record_idempotency_response(

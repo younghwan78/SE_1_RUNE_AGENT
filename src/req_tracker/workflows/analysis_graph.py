@@ -7,7 +7,7 @@ from req_tracker.adapters.dummy.adapter import DummySourceAdapter
 from req_tracker.approvals.models import ApprovalItem
 from req_tracker.approvals.service import ApprovalService
 from req_tracker.debug.artifacts import LocalArtifactStore
-from req_tracker.debug.models import AgentRun, AgentStepTrace, TriggerSource
+from req_tracker.debug.models import AgentRun, AgentStepTrace, RunType, TriggerSource
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.evidence.spans import build_artifact_evidence
 from req_tracker.findings.rules import analyze_findings
@@ -132,11 +132,12 @@ class LocalAnalysisWorkflow:
         scenario: str = "RUNE_CAM_ALPHA",
         triggered_by: str = "local",
         trigger_source: TriggerSource = "manual",
+        run_type: RunType = "analysis",
     ) -> AnalysisResult:
         """Run source fetch through approval staging."""
         self.traces.create_run(
             run_id=run_id,
-            run_type="analysis",
+            run_type=run_type,
             project_key=project_key,
             triggered_by=triggered_by,
             trigger_source=trigger_source,
