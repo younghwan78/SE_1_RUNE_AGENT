@@ -8,6 +8,7 @@ from time import perf_counter
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
 
+from req_tracker.adapters.factory import create_source_adapter
 from req_tracker.api.routes.admin import router as admin_router
 from req_tracker.api.routes.approvals import router as approvals_router
 from req_tracker.api.routes.audit import router as audit_router
@@ -44,6 +45,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     """Create the API application."""
     resolved_settings = settings or get_settings()
     configure_logging(resolved_settings.log_level)
+    source_adapter = create_source_adapter(resolved_settings)
     graph = _create_graph_backend(resolved_settings)
     vector = _create_vector_backend(resolved_settings)
     state_store: StateStore | None = None
@@ -77,6 +79,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         scheduler_lease_manager=state_store
         if isinstance(state_store, PostgreSQLStateStore)
         else None,
+        source_adapter=source_adapter,
     )
 
     @asynccontextmanager

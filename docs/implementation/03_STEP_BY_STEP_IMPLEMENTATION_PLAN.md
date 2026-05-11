@@ -568,6 +568,8 @@ Dummy 검증:
 - restricted decision/email export policy that accepts approved decision sources and skips full-mailbox artifacts
 - JIRA REST source adapter foundation behind the shared `SourceAdapter` contract
 - Confluence REST source adapter foundation behind the shared `SourceAdapter` contract
+- datasource factory and runtime workflow injection for dummy, skill/export, JIRA REST, and Confluence REST modes
+- persisted `source_sync_cursors` snapshots plus debug API for source cursor inspection
 - JIRA/Confluence REST retry, rate-limit, permission-denied, and warning handling foundation
 - local JIRA/Confluence REST source smoke harness for HTTP pagination and permission warnings
 - ingestion normalization, masking, chunking, evidence span path

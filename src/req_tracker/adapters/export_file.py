@@ -25,7 +25,7 @@ class ExportFileSourceAdapter:
         export_path: Path | str,
         export_format: ExportFormat | None = None,
     ) -> None:
-        self.source_type = source_type
+        self.source_type: SourceType = source_type
         self.export_path = Path(export_path)
         self.export_format = export_format or _infer_format(self.export_path)
 

@@ -16,6 +16,7 @@ from req_tracker.adapters.base import (
 )
 from req_tracker.adapters.retry import RetrySleep, parse_retry_after, request_with_retry
 from req_tracker.debug.hash import stable_hash
+from req_tracker.ontology.models import SourceType
 
 ConfluenceTransport = Callable[[str, str, dict[str, str], None], dict[str, Any]]
 
@@ -23,7 +24,7 @@ ConfluenceTransport = Callable[[str, str, dict[str, str], None], dict[str, Any]]
 class ConfluenceRestSourceAdapter:
     """Fetch Confluence pages through REST and normalize them into raw artifacts."""
 
-    source_type = "confluence"
+    source_type: SourceType = "confluence"
 
     def __init__(
         self,

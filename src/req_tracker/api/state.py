@@ -5,7 +5,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from req_tracker.adapters.base import SourceSyncCursorState
+from req_tracker.adapters.base import SourceAdapter, SourceSyncCursorState
+from req_tracker.adapters.dummy.adapter import DummySourceAdapter
 from req_tracker.approvals.models import ApprovalItem, GraphDelta
 from req_tracker.approvals.service import ApprovalService
 from req_tracker.audit.archive import AuditArchiveWriter, LocalAuditArchiveStore
@@ -52,6 +53,7 @@ class RuntimeState(BaseModel):
     registry_activations: dict[str, dict[str, Any]]
     improvement_decisions: dict[str, dict[str, Any]]
     scheduler: RunScheduler
+    source_adapter: Any
     state_store: StateStore | None = None
 
     @classmethod
@@ -65,6 +67,7 @@ class RuntimeState(BaseModel):
         audit_policy: AuditRetentionPolicy | None = None,
         audit_archive_store: AuditArchiveWriter | None = None,
         scheduler_lease_manager: SchedulerLeaseManager | None = None,
+        source_adapter: SourceAdapter | None = None,
     ) -> "RuntimeState":
         """Create a local runtime state."""
         runtime = cls(
@@ -88,6 +91,7 @@ class RuntimeState(BaseModel):
                 schedule_config,
                 lease_manager=scheduler_lease_manager,
             ),
+            source_adapter=source_adapter or DummySourceAdapter(),
             state_store=state_store,
         )
         runtime.restore_from_state_store()
@@ -101,6 +105,7 @@ class RuntimeState(BaseModel):
             graph=self.graph,
             vector=self.vector,
             approvals=self.approvals,
+            source_adapter=self.source_adapter,
         )
 
     def run_analysis(

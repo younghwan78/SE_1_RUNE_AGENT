@@ -33,6 +33,14 @@ Recommended initial server `.env`:
 ```env
 REQ_TRACKER_ENV=production
 DATASOURCE_MODE=dummy
+SOURCE_EXPORT_PATH=
+JIRA_BASE_URL=
+JIRA_TOKEN=
+JIRA_JQL=
+CONFLUENCE_BASE_URL=
+CONFLUENCE_TOKEN=
+CONFLUENCE_SPACE_KEY=
+CONFLUENCE_CQL=
 GRAPH_BACKEND=memory
 NEO4J_URI=
 NEO4J_USERNAME=neo4j
@@ -68,6 +76,10 @@ SCHEDULER_LEASE_TTL_SECONDS=300
 ```
 
 For actual company deployment, keep JIRA, Confluence, and Email credentials outside this repo and expose them through the company-approved Claude Code skill/MCP setup.
+`DATASOURCE_MODE` supports `dummy`, `jira_export`, `confluence_export`,
+`decision_email_export`, `jira_rest`, and `confluence_rest`. Export modes read
+the skill-produced file at `SOURCE_EXPORT_PATH`; REST modes require the matching
+base URL/token settings above.
 
 When using `AUTH_MODE=trusted_proxy`, terminate OIDC/SAML at a company-approved
 reverse proxy and inject `x-rune-user`, `x-rune-groups`, `x-rune-projects`, and

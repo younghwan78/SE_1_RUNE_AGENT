@@ -3,6 +3,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
 from req_tracker.adapters.base import (
+    SourceAdapter,
     SourceFetchResult,
     SourceScope,
     SourceSyncCursorState,
@@ -93,13 +94,14 @@ class LocalAnalysisWorkflow:
         graph: GraphBackend,
         vector: VectorBackend,
         approvals: ApprovalService,
+        source_adapter: SourceAdapter | None = None,
     ) -> None:
         self.traces = traces
         self.artifact_store = artifact_store
         self.graph = graph
         self.vector = vector
         self.approvals = approvals
-        self.adapter = DummySourceAdapter()
+        self.adapter = source_adapter or DummySourceAdapter()
 
     def ingest(
         self,

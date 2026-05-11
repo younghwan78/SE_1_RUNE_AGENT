@@ -20,6 +20,7 @@ from req_tracker.adapters.base import (
 )
 from req_tracker.adapters.retry import RetrySleep, parse_retry_after, request_with_retry
 from req_tracker.debug.hash import stable_hash
+from req_tracker.ontology.models import SourceType
 
 JiraTransport = Callable[[str, str, dict[str, str], dict[str, Any]], dict[str, Any]]
 
@@ -27,7 +28,7 @@ JiraTransport = Callable[[str, str, dict[str, str], dict[str, Any]], dict[str, A
 class JiraRestSourceAdapter:
     """Fetch JIRA issues through REST and normalize them into raw source artifacts."""
 
-    source_type = "jira"
+    source_type: SourceType = "jira"
 
     def __init__(
         self,
