@@ -11,7 +11,7 @@ from req_tracker.debug.models import AgentRun, AgentStepTrace
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.evidence.spans import build_artifact_evidence
 from req_tracker.findings.rules import analyze_findings
-from req_tracker.graph.memory_backend import MemoryGraphBackend
+from req_tracker.graph.base import GraphBackend
 from req_tracker.ingestion.chunking import chunk_artifact
 from req_tracker.ingestion.masking import mask_text
 from req_tracker.ingestion.normalization import normalize_raw_artifact
@@ -24,7 +24,7 @@ from req_tracker.ontology.models import (
 )
 from req_tracker.reasoning.extraction import extract_node
 from req_tracker.reasoning.linking import link_edges
-from req_tracker.vector.memory_backend import MemoryVectorBackend
+from req_tracker.vector.base import VectorBackend
 
 
 class AnalysisResult(BaseModel):
@@ -50,8 +50,8 @@ class LocalAnalysisWorkflow:
         *,
         traces: InMemoryTraceRepository,
         artifact_store: LocalArtifactStore,
-        graph: MemoryGraphBackend,
-        vector: MemoryVectorBackend,
+        graph: GraphBackend,
+        vector: VectorBackend,
         approvals: ApprovalService,
     ) -> None:
         self.traces = traces

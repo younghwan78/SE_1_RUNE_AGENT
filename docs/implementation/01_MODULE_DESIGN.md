@@ -340,7 +340,7 @@ Rule은 LLM 없이 동작해야 한다.
 권장 위치:
 
 ```text
-src/req_tracker/graph/backend.py
+src/req_tracker/graph/base.py
 src/req_tracker/graph/memory_backend.py
 src/req_tracker/graph/neo4j_backend.py
 src/req_tracker/graph/projection.py

@@ -11,7 +11,7 @@ from req_tracker.approvals.models import (
 )
 from req_tracker.debug.hash import stable_hash
 from req_tracker.feedback.models import FeedbackAction, FeedbackEvent
-from req_tracker.graph.memory_backend import MemoryGraphBackend
+from req_tracker.graph.base import GraphBackend
 from req_tracker.ontology.models import TraceabilityEdge
 
 
@@ -71,7 +71,7 @@ class ApprovalService:
     def decide(
         self,
         decision: ApprovalDecision,
-        graph: MemoryGraphBackend,
+        graph: GraphBackend,
     ) -> ApprovalItem:
         """Apply an approval decision."""
         item = self.items[decision.approval_id]

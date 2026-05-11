@@ -298,7 +298,7 @@ Dummy 검증:
 주요 파일:
 
 ```text
-src/req_tracker/vector/backend.py
+src/req_tracker/vector/base.py
 src/req_tracker/vector/memory_backend.py
 src/req_tracker/vector/retrieval.py
 tests/unit/vector/
@@ -400,7 +400,7 @@ Dummy 검증:
 ```text
 src/req_tracker/approvals/service.py
 src/req_tracker/approvals/routing.py
-src/req_tracker/graph/backend.py
+src/req_tracker/graph/base.py
 src/req_tracker/graph/memory_backend.py
 src/req_tracker/graph/delta.py
 src/req_tracker/workflows/approval_graph.py
@@ -564,6 +564,7 @@ Dummy 검증:
 - export-file adapters for JIRA, Confluence, and restricted decision/email sources
 - ingestion normalization, masking, chunking, evidence span path
 - deterministic node extraction, source-link edge candidate generation, findings rules
+- graph/vector backend protocols for production backend replacement
 - pending approval queue and approved graph separation
 - approval approve/reject/hold/modify decision path
 - feedback summary, eval candidate, improvement candidate, eval gate block

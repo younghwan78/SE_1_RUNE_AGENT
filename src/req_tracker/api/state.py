@@ -8,10 +8,12 @@ from req_tracker.approvals.service import ApprovalService
 from req_tracker.audit.service import AuditService
 from req_tracker.debug.artifacts import LocalArtifactStore
 from req_tracker.debug.traces import InMemoryTraceRepository
+from req_tracker.graph.base import GraphBackend
 from req_tracker.graph.memory_backend import MemoryGraphBackend
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.scheduler.service import RunScheduler
 from req_tracker.storage.state_store import StateStore
+from req_tracker.vector.base import VectorBackend
 from req_tracker.vector.memory_backend import MemoryVectorBackend
 from req_tracker.workflows.analysis_graph import AnalysisResult, LocalAnalysisWorkflow
 
@@ -23,8 +25,8 @@ class RuntimeState(BaseModel):
 
     traces: InMemoryTraceRepository
     artifact_store: LocalArtifactStore
-    graph: MemoryGraphBackend
-    vector: MemoryVectorBackend
+    graph: GraphBackend
+    vector: VectorBackend
     approvals: ApprovalService
     audit: AuditService
     analyses: dict[str, AnalysisResult]
