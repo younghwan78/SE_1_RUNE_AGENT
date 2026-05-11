@@ -54,3 +54,24 @@ def test_feedback_builds_improvement_candidates_and_gate_blocks_single_case() ->
     gate = run_local_eval_gate(build_eval_candidates(feedback), "eval_1")
     assert gate.status == "blocked"
     assert "edge_linking/rejected_edges.jsonl:not_enough_cases" in gate.blockers
+
+
+def test_wrong_node_type_feedback_builds_ontology_normalization_candidate() -> None:
+    feedback = [
+        FeedbackEvent(
+            feedback_id="fb_node_type_1",
+            target_type="node",
+            target_id="node_1",
+            action="modify",
+            user_id="reviewer",
+            user_role="System Architect",
+            reason_code="wrong node type",
+        ),
+    ]
+
+    improvements = build_improvement_candidates(feedback)
+
+    assert improvements[0].candidate_type == "ontology_normalization"
+    assert improvements[0].after_version_ref.startswith(
+        "draft://ontology_normalization/wrong_node_type/"
+    )

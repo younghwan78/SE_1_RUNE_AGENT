@@ -212,6 +212,7 @@ Improvement candidate 종류:
 | same relation type repeatedly rejected | edge linking prompt/rule candidate |
 | many weak evidence feedbacks | retrieval top-k/rerank policy candidate |
 | duplicate feedback cluster | entity resolver threshold candidate |
+| wrong node type feedback cluster | ontology normalization candidate |
 | wrong severity on same rule | severity scoring candidate |
 | schema failures on one model | model profile or parser candidate |
 
@@ -274,4 +275,3 @@ Run Detail에서 바로 확인해야 할 것:
 | source latency target changes | stale trace finding |
 | reviewer rejects relation | feedback -> eval candidate |
 | security fixture uses external model | `MODEL_POLICY_BLOCKED` |
-

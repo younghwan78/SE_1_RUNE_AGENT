@@ -8,7 +8,7 @@ from req_tracker.feedback.models import FeedbackEvent, ImprovementCandidate, Imp
 _REASON_TO_IMPROVEMENT: dict[str, ImprovementType] = {
     "wrong_relation": "rule",
     "weak_evidence": "retrieval_policy",
-    "wrong_node_type": "prompt",
+    "wrong_node_type": "ontology_normalization",
     "duplicate": "rule",
     "missing_context": "retrieval_policy",
     "wrong_severity": "scoring_threshold",

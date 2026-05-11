@@ -46,6 +46,7 @@ ImprovementType = Literal[
     "rule",
     "retrieval_policy",
     "scoring_threshold",
+    "ontology_normalization",
     "model_profile",
 ]
 ImprovementStatus = Literal[
