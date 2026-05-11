@@ -10,26 +10,28 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
-- `eec528e Add CI verification workflow`
-- `5b42d49 Add typed PostgreSQL core table migrations`
-- `95185d0 Add PostgreSQL state repository foundation`
+- `98df703 Add JIRA REST source adapter foundation`
+- `6ce6b99 Add Qdrant vector backend foundation`
+- `c85727d Add Neo4j graph backend foundation`
+- `d02c026 Guard unsupported production backends`
+- `d1f781c Add PostgreSQL typed read and rollback support`
 
 Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 43 passed
+- `uv run pytest`: 53 passed, 3 skipped
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `eec528e`: completed successfully
+- GitHub Actions `CI` run for `98df703`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
 | Requirement | Current evidence | Status |
 | --- | --- | --- |
 | Production plan is the source of truth | `PRODUCTION_EXECUTION_PLAN.md`, `docs/implementation/03_STEP_BY_STEP_IMPLEMENTATION_PLAN.md` | Complete |
-| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design and export path complete; JIRA REST foundation complete; Confluence/Email live access pending |
+| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, export adapters, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA REST foundation complete; Confluence/Email live access pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider and policy | Local dummy complete; real provider profiles pending |
