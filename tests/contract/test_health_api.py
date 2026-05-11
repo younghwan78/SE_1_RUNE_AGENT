@@ -16,6 +16,8 @@ def test_health_endpoint_defaults_to_dummy_modes(client: TestClient) -> None:
     assert body["graph_backend"] == "memory"
     assert body["vector_backend"] == "memory"
     assert body["model_gateway_mode"] == "dummy"
+    assert body["opentelemetry"]["enabled"] is False
+    assert body["opentelemetry"]["reason"] == "disabled"
 
 
 def test_request_log_includes_correlation_and_user_id(

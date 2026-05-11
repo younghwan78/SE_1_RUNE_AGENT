@@ -27,6 +27,8 @@ def test_readiness_report_flags_unverified_company_gates() -> None:
             "TRUSTED_PROXY_SECRET": "secret",
             "TRUSTED_GROUP_ROLE_MAP": '{"rune-admins":"admin"}',
             "ARTIFACT_ROOT": "/var/lib/rune-agent/artifacts",
+            "OTEL_ENABLED": "true",
+            "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4317",
         }
     )
 
@@ -35,6 +37,7 @@ def test_readiness_report_flags_unverified_company_gates() -> None:
     assert report["summary"]["manual_required"] > 0
     checks = {check["check_id"]: check for check in report["checks"]}
     assert checks["postgres_state_store"]["status"] == "passed"
+    assert checks["opentelemetry_export"]["status"] == "passed"
     assert checks["company_postgres_rehearsal"]["status"] == "manual_required"
     assert checks["kubernetes_helm_rehearsal"]["status"] == "passed"
     assert "secret" not in str(report)
@@ -419,7 +422,7 @@ def test_readiness_report_passes_with_complete_env_and_reviewed_evidence() -> No
 
     assert report["passed"] is True
     assert report["summary"] == {
-        "passed": 17,
+        "passed": 18,
         "warning": 0,
         "failed": 0,
         "manual_required": 0,
@@ -477,6 +480,8 @@ def _complete_production_env() -> dict[str, str]:
         "AUTH_MODE": "trusted_proxy",
         "TRUSTED_PROXY_SECRET": "secret-value",
         "TRUSTED_GROUP_ROLE_MAP": '{"rune-admins":"admin"}',
+        "OTEL_ENABLED": "true",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4317",
         "RUNE_API_BASE_URL": "https://rune-agent.example.test",
         "ARTIFACT_ROOT": "/var/lib/rune-agent/artifacts",
         "JIRA_BASE_URL": "https://jira.example.test",

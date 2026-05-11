@@ -26,6 +26,8 @@ REQUIRED_VALUE_SNIPPETS = {
     "MODEL_GATEWAY_MODE: http_json",
     "AUTH_MODE: trusted_proxy",
     "SCHEDULER_LEASE_NAME: rune-periodic-analysis",
+    "OTEL_ENABLED: \"false\"",
+    "OTEL_SERVICE_NAME: rune-agent-api",
 }
 
 REQUIRED_SECRET_REFS = {

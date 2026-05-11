@@ -68,6 +68,19 @@ class Settings(BaseSettings):
     )
     postgres_dsn: str = Field(default="", validation_alias="POSTGRES_DSN")
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
+    otel_enabled: bool = Field(default=False, validation_alias="OTEL_ENABLED")
+    otel_service_name: str = Field(
+        default="rune-agent-api",
+        validation_alias="OTEL_SERVICE_NAME",
+    )
+    otel_exporter_otlp_endpoint: str = Field(
+        default="",
+        validation_alias="OTEL_EXPORTER_OTLP_ENDPOINT",
+    )
+    otel_exporter_otlp_insecure: bool = Field(
+        default=True,
+        validation_alias="OTEL_EXPORTER_OTLP_INSECURE",
+    )
     enable_docs: bool = Field(default=True, validation_alias="ENABLE_DOCS")
     scheduler_enabled: bool = Field(default=False, validation_alias="SCHEDULER_ENABLED")
     scheduler_interval_seconds: int = Field(

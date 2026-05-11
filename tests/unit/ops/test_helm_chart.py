@@ -37,6 +37,8 @@ def test_helm_chart_maps_production_env_and_secret_refs() -> None:
         "MODEL_GATEWAY_MODE: http_json",
         "AUTH_MODE: trusted_proxy",
         "SCHEDULER_LEASE_NAME: rune-periodic-analysis",
+        "OTEL_ENABLED: \"false\"",
+        "OTEL_SERVICE_NAME: rune-agent-api",
     ]:
         assert key in values
     for key in [

@@ -27,6 +27,7 @@ from req_tracker.graph.base import GraphBackend
 from req_tracker.graph.memory_backend import MemoryGraphBackend
 from req_tracker.graph.neo4j_backend import Neo4jGraphBackend
 from req_tracker.observability.metrics import InMemoryMetrics
+from req_tracker.observability.otel import configure_opentelemetry
 from req_tracker.observability.tracing import resolve_trace_context
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.storage.postgres_store import PostgreSQLStateStore
@@ -108,6 +109,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = resolved_settings
     app.state.runtime = runtime
     app.state.metrics = metrics
+    app.state.opentelemetry = configure_opentelemetry(app, resolved_settings)
 
     @app.middleware("http")
     async def add_correlation_id(

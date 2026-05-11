@@ -21,6 +21,10 @@ Requests may pass a W3C `traceparent` header. The API returns a server-span
 debug traces can be correlated before a full OpenTelemetry collector is wired in
 the target environment.
 
+Set `OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT` to a company-approved
+collector to export FastAPI spans through OTLP. The default local mode keeps
+OpenTelemetry export disabled while preserving trace-context headers.
+
 Implemented route groups:
 
 - health, readiness, and runtime metrics

@@ -264,6 +264,17 @@ def _environment_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
             required_keys=("ARTIFACT_ROOT",),
             next_action="Set ARTIFACT_ROOT to a backed-up server path.",
         ),
+        _expect_mode(
+            env,
+            check_id="opentelemetry_export",
+            mode_key="OTEL_ENABLED",
+            expected_mode="true",
+            required_keys=("OTEL_EXPORTER_OTLP_ENDPOINT",),
+            next_action=(
+                "Set OTEL_ENABLED=true and OTEL_EXPORTER_OTLP_ENDPOINT to the "
+                "company-approved collector."
+            ),
+        ),
     ]
 
 

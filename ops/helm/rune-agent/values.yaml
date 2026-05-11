@@ -73,6 +73,10 @@ env:
   TRUSTED_DEFAULT_ROLE: viewer
   TRUSTED_GROUP_ROLE_MAP: '{"rune-viewers":"viewer","rune-developers":"developer","rune-operators":"operator","rune-admins":"admin"}'
   LOG_LEVEL: INFO
+  OTEL_ENABLED: "false"
+  OTEL_SERVICE_NAME: rune-agent-api
+  OTEL_EXPORTER_OTLP_ENDPOINT: ""
+  OTEL_EXPORTER_OTLP_INSECURE: "true"
   ENABLE_DOCS: "false"
   SCHEDULER_ENABLED: "true"
   SCHEDULER_INTERVAL_SECONDS: "3600"
