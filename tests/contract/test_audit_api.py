@@ -68,3 +68,24 @@ def test_audit_events_capture_operational_actions(client: TestClient) -> None:
     archive = client.post("/api/v1/audit/retention/archive-prune")
     assert archive.status_code == 200
     assert archive.json()["archived_events"] == 0
+
+
+def test_audit_archive_prune_idempotency_key_avoids_duplicate_audit_event(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/v1/audit/retention/archive-prune",
+        headers={"Idempotency-Key": "idem-audit-archive-1"},
+    )
+    second = client.post(
+        "/api/v1/audit/retention/archive-prune",
+        headers={"Idempotency-Key": "idem-audit-archive-1"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
+
+    audit = client.get("/api/v1/audit/events?action=audit_archive_pruned")
+    assert audit.status_code == 200
+    assert len(audit.json()) == 1

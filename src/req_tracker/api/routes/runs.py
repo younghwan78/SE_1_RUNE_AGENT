@@ -5,7 +5,11 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
-from req_tracker.api.idempotency import prepare_idempotency, record_idempotency_response
+from req_tracker.api.idempotency import (
+    explicit_model_payload,
+    prepare_idempotency,
+    record_idempotency_response,
+)
 from req_tracker.api.security import require_project, require_role
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings
@@ -182,6 +186,17 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
         raise HTTPException(status_code=404, detail="run not found")
     source = runtime.analyses[run_id]
     require_project(request, source.run.project_key, "developer")
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="runs.replay",
+        payload={
+            "source_run_id": run_id,
+            "replay": explicit_model_payload(payload),
+        },
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
     replay_run_id = payload.replay_run_id or settings.new_id("replay")
     result = ReplayService(runtime.workflow(), runtime.analyses).replay(
         source_run_id=run_id,
@@ -192,7 +207,15 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
     )
     runtime.replays[replay_run_id] = result
     runtime.persist_replay_result(result)
-    return result.model_dump(mode="json")
+    response = result.model_dump(mode="json")
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="runs.replay",
+        project_key=source.run.project_key,
+        response=response,
+    )
+    return response
 
 
 @router.get("/replays/{replay_id}/diff")
@@ -242,6 +265,14 @@ async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[
     user = require_project(request, payload.project_key, "operator")
     runtime: RuntimeState = request.app.state.runtime
     settings: Settings = request.app.state.settings
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="schedule.configure",
+        payload=payload.model_dump(mode="json"),
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
     status = await runtime.scheduler.configure(
         payload,
         runner=lambda run_id, project_key, scenario: runtime.run_analysis(
@@ -264,6 +295,13 @@ async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[
     )
     runtime.persist_approval_state()
     result: dict[str, Any] = status.model_dump(mode="json")
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="schedule.configure",
+        project_key=payload.project_key,
+        response=result,
+    )
     return result
 
 
@@ -273,6 +311,14 @@ async def run_schedule_now(request: Request) -> dict[str, Any]:
     runtime: RuntimeState = request.app.state.runtime
     user = require_project(request, runtime.scheduler.config.project_key, "operator")
     settings: Settings = request.app.state.settings
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="schedule.run_now",
+        payload=runtime.scheduler.config.model_dump(mode="json"),
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
     result = await runtime.scheduler.run_now(
         runner=lambda run_id, project_key, scenario: runtime.run_analysis(
             run_id=run_id,
@@ -294,4 +340,11 @@ async def run_schedule_now(request: Request) -> dict[str, Any]:
     )
     runtime.persist_approval_state()
     response: dict[str, Any] = result.model_dump(mode="json")
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="schedule.run_now",
+        project_key=runtime.scheduler.config.project_key,
+        response=response,
+    )
     return response

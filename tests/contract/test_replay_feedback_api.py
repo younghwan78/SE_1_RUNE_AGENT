@@ -53,6 +53,36 @@ def test_replay_and_feedback_eval_api(client: TestClient) -> None:
     assert blocked.json()["detail"]["message"] == "eval gate blocked activation"
 
 
+def test_replay_idempotency_key_reuses_original_replay_result(client: TestClient) -> None:
+    client.post(
+        "/api/v1/runs/analyze",
+        json={
+            "project_key": "RUNE_CAM_ALPHA",
+            "scenario": "RUNE_CAM_ALPHA",
+            "run_id": "run_replay_idempotent",
+        },
+    )
+
+    first = client.post(
+        "/api/v1/runs/run_replay_idempotent/replay",
+        json={"scenario": "RUNE_CAM_ALPHA"},
+        headers={"Idempotency-Key": "idem-replay-1"},
+    )
+    second = client.post(
+        "/api/v1/runs/run_replay_idempotent/replay",
+        json={"scenario": "RUNE_CAM_ALPHA"},
+        headers={"Idempotency-Key": "idem-replay-1"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
+
+    runs = client.get("/api/v1/runs?project_key=RUNE_CAM_ALPHA")
+    assert runs.status_code == 200
+    assert [run["run_id"] for run in runs.json()].count(first.json()["replay_run_id"]) == 1
+
+
 def test_improvement_activation_requires_review_and_canary_after_eval_passes(
     client: TestClient,
 ) -> None:
@@ -92,6 +122,42 @@ def test_improvement_activation_requires_review_and_canary_after_eval_passes(
     assert active.status_code == 200
     assert active.json()["status"] == "active"
     assert active.json()["promotion_status"] == "active"
+
+
+def test_improvement_activation_idempotency_key_reuses_eval_response(
+    client: TestClient,
+) -> None:
+    for index in range(2):
+        feedback = client.post(
+            "/api/v1/feedback",
+            json={
+                "feedback_id": f"fb_improvement_idem_{index}",
+                "target_type": "edge",
+                "target_id": f"edge_improvement_idem_{index}",
+                "action": "rejected",
+                "user_id": "reviewer",
+                "user_role": "System Architect",
+                "reason_code": "wrong_relation",
+            },
+        )
+        assert feedback.status_code == 200
+
+    improvements = client.get("/api/v1/improvements/candidates")
+    candidate_id = improvements.json()[0]["candidate_id"]
+    first = client.post(
+        f"/api/v1/improvements/{candidate_id}/activate",
+        json={"reviewer_approved": True, "canary_passed": False},
+        headers={"Idempotency-Key": "idem-improvement-1"},
+    )
+    second = client.post(
+        f"/api/v1/improvements/{candidate_id}/activate",
+        json={"reviewer_approved": True, "canary_passed": False},
+        headers={"Idempotency-Key": "idem-improvement-1"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
 
 
 def test_feedback_idempotency_key_avoids_duplicate_feedback_events(

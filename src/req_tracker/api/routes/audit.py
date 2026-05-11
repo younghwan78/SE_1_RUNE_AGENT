@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, Request
 
+from req_tracker.api.idempotency import prepare_idempotency, record_idempotency_response
 from req_tracker.api.security import require_project, require_role
 from req_tracker.audit.models import AuditAction
 
@@ -46,6 +47,14 @@ def archive_and_prune_audit_events(request: Request) -> dict[str, Any]:
     """Archive and prune audit events selected by the active retention policy."""
     user = require_role(request, "admin")
     runtime = request.app.state.runtime
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="audit.archive_prune",
+        payload=runtime.audit.retention_report()["policy"],
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
     result: dict[str, Any] = runtime.archive_and_prune_audit()
     runtime.audit.record(
         action="audit_archive_pruned",
@@ -56,4 +65,11 @@ def archive_and_prune_audit_events(request: Request) -> dict[str, Any]:
         metadata=result,
     )
     runtime.persist_approval_state()
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="audit.archive_prune",
+        project_key=None,
+        response=result,
+    )
     return result

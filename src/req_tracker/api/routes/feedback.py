@@ -112,6 +112,17 @@ def activate_improvement(
     )
     if candidate is None:
         raise HTTPException(status_code=404, detail="improvement candidate not found")
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="improvements.activate",
+        payload={
+            "candidate_id": candidate_id,
+            "promotion": explicit_model_payload(promotion),
+        },
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
 
     eval_candidates_for_gate = build_eval_candidates(runtime.approvals.feedback)
     gate = run_local_eval_gate(eval_candidates_for_gate, settings.new_id("eval"))
@@ -137,6 +148,13 @@ def activate_improvement(
     result = candidate.model_dump(mode="json")
     result["promotion_status"] = promotion_status
     result["eval_gate"] = gate.model_dump(mode="json")
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="improvements.activate",
+        project_key=None,
+        response=result,
+    )
     return result
 
 

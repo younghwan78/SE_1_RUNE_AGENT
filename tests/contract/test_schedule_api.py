@@ -31,3 +31,34 @@ def test_schedule_status_configure_and_run_now(client: TestClient) -> None:
     assert detail.json()["status"] == "succeeded"
     assert detail.json()["trigger_source"] == "manual"
     assert detail.json()["triggered_by"] == "local"
+
+
+def test_schedule_run_now_idempotency_key_reuses_original_run(client: TestClient) -> None:
+    configured = client.put(
+        "/api/v1/schedule",
+        json={
+            "enabled": False,
+            "interval_seconds": 5,
+            "project_key": "RUNE_CAM_ALPHA",
+            "scenario": "RUNE_MULTI_SOURCE",
+            "run_id_prefix": "idem_sched",
+        },
+    )
+    assert configured.status_code == 200
+
+    first = client.post(
+        "/api/v1/schedule/run-now",
+        headers={"Idempotency-Key": "idem-schedule-run-now-1"},
+    )
+    second = client.post(
+        "/api/v1/schedule/run-now",
+        headers={"Idempotency-Key": "idem-schedule-run-now-1"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
+
+    status = client.get("/api/v1/schedule")
+    assert status.status_code == 200
+    assert status.json()["runs_started"] == 1
