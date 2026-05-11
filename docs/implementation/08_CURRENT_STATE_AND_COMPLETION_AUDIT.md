@@ -10,6 +10,10 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `c9ca4ff Check metrics in full stack rehearsal`
+- `08cd9d2 Propagate request trace context`
+- `48f52f0 Add runtime metrics scrape endpoints`
+- `e7a7d16 Refresh audit after CI coverage gate`
 - `676e783 Validate CI release gate coverage`
 - `ab21131 Validate readiness example evidence arrays`
 - `72f103a Tighten readiness evidence example validation`
@@ -95,7 +99,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 168 passed, 3 skipped
+- `uv run pytest`: 176 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -112,7 +116,11 @@ Latest local verification:
 - `uv run python ops/security/rehearse_masking_policy.py`: passed, verifying representative sensitive inputs are redacted without printing raw sensitive strings or forbidden patterns
 - `uv run python ops/security/check_release_blockers.py`: passed, validating coverage evidence for masking violations, approval-gated graph mutation, project authorization leaks, prompt/model regression gates, migration rollback/restore, and forbidden model payload policy
 - `uv run pytest tests/unit/ops/test_backup_verify.py`: passed, validating backup-set required files, SHA256 mismatch detection, artifact tar, Qdrant JSON, Neo4j dump marker, and git commit marker checks
-- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3201 ms against a 5000 ms local rehearsal threshold)
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed,
+  including API restart restore, metrics surface check
+  (`http_total_requests=7`, `graph_nodes=14`, `llm_calls=1`), and smoke-load
+  pass (`load_smoke.p95_ms` about 3247 ms against a 5000 ms local rehearsal
+  threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
 - `uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -`: passed, producing a review-safe unresolved-gate evidence template with `failed` TODO placeholders
@@ -129,7 +137,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25695219629` for `676e783`: completed successfully
+- GitHub Actions `CI` run `25696188697` for `c9ca4ff`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
