@@ -39,6 +39,11 @@ Implemented route groups:
 - scheduler controls
 - static UI route
 
+Run step responses include step-level `retrieval_context_ref`,
+`validation_status`, and `validation_result` fields so debug screens can show
+the stage retrieval context and structured validation result without requiring a
+separate LLM-call lookup.
+
 Do not document MCP tool names or company-specific source credentials here.
 JIRA, Confluence, and Email access procedures belong in `.claude/skills/` and
 company-local MCP configuration.

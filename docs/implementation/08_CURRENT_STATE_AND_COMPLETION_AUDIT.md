@@ -10,6 +10,8 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `30477fe Align docs for step debug metadata`
+- `5b56a60 Refresh audit after step debug metadata`
 - `3984793 Add step validation debug metadata`
 - `d44cc70 Validate source integration boundaries`
 - `6777c28 Refresh audit after ontology improvement candidate`
@@ -277,8 +279,8 @@ Latest GitHub verification:
 
 2026-05-12 local verification after controlled improvement rollback,
 runtime metrics, trace-context, OpenTelemetry export foundation, restricted
-model payload policy, provider usage metadata, and observability asset
-implementation:
+model payload policy, provider usage metadata, observability asset
+implementation, and step-level retrieval/validation debug metadata:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed

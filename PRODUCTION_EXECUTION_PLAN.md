@@ -371,6 +371,9 @@ class AgentStepTrace(BaseModel):
     input_hash: str
     output_hash: str | None
     output_ref: str | None
+    retrieval_context_ref: str | None
+    validation_status: Literal["not_applicable", "passed", "failed", "repaired"]
+    validation_result: dict
     started_at: datetime
     completed_at: datetime | None
     retry_count: int
