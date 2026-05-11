@@ -52,6 +52,9 @@ jobs:
       - name: Helm chart scaffold validation
         run: uv run python ops/helm/validate_chart.py
 
+      - name: Readiness evidence template smoke
+        run: uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -
+
       - name: Operator UI graph smoke
         run: uv run python ops/ui/smoke_operator_ui.py
 
