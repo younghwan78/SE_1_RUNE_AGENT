@@ -203,6 +203,12 @@ Run feedback/eval/canary rehearsal:
 uv run python ops/evals/run_feedback_eval_rehearsal.py
 ```
 
+Run masking policy rehearsal:
+
+```bash
+uv run python ops/security/rehearse_masking_policy.py
+```
+
 Check release-readiness gates:
 
 ```bash

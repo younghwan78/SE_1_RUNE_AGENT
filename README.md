@@ -75,6 +75,15 @@ uv run python ops/evals/run_feedback_eval_rehearsal.py
 This validates that feedback-derived improvements pass through eval,
 review-ready, canary, and active states, while security feedback remains blocked.
 
+Run masking policy rehearsal:
+
+```powershell
+uv run python ops/security/rehearse_masking_policy.py
+```
+
+This verifies representative sensitive inputs are redacted without printing the
+raw sensitive strings or forbidden patterns.
+
 Check production-readiness gates before a release decision:
 
 ```powershell
