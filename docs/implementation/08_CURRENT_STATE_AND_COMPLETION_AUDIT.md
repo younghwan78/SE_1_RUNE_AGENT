@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `8aff68b Refresh audit after docs alignment`
 - `c2bac5b Align docs for step debug metadata`
 - `5b56a60 Refresh audit after step debug metadata`
 - `3984793 Add step validation debug metadata`
@@ -162,7 +163,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25699859054` for `3984793`: completed successfully
+- GitHub Actions `CI` run `25699955256` for `8aff68b`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
