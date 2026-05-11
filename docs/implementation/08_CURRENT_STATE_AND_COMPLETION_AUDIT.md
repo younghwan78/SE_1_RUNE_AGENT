@@ -44,16 +44,17 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 102 passed, 3 skipped
+- `uv run pytest`: 104 passed, 3 skipped
 - `uv run python ops/integration/run_backend_integration.py`: 3 passed
 - `uv run python ops/source/smoke_source_adapters.py`: passed
 - `uv run python ops/source/rehearse_company_sources.py`: failed as expected on this local shell because JIRA/Confluence sandbox env vars are unset; output masks tokens and lists missing config
 - `uv run python ops/model_gateway/smoke_model_gateway.py`: passed
 - `uv run python ops/model_gateway/rehearse_model_gateway.py`: failed as expected on this local shell because `MODEL_GATEWAY_ENDPOINT_URL` is unset; output masks API key state and lists missing config
+- `uv run python ops/security/rehearse_trusted_proxy_auth.py`: failed as expected on this local shell because `RUNE_API_BASE_URL` and `TRUSTED_PROXY_SECRET` are unset; output masks secret state and lists missing config
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3250 ms against a 5000 ms local rehearsal threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
-- `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced 6 failed env checks and 9 manual-required gates without secret values
-- `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected on this local shell because production env checks are still unset; manual evidence resolved 9 manual gates
+- `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
+- `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected on this local shell because production env checks are still unset; manual evidence resolved example manual gates
 - `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 4 passed, including manual evidence file loading and manual-gate resolution behavior
 
 Latest GitHub verification:
@@ -77,7 +78,7 @@ Latest GitHub verification:
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test, Docker integration runner | Qdrant foundation complete; disposable Docker Qdrant integration passed; company/staging vector rehearsal pending |
 | Approval workflow | approval queue, approve/reject/hold/modify path, graph commit, developer/operator RBAC and project-scope checks | Complete for local and protected API paths |
 | Feedback loop | feedback events, eval candidates, improvement candidates, eval gate, controlled review/canary promotion, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary rehearsal complete; real production feedback calibration pending |
-| Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, approval/query/scheduler/debug RBAC, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; direct company IdP validation pending |
+| Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug RBAC, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
 | Scheduler | process-local `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture | Single-process complete; multi-worker orchestration pending |
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, and reviewed manual-evidence input path complete; company/staging environment rehearsal pending |
@@ -127,6 +128,9 @@ Latest GitHub verification:
 
 - Rehearse trusted-proxy auth behind a real company SSO/OIDC reverse proxy and
   replace it with direct IdP token validation only if required.
+- Use `ops/security/rehearse_trusted_proxy_auth.py` for the first staging
+  trusted-proxy RBAC proof and attach its masked JSON output to the production
+  readiness evidence file.
 - Run backup/restore and load rehearsals against company/staging PostgreSQL,
   Neo4j, Qdrant, and artifact store environments.
 - Run `ops/rehearsal/check_production_readiness.py --run-local-gates` on a

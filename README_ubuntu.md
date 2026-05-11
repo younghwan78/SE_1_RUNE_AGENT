@@ -68,6 +68,19 @@ reverse proxy and inject `x-rune-user`, `x-rune-groups`, `x-rune-projects`, and
 `x-rune-trusted-secret`. The proxy must strip incoming client-supplied versions
 of these headers before adding trusted values.
 
+After the staging API is running behind the trusted proxy boundary, rehearse the
+RBAC contract:
+
+```bash
+export RUNE_API_BASE_URL=https://rune-agent.example.com
+export TRUSTED_PROXY_SECRET=<from-secret-store>
+export RUNE_PROJECT_KEY=RUNE_CAM_ALPHA
+uv run python ops/security/rehearse_trusted_proxy_auth.py
+```
+
+The rehearsal output masks the shared secret and checks viewer, developer,
+operator, and project-scope behavior without mutating data.
+
 To use PostgreSQL instead of SQLite, create the database/user with your company
 standard policy and switch only these values:
 

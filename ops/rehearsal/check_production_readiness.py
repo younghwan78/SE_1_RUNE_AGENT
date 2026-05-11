@@ -274,6 +274,17 @@ def _company_rehearsal_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
             ),
         )
     )
+    checks.append(
+        _external_rehearsal_check(
+            env,
+            check_id="trusted_proxy_rbac_rehearsal",
+            keys=("RUNE_API_BASE_URL", "TRUSTED_PROXY_SECRET"),
+            next_action=(
+                "Run ops/security/rehearse_trusted_proxy_auth.py against the "
+                "company/staging trusted proxy boundary."
+            ),
+        )
+    )
     return checks
 
 

@@ -136,6 +136,18 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/events `
   -Headers @{"x-rune-trusted-secret"="<from-secret-store>";"x-rune-user"="user@example.com";"x-rune-groups"="rune-operators";"x-rune-projects"="RUNE_CAM_ALPHA"}
 ```
 
+Rehearse trusted-proxy RBAC against a running staging API:
+
+```powershell
+$env:RUNE_API_BASE_URL="https://rune-agent.example.com"
+$env:TRUSTED_PROXY_SECRET="<from-secret-store>"
+$env:RUNE_PROJECT_KEY="RUNE_CAM_ALPHA"
+uv run python ops/security/rehearse_trusted_proxy_auth.py
+```
+
+The rehearsal checks health, viewer schedule read, developer audit denial,
+operator audit read, and wrong-project denial while masking the shared secret.
+
 Configure periodic runs:
 
 ```powershell

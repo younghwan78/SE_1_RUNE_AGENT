@@ -76,11 +76,20 @@
       ]
     },
     {
+      "check_id": "trusted_proxy_rbac_rehearsal",
+      "status": "passed",
+      "summary": "Trusted proxy RBAC and project-scope rehearsal passed in staging.",
+      "evidence": [
+        "staging-ci:trusted-proxy-rbac:run-12353",
+        "artifact:trusted-proxy-rbac-report.json"
+      ]
+    },
+    {
       "check_id": "local_regression_gates",
       "status": "passed",
       "summary": "Release branch local regression and rehearsal gate list passed.",
       "evidence": [
-        "github-actions:CI:run-12353",
+        "github-actions:CI:run-12354",
         "artifact:full-stack-rehearsal-report.json"
       ]
     }
