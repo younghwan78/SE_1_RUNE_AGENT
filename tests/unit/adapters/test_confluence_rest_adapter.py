@@ -61,6 +61,7 @@ def test_confluence_rest_adapter_reports_malformed_page_warning() -> None:
 
 def test_confluence_rest_adapter_retries_transient_server_error() -> None:
     calls = 0
+    sleep_delays: list[float] = []
 
     def transport(
         _method: str,
@@ -80,11 +81,13 @@ def test_confluence_rest_adapter_retries_transient_server_error() -> None:
         space_key="CAM",
         transport=transport,
         max_retries=1,
+        retry_sleep=sleep_delays.append,
     )
 
     result = adapter.fetch_incremental(SourceScope(project_key="RUNE_CAM_ALPHA"))
 
     assert calls == 2
+    assert sleep_delays == [0.25]
     assert result.partial_failure is True
     assert result.source_warnings == ["confluence_request_retry:503:attempt_1"]
     assert result.artifacts[0].external_id == "123"

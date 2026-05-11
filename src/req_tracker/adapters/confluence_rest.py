@@ -2,6 +2,7 @@
 
 import json
 import re
+import time
 from collections.abc import Callable
 from typing import Any
 from urllib import error, parse, request
@@ -47,7 +48,7 @@ class ConfluenceRestSourceAdapter:
         self.cql = cql
         self._transport = transport or _urllib_transport
         self._max_retries = max_retries
-        self._retry_sleep = retry_sleep
+        self._retry_sleep = retry_sleep or time.sleep
 
     def fetch_incremental(
         self,

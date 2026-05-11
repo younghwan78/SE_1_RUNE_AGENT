@@ -95,6 +95,7 @@ def test_jira_rest_adapter_retries_rate_limited_request() -> None:
 
 def test_jira_rest_adapter_retries_network_os_error() -> None:
     calls = 0
+    sleep_delays: list[float] = []
 
     def transport(
         _method: str,
@@ -113,13 +114,50 @@ def test_jira_rest_adapter_retries_network_os_error() -> None:
         token="token",
         transport=transport,
         max_retries=1,
+        retry_sleep=sleep_delays.append,
     )
 
     result = adapter.fetch_incremental(SourceScope(project_key="CAM"))
 
     assert calls == 2
+    assert sleep_delays == [0.25]
     assert result.partial_failure is True
     assert result.source_warnings == ["jira_request_retry:network_error:attempt_1"]
+    assert result.artifacts[0].external_id == "CAM-REQ-001"
+
+
+def test_jira_rest_adapter_exponential_backoff_without_retry_after() -> None:
+    calls = 0
+    sleep_delays: list[float] = []
+
+    def transport(
+        _method: str,
+        _url: str,
+        _headers: dict[str, str],
+        _payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        nonlocal calls
+        calls += 1
+        if calls < 3:
+            raise SourceAdapterRequestError("temporary failure", status_code=503)
+        return {"total": 1, "issues": [_issue("CAM-REQ-001", "Camera latency")]}
+
+    adapter = JiraRestSourceAdapter(
+        base_url="https://jira.example.com",
+        token="token",
+        transport=transport,
+        max_retries=2,
+        retry_sleep=sleep_delays.append,
+    )
+
+    result = adapter.fetch_incremental(SourceScope(project_key="CAM"))
+
+    assert calls == 3
+    assert sleep_delays == [0.25, 0.5]
+    assert result.source_warnings == [
+        "jira_request_retry:503:attempt_1",
+        "jira_request_retry:503:attempt_2",
+    ]
     assert result.artifacts[0].external_id == "CAM-REQ-001"
 
 

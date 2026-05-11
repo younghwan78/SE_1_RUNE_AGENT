@@ -6,6 +6,7 @@ the application only sees the stable SourceAdapter contract.
 """
 
 import json
+import time
 from collections.abc import Callable
 from typing import Any
 from urllib import error, request
@@ -47,7 +48,7 @@ class JiraRestSourceAdapter:
         self.jql = jql
         self._transport = transport or _urllib_transport
         self._max_retries = max_retries
-        self._retry_sleep = retry_sleep
+        self._retry_sleep = retry_sleep or time.sleep
 
     def fetch_incremental(
         self,
