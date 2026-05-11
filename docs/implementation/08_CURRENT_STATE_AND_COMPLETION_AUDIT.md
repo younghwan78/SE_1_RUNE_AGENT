@@ -10,6 +10,9 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `c8e1020 Block stale approval decisions`
+- `ab6dde2 Trace counter evidence in reasoning output`
+- `a333a77 Add deterministic approval risk scoring`
 - `431c252 Align improvement candidate types`
 - `8a54a78 Record replay comparison metadata`
 - `8aff68b Refresh audit after docs alignment`
@@ -165,7 +168,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25700287906` for `431c252`: completed successfully
+- GitHub Actions `CI` run `25700664492` for `c8e1020`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -184,6 +187,7 @@ Latest GitHub verification:
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Source snapshot lineage | `AgentRun.input_snapshot_ids`, normalized `SourceArtifact.artifact_id`, `LocalAnalysisWorkflow` metadata update, run API and integration tests | Complete for local/source-artifact snapshot lineage |
 | Run trigger lineage | `AgentRun.triggered_by`, `AgentRun.trigger_source`, API analyze path, schedule run-now path, periodic scheduler path, replay path, contract tests | Complete for local API/manual/schedule/replay trigger attribution |
+| Agent workflow orchestration | `LocalAnalysisWorkflow`, stable public stage names, `AgentStepTrace`, `LLMCallTrace`, `docs/implementation/01_MODULE_DESIGN.md` LangGraph transition note | Complete for local/dummy workflow contract validation; LangGraph remains a later orchestration swap after production dependency and branching needs justify it |
 | Command idempotency | `POST /api/v1/runs/ingest`, `POST /api/v1/runs/analyze`, `POST /api/v1/runs/{run_id}/replay`, `PUT /api/v1/schedule`, `POST /api/v1/schedule/run-now`, `POST /api/v1/approvals/{approval_id}/decision`, `POST /api/v1/findings/{finding_id}/status`, `POST /api/v1/feedback`, `POST /api/v1/improvements/{candidate_id}/activate`, `POST /api/v1/improvements/{candidate_id}/rollback`, `POST /api/v1/admin/model-profiles/{id}/activate`, `POST /api/v1/admin/model-profiles/{id}/rollback`, `POST /api/v1/admin/prompt-versions/{id}/activate`, `POST /api/v1/admin/prompt-versions/{id}/rollback`, and `POST /api/v1/audit/retention/archive-prune` `Idempotency-Key`/`X-Idempotency-Key`, persisted `idempotency_results`, API conflict tests, SQLite restart restore test, graph commit idempotency keys | Complete for implemented local command APIs plus graph commit paths |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests, restricted/confidential masking and access-check gates, provider usage metadata extraction, token/cost trace propagation, `ops/model_gateway/smoke_model_gateway.py`, `ops/model_gateway/rehearse_model_gateway.py` | Profile/registry/live-shaped HTTP foundation, env-driven company sandbox rehearsal entrypoint, and provider-reported token/cost observability complete; real external provider sandbox validation pending |
 | LLM-assisted workflow trace | `LocalAnalysisWorkflow` `llm_assisted_reasoning` stage, `ModelGatewayClient`, structured reasoning output with confidence and counter-evidence refs, `LLMCallTrace`, step-level `retrieval_context_ref`/`validation_status`/`validation_result`, SQLite restore of `llm_call_traces` and step validation metadata, `/api/v1/runs/{run_id}/llm-calls`, debug diff LLM panes | Dummy model-gateway integration complete with step-level validation/debug metadata; live model quality validation pending |
@@ -283,7 +287,9 @@ Latest GitHub verification:
 2026-05-12 local verification after controlled improvement rollback,
 runtime metrics, trace-context, OpenTelemetry export foundation, restricted
 model payload policy, provider usage metadata, observability asset
-implementation, and step-level retrieval/validation debug metadata:
+implementation, step-level retrieval/validation debug metadata, deterministic
+approval risk scoring, counter-evidence reasoning output, and stale approval
+blocking:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
