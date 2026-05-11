@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `dd10388 Refresh audit after eval canary rehearsal`
 - `daff157 Add feedback eval canary rehearsal`
 - `465080b Refresh audit after full stack rehearsal`
 - `80e4369 Add full stack rehearsal runner`
@@ -39,7 +40,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `daff157`: completed successfully
+- GitHub Actions `CI` run for `dd10388`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -111,7 +112,9 @@ Latest GitHub verification:
 
 The overall production objective is not complete yet. The current repo is a
 validated local/dummy, persistence-foundation, backend-interface, source-adapter,
-debuggability, and operations-rehearsal stage. The next concrete completion gate
-requires disposable production-like services for PostgreSQL, Neo4j, Qdrant,
-JIRA/Confluence, and a sandbox model endpoint so integration, replay, backup,
-restore, load, and live-provider validation can run against real dependencies.
+debuggability, disposable backend integration, full-stack rehearsal, and
+operations-rehearsal stage. The next concrete completion gate requires
+company/staging PostgreSQL, Neo4j, Qdrant, JIRA/Confluence, SSO/OIDC proxy, and
+a real sandbox model endpoint so integration, replay, backup, restore, load,
+live-source, and live-provider validation can run against real organization
+dependencies.
