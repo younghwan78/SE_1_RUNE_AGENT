@@ -49,6 +49,9 @@ audit event before re-raising the error to the API layer.
 Replay executions are stored as `run_type="replay"` with their own audit
 boundary events and restart-safe run/step/LLM traces. Replay trace persistence
 does not overwrite reviewed operational findings or graph state.
+Replay idempotency responses are also restart-safe: a repeated request with the
+same idempotency key can return the persisted response even after the source
+analysis object has aged out of in-memory runtime state.
 
 Run step responses include step-level `retrieval_context_ref`,
 `validation_status`, and `validation_result` fields so debug screens can show

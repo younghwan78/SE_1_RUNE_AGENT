@@ -244,10 +244,10 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
     """Replay a run and return object-level diff."""
     runtime = request.app.state.runtime
     settings = request.app.state.settings
-    if run_id not in runtime.analyses:
+    source_run = runtime.traces.runs.get(run_id)
+    if source_run is None:
         raise HTTPException(status_code=404, detail="run not found")
-    source = runtime.analyses[run_id]
-    require_project(request, source.run.project_key, "developer")
+    require_project(request, source_run.project_key, "developer")
     idempotency = prepare_idempotency(
         request=request,
         runtime=runtime,
@@ -259,6 +259,9 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
     )
     if idempotency.cached_response is not None:
         return idempotency.cached_response
+    if run_id not in runtime.analyses:
+        raise HTTPException(status_code=404, detail="run analysis result not available for replay")
+    source = runtime.analyses[run_id]
     replay_run_id = payload.replay_run_id or settings.new_id("replay")
     runtime._record_run_started(
         run_id=replay_run_id,

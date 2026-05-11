@@ -131,7 +131,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 201 passed, 3 skipped
+- `uv run pytest`: 202 passed, 3 skipped
 - `uv run pytest tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   15 passed, validating run-start audit capture, analysis/ingestion run audit
   metadata, and SQLite restore of audit events
@@ -139,6 +139,10 @@ Latest local verification:
   14 passed, validating replay run type, replay audit boundary events,
   restart-safe replay run trace lookup, and replay trace persistence without
   overwriting reviewed findings
+- `uv run pytest tests/contract/test_persistence_api.py tests/contract/test_replay_feedback_api.py tests/contract/test_security_api.py`:
+  20 passed, validating replay idempotency response restore after restart,
+  conflict detection after restart, protected replay access, and replay
+  persistence contracts
 - `uv run pytest tests/unit/api/test_runtime_state.py tests/unit/debug/test_trace_recorder.py tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   20 passed, validating immediate run-start audit persistence, failed run
   state, failed completion audit events, and failure audit persistence
@@ -163,7 +167,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed,
   including API restart restore, `audit_total_events=3`, metrics surface check
   (`http_total_requests=7`, `graph_nodes=14`, `llm_calls=1`), and smoke-load
-  pass (`load_smoke.p95_ms` about 3253 ms against a 5000 ms local rehearsal
+  pass (`load_smoke.p95_ms` about 3218 ms against a 5000 ms local rehearsal
   threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed, including review-ready, canary, active, rollback, and security-blocked eval paths
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
@@ -201,7 +205,7 @@ Latest GitHub verification:
 | Source snapshot lineage | `AgentRun.input_snapshot_ids`, normalized `SourceArtifact.artifact_id`, `LocalAnalysisWorkflow` metadata update, run API and integration tests | Complete for local/source-artifact snapshot lineage |
 | Run trigger lineage | `AgentRun.triggered_by`, `AgentRun.trigger_source`, API analyze path, schedule run-now path, periodic scheduler path, replay path, contract tests | Complete for local API/manual/schedule/replay trigger attribution |
 | Agent workflow orchestration | `LocalAnalysisWorkflow`, stable public stage names, `AgentStepTrace`, `LLMCallTrace`, `docs/implementation/01_MODULE_DESIGN.md` LangGraph transition note | Complete for local/dummy workflow contract validation; LangGraph remains a later orchestration swap after production dependency and branching needs justify it |
-| Command idempotency | `POST /api/v1/runs/ingest`, `POST /api/v1/runs/analyze`, `POST /api/v1/runs/{run_id}/replay`, `PUT /api/v1/schedule`, `POST /api/v1/schedule/run-now`, `POST /api/v1/approvals/{approval_id}/decision`, `POST /api/v1/findings/{finding_id}/status`, `POST /api/v1/feedback`, `POST /api/v1/improvements/{candidate_id}/activate`, `POST /api/v1/improvements/{candidate_id}/rollback`, `POST /api/v1/admin/model-profiles/{id}/activate`, `POST /api/v1/admin/model-profiles/{id}/rollback`, `POST /api/v1/admin/prompt-versions/{id}/activate`, `POST /api/v1/admin/prompt-versions/{id}/rollback`, and `POST /api/v1/audit/retention/archive-prune` `Idempotency-Key`/`X-Idempotency-Key`, persisted `idempotency_results`, API conflict tests, SQLite restart restore test, graph commit idempotency keys | Complete for implemented local command APIs plus graph commit paths |
+| Command idempotency | `POST /api/v1/runs/ingest`, `POST /api/v1/runs/analyze`, `POST /api/v1/runs/{run_id}/replay`, `PUT /api/v1/schedule`, `POST /api/v1/schedule/run-now`, `POST /api/v1/approvals/{approval_id}/decision`, `POST /api/v1/findings/{finding_id}/status`, `POST /api/v1/feedback`, `POST /api/v1/improvements/{candidate_id}/activate`, `POST /api/v1/improvements/{candidate_id}/rollback`, `POST /api/v1/admin/model-profiles/{id}/activate`, `POST /api/v1/admin/model-profiles/{id}/rollback`, `POST /api/v1/admin/prompt-versions/{id}/activate`, `POST /api/v1/admin/prompt-versions/{id}/rollback`, and `POST /api/v1/audit/retention/archive-prune` `Idempotency-Key`/`X-Idempotency-Key`, persisted `idempotency_results`, API conflict tests, SQLite restart restore tests for analyze and replay responses, graph commit idempotency keys | Complete for implemented local command APIs plus graph commit paths |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests, restricted/confidential masking and access-check gates, provider usage metadata extraction, token/cost trace propagation, `ops/model_gateway/smoke_model_gateway.py`, `ops/model_gateway/rehearse_model_gateway.py` | Profile/registry/live-shaped HTTP foundation, env-driven company sandbox rehearsal entrypoint, and provider-reported token/cost observability complete; real external provider sandbox validation pending |
 | LLM-assisted workflow trace | `LocalAnalysisWorkflow` `llm_assisted_reasoning` stage, `ModelGatewayClient`, structured reasoning output with confidence and counter-evidence refs, `LLMCallTrace`, step-level `retrieval_context_ref`/`validation_status`/`validation_result`, SQLite restore of `llm_call_traces` and step validation metadata, `/api/v1/runs/{run_id}/llm-calls`, debug diff LLM panes | Dummy model-gateway integration complete with step-level validation/debug metadata; live model quality validation pending |
 | Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, `/api/v1/runs/{run_id}/steps`, `/api/v1/runs/{run_id}/llm-calls`, `/api/v1/runs/{run_id}/artifacts`, `/api/v1/runs/{run_id}/graph-delta`, `/api/v1/replays/{replay_id}/diff`, restart-safe `replay_results`, replay `AgentRun`/step/LLM trace persistence, compared replay model/prompt metadata, approval lineage API, run diff-view API, run debug UI, LLM/graph delta side-by-side panes | Local debug workbench foundation complete with persisted retrieval/validation metadata on agent steps, replay run type, replay audit boundaries, and replay comparison version metadata; live LLM payload validation pending |
@@ -306,11 +310,13 @@ blocking:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `201 passed, 3 skipped`
+- `uv run pytest`: `202 passed, 3 skipped`
 - `uv run pytest tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   `15 passed`
 - `uv run pytest tests/contract/test_replay_feedback_api.py tests/contract/test_persistence_api.py tests/contract/test_audit_api.py`:
   `14 passed`
+- `uv run pytest tests/contract/test_persistence_api.py tests/contract/test_replay_feedback_api.py tests/contract/test_security_api.py`:
+  `20 passed`
 - `uv run pytest tests/unit/api/test_runtime_state.py tests/unit/debug/test_trace_recorder.py tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   `20 passed`
 - `uv run python ops/observability/validate_observability_assets.py`: passed

@@ -261,6 +261,68 @@ def test_sqlite_state_store_restores_analyze_idempotency_after_restart(tmp_path)
     assert [run["run_id"] for run in runs.json()].count("run_idempotency_restore") == 1
 
 
+def test_sqlite_state_store_restores_replay_idempotency_after_restart(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    db_path = tmp_path / "runtime.sqlite3"
+    settings = Settings(
+        artifact_root=tmp_path / "artifacts",
+        state_store="sqlite",
+        sqlite_state_path=db_path,
+    )
+
+    first_app = create_app(settings)
+    with TestClient(first_app) as client:
+        analyze = client.post(
+            "/api/v1/runs/analyze",
+            json={
+                "project_key": "RUNE_CAM_ALPHA",
+                "scenario": "RUNE_CAM_ALPHA",
+                "run_id": "run_replay_restore_idem",
+            },
+        )
+        first = client.post(
+            "/api/v1/runs/run_replay_restore_idem/replay",
+            json={
+                "replay_run_id": "replay_restore_idem",
+                "scenario": "RUNE_CAM_ALPHA",
+            },
+            headers={"Idempotency-Key": "idem-replay-restore-1"},
+        )
+    assert analyze.status_code == 200
+    assert first.status_code == 200
+
+    second_app = create_app(settings)
+    with TestClient(second_app) as client:
+        second = client.post(
+            "/api/v1/runs/run_replay_restore_idem/replay",
+            json={
+                "replay_run_id": "replay_restore_idem",
+                "scenario": "RUNE_CAM_ALPHA",
+            },
+            headers={"Idempotency-Key": "idem-replay-restore-1"},
+        )
+        conflict = client.post(
+            "/api/v1/runs/run_replay_restore_idem/replay",
+            json={
+                "replay_run_id": "replay_restore_idem_conflict",
+                "scenario": "RUNE_CAM_ALPHA",
+            },
+            headers={"Idempotency-Key": "idem-replay-restore-1"},
+        )
+        uncached = client.post(
+            "/api/v1/runs/run_replay_restore_idem/replay",
+            json={
+                "replay_run_id": "replay_restore_uncached",
+                "scenario": "RUNE_CAM_ALPHA",
+            },
+        )
+
+    assert second.status_code == 200
+    assert second.json() == first.json()
+    assert conflict.status_code == 409
+    assert uncached.status_code == 404
+    assert uncached.json()["detail"] == "run analysis result not available for replay"
+
+
 def test_runtime_archive_prune_deletes_pruned_audit_rows_from_state_store(tmp_path) -> None:  # type: ignore[no-untyped-def]
     store = SQLiteStateStore(tmp_path / "runtime.sqlite3")
     runtime = RuntimeState.create(
