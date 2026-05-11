@@ -115,6 +115,7 @@ def load_manual_evidence(path: Path) -> list[ManualEvidence]:
     if not isinstance(checks, list):
         raise ValueError("manual evidence file must contain a checks array")
     records: list[ManualEvidence] = []
+    seen_check_ids: set[str] = set()
     for index, item in enumerate(checks):
         if not isinstance(item, dict):
             raise ValueError(f"checks[{index}] must be an object")
@@ -124,6 +125,9 @@ def load_manual_evidence(path: Path) -> list[ManualEvidence]:
         evidence = item.get("evidence")
         if not isinstance(check_id, str) or not check_id:
             raise ValueError(f"checks[{index}].check_id must be a non-empty string")
+        if check_id in seen_check_ids:
+            raise ValueError(f"checks[{index}].check_id duplicates {check_id}")
+        seen_check_ids.add(check_id)
         if status not in {"passed", "warning", "failed"}:
             raise ValueError(f"checks[{index}].status must be passed, warning, or failed")
         if not isinstance(summary, str) or not summary:
