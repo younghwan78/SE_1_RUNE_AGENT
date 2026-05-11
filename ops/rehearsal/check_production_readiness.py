@@ -126,6 +126,10 @@ def load_manual_evidence(path: Path) -> list[ManualEvidence]:
             raise ValueError(f"checks[{index}].summary must be a non-empty string")
         if not isinstance(evidence, list) or not all(isinstance(entry, str) for entry in evidence):
             raise ValueError(f"checks[{index}].evidence must be a string array")
+        if status == "passed" and _contains_todo_placeholder([summary, *evidence]):
+            raise ValueError(
+                f"checks[{index}] cannot be passed while summary or evidence contains TODO"
+            )
         records.append(
             ManualEvidence(
                 check_id=check_id,
@@ -546,6 +550,10 @@ def _presence_evidence(env: Mapping[str, str], key: str) -> str:
     if not value:
         return f"{key}=<unset>"
     return f"{key}=<set>"
+
+
+def _contains_todo_placeholder(values: Sequence[str]) -> bool:
+    return any("TODO:" in value for value in values)
 
 
 def main() -> int:

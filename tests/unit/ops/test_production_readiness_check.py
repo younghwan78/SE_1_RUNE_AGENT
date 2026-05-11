@@ -4,6 +4,8 @@ import importlib.util
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 
 def test_readiness_report_flags_unverified_company_gates() -> None:
     checker = _load_checker_module()
@@ -144,6 +146,30 @@ def test_load_manual_evidence_from_json(tmp_path) -> None:  # type: ignore[no-un
     assert len(evidence) == 1
     assert evidence[0].check_id == "local_regression_gates"
     assert evidence[0].status == "passed"
+
+
+def test_load_manual_evidence_rejects_passed_todo_placeholder(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text(
+        """
+        {
+          "schema_version": "v1",
+          "checks": [
+            {
+              "check_id": "company_postgres_rehearsal",
+              "status": "passed",
+              "summary": "TODO: replace after staging run.",
+              "evidence": ["TODO: attach reviewed CI run id"]
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="cannot be passed"):
+        checker.load_manual_evidence(evidence_path)
 
 
 def test_manual_evidence_template_only_contains_unresolved_manual_gates() -> None:

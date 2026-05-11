@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `4a4b2a2 Add readiness template CI smoke`
 - `16fad95 Add readiness evidence template generation`
 - `d45067b Add explicit release gate CI steps`
 - `ac42a78 Refresh audit after UI smoke gate`
@@ -81,7 +82,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 148 passed, 3 skipped
+- `uv run pytest`: 149 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -104,14 +105,14 @@ Latest local verification:
 - `uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -`: passed, producing a review-safe unresolved-gate evidence template with `failed` TODO placeholders
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected on this local shell because production env checks are still unset; manual evidence resolved example manual gates
-- `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 9 passed, including manual evidence file loading, review-safe evidence template generation, complete env/evidence pass behavior, unknown evidence warning blocking, and Kubernetes Helm evidence gating
+- `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 10 passed, including manual evidence file loading, TODO-placeholder rejection for passed evidence, review-safe evidence template generation, complete env/evidence pass behavior, unknown evidence warning blocking, and Kubernetes Helm evidence gating
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25692452215` for `16fad95`: completed successfully
+- GitHub Actions `CI` run `25692552615` for `4a4b2a2`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
