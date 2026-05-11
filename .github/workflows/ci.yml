@@ -64,6 +64,9 @@ jobs:
       - name: Readiness example safety validation
         run: uv run python ops/rehearsal/validate_evidence_example.py
 
+      - name: CI gate coverage validation
+        run: uv run python ops/rehearsal/validate_ci_gate_coverage.py
+
       - name: Operator UI graph smoke
         run: uv run python ops/ui/smoke_operator_ui.py
 
