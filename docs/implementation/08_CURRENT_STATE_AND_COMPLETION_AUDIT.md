@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `133c2ad Refresh audit after decision email rehearsal`
 - `d2e83fe Add decision email export rehearsal`
 - `92368ca Add backup set verifier`
 - `6d5cce8 Add trusted proxy rehearsal runner`
@@ -64,7 +65,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25685203480` for `d2e83fe`: completed successfully
+- GitHub Actions `CI` run `25685259413` for `133c2ad`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
