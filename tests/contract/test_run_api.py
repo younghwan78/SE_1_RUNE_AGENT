@@ -64,6 +64,59 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
     assert projection.json()["counts"]["orphan_nodes"] >= 1
 
 
+def test_analyze_run_idempotency_key_returns_original_response(client: TestClient) -> None:
+    payload = {
+        "project_key": "RUNE_CAM_ALPHA",
+        "scenario": "RUNE_CAM_ALPHA",
+        "run_id": "run_api_idempotent",
+    }
+    first = client.post(
+        "/api/v1/runs/analyze",
+        json=payload,
+        headers={"Idempotency-Key": "idem-analyze-1"},
+    )
+    second = client.post(
+        "/api/v1/runs/analyze",
+        json=payload,
+        headers={"Idempotency-Key": "idem-analyze-1"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
+
+    runs = client.get("/api/v1/runs?project_key=RUNE_CAM_ALPHA")
+    assert runs.status_code == 200
+    assert [run["run_id"] for run in runs.json()].count("run_api_idempotent") == 1
+
+
+def test_analyze_run_idempotency_key_rejects_different_payload(client: TestClient) -> None:
+    first = client.post(
+        "/api/v1/runs/analyze",
+        json={
+            "project_key": "RUNE_CAM_ALPHA",
+            "scenario": "RUNE_CAM_ALPHA",
+            "run_id": "run_api_idempotency_conflict",
+        },
+        headers={"Idempotency-Key": "idem-analyze-conflict"},
+    )
+    conflict = client.post(
+        "/api/v1/runs/analyze",
+        json={
+            "project_key": "RUNE_CAM_ALPHA",
+            "scenario": "RUNE_CAM_ALPHA_VARIANT",
+            "run_id": "run_api_idempotency_conflict",
+        },
+        headers={"Idempotency-Key": "idem-analyze-conflict"},
+    )
+
+    assert first.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["detail"]["message"] == (
+        "idempotency key reused with different request"
+    )
+
+
 def test_modify_approval_commits_corrected_edge_and_feedback(client: TestClient) -> None:
     response = client.post(
         "/api/v1/runs/analyze",

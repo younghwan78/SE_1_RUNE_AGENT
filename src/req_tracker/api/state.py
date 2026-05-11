@@ -1,6 +1,7 @@
 """Runtime state for local API execution."""
 
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -39,6 +40,7 @@ class RuntimeState(BaseModel):
     audit_archive_store: AuditArchiveWriter
     analyses: dict[str, AnalysisResult]
     replays: dict[str, ReplayResult]
+    idempotency_results: dict[str, dict[str, Any]]
     scheduler: RunScheduler
     state_store: StateStore | None = None
 
@@ -65,6 +67,7 @@ class RuntimeState(BaseModel):
             or LocalAuditArchiveStore(artifact_root / "audit_archives"),
             analyses={},
             replays={},
+            idempotency_results={},
             scheduler=RunScheduler(schedule_config),
             state_store=state_store,
         )
@@ -233,6 +236,35 @@ class RuntimeState(BaseModel):
             payload=result,
         )
 
+    def record_idempotency_result(
+        self,
+        *,
+        record_id: str,
+        idempotency_key: str,
+        command: str,
+        project_key: str | None,
+        request_hash: str,
+        response: dict[str, Any],
+    ) -> None:
+        """Record a completed command response for idempotent API retry."""
+        record = {
+            "record_id": record_id,
+            "idempotency_key": idempotency_key,
+            "command": command,
+            "project_key": project_key,
+            "request_hash": request_hash,
+            "response": response,
+        }
+        self.idempotency_results[record_id] = record
+        if self.state_store is None:
+            return
+        self.state_store.upsert(
+            collection="idempotency_results",
+            entity_id=record_id,
+            project_key=project_key,
+            payload=record,
+        )
+
     def archive_and_prune_audit(self) -> dict[str, object]:
         """Archive/prune audit events and mirror pruned rows into the state store."""
         result = self.audit.archive_and_prune(archive_writer=self.audit_archive_store)
@@ -258,6 +290,10 @@ class RuntimeState(BaseModel):
         for payload in self.state_store.list("replay_results"):
             replay = ReplayResult.model_validate(payload)
             self.replays[replay.replay_run_id] = replay
+        for payload in self.state_store.list("idempotency_results"):
+            record_id = payload.get("record_id")
+            if isinstance(record_id, str):
+                self.idempotency_results[record_id] = payload
         for payload in self.state_store.list("approval_items"):
             approval = ApprovalItem.model_validate(payload)
             self.approvals.items[approval.approval_id] = approval

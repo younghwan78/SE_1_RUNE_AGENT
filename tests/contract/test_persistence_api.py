@@ -115,6 +115,52 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     }
 
 
+def test_sqlite_state_store_restores_analyze_idempotency_after_restart(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    db_path = tmp_path / "runtime.sqlite3"
+    settings = Settings(
+        artifact_root=tmp_path / "artifacts",
+        state_store="sqlite",
+        sqlite_state_path=db_path,
+    )
+    payload = {
+        "project_key": "RUNE_CAM_ALPHA",
+        "scenario": "RUNE_CAM_ALPHA",
+        "run_id": "run_idempotency_restore",
+    }
+
+    first_app = create_app(settings)
+    with TestClient(first_app) as client:
+        first = client.post(
+            "/api/v1/runs/analyze",
+            json=payload,
+            headers={"Idempotency-Key": "idem-restore-1"},
+        )
+        assert first.status_code == 200
+
+    store = SQLiteStateStore(db_path)
+    assert store.counts_by_collection()["idempotency_results"] == 1
+
+    second_app = create_app(settings)
+    with TestClient(second_app) as client:
+        second = client.post(
+            "/api/v1/runs/analyze",
+            json=payload,
+            headers={"Idempotency-Key": "idem-restore-1"},
+        )
+        conflict = client.post(
+            "/api/v1/runs/analyze",
+            json={**payload, "scenario": "RUNE_CAM_ALPHA_VARIANT"},
+            headers={"Idempotency-Key": "idem-restore-1"},
+        )
+        runs = client.get("/api/v1/runs?project_key=RUNE_CAM_ALPHA")
+
+    assert second.status_code == 200
+    assert second.json()["run"]["run_id"] == "run_idempotency_restore"
+    assert conflict.status_code == 409
+    assert runs.status_code == 200
+    assert [run["run_id"] for run in runs.json()].count("run_idempotency_restore") == 1
+
+
 def test_runtime_archive_prune_deletes_pruned_audit_rows_from_state_store(tmp_path) -> None:  # type: ignore[no-untyped-def]
     store = SQLiteStateStore(tmp_path / "runtime.sqlite3")
     runtime = RuntimeState.create(
