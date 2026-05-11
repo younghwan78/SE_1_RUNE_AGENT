@@ -87,11 +87,20 @@
       ]
     },
     {
+      "check_id": "kubernetes_helm_rehearsal",
+      "status": "passed",
+      "summary": "Kubernetes Helm lint and rendered manifest review passed for company values.",
+      "evidence": [
+        "staging-ci:helm-lint-template:run-12354",
+        "artifact:helm-template-rune-agent-redacted.yaml"
+      ]
+    },
+    {
       "check_id": "local_regression_gates",
       "status": "passed",
       "summary": "Release branch local regression and rehearsal gate list passed.",
       "evidence": [
-        "github-actions:CI:run-12354",
+        "github-actions:CI:run-12355",
         "artifact:full-stack-rehearsal-report.json"
       ]
     }

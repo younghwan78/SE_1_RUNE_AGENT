@@ -34,7 +34,38 @@ def test_readiness_report_flags_unverified_company_gates() -> None:
     checks = {check["check_id"]: check for check in report["checks"]}
     assert checks["postgres_state_store"]["status"] == "passed"
     assert checks["company_postgres_rehearsal"]["status"] == "manual_required"
+    assert checks["kubernetes_helm_rehearsal"]["status"] == "passed"
     assert "secret" not in str(report)
+
+
+def test_readiness_report_requires_helm_evidence_for_kubernetes_target() -> None:
+    checker = _load_checker_module()
+
+    report = checker.build_readiness_report(
+        {
+            "DEPLOYMENT_TARGET": "kubernetes",
+        }
+    )
+
+    checks = {check["check_id"]: check for check in report["checks"]}
+    assert checks["kubernetes_helm_rehearsal"]["status"] == "manual_required"
+
+    resolved = checker.build_readiness_report(
+        {
+            "DEPLOYMENT_TARGET": "kubernetes",
+        },
+        manual_evidence=[
+            checker.ManualEvidence(
+                check_id="kubernetes_helm_rehearsal",
+                status="passed",
+                summary="Helm lint/template passed.",
+                evidence=["staging-ci:helm:run-1"],
+            )
+        ],
+    )
+
+    resolved_checks = {check["check_id"]: check for check in resolved["checks"]}
+    assert resolved_checks["kubernetes_helm_rehearsal"]["status"] == "passed"
 
 
 def test_readiness_report_fails_missing_production_env() -> None:
@@ -133,7 +164,7 @@ def test_readiness_report_passes_with_complete_env_and_reviewed_evidence() -> No
 
     assert report["passed"] is True
     assert report["summary"] == {
-        "passed": 16,
+        "passed": 17,
         "warning": 0,
         "failed": 0,
         "manual_required": 0,

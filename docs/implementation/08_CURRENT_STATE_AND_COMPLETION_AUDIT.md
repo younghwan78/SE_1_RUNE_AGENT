@@ -72,7 +72,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 142 passed, 3 skipped
+- `uv run pytest`: 143 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -87,12 +87,12 @@ Latest local verification:
 - `uv run python ops/security/rehearse_trusted_proxy_auth.py`: failed as expected on this local shell because `RUNE_API_BASE_URL` and `TRUSTED_PROXY_SECRET` are unset; output masks secret state and lists missing config
 - `uv run python ops/security/rehearse_masking_policy.py`: passed, verifying representative sensitive inputs are redacted without printing raw sensitive strings or forbidden patterns
 - `uv run pytest tests/unit/ops/test_backup_verify.py`: passed, validating backup-set required files, SHA256 mismatch detection, artifact tar, Qdrant JSON, Neo4j dump marker, and git commit marker checks
-- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3041 ms against a 5000 ms local rehearsal threshold)
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3057 ms against a 5000 ms local rehearsal threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected on this local shell because production env checks are still unset; manual evidence resolved example manual gates
-- `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 6 passed, including manual evidence file loading, complete env/evidence pass behavior, and unknown evidence warning blocking
+- `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 7 passed, including manual evidence file loading, complete env/evidence pass behavior, unknown evidence warning blocking, and Kubernetes Helm evidence gating
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment

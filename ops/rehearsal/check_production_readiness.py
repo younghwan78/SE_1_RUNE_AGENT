@@ -294,6 +294,7 @@ def _company_rehearsal_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
             ),
         )
     )
+    checks.append(_kubernetes_helm_rehearsal_check(env))
     return checks
 
 
@@ -377,6 +378,39 @@ def _external_rehearsal_check(
         summary="No company/staging endpoint configuration was found.",
         evidence=[_presence_evidence(env, key) for key in keys],
         next_action=next_action,
+    )
+
+
+def _kubernetes_helm_rehearsal_check(env: Mapping[str, str]) -> ReadinessCheck:
+    deployment_target = env.get("DEPLOYMENT_TARGET", "").lower()
+    kubernetes_enabled = env.get("KUBERNETES_DEPLOYMENT", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    if deployment_target != "kubernetes" and not kubernetes_enabled:
+        return ReadinessCheck(
+            check_id="kubernetes_helm_rehearsal",
+            status="passed",
+            summary="Kubernetes deployment is not selected; Ubuntu runbook remains primary.",
+            evidence=[
+                f"DEPLOYMENT_TARGET={deployment_target or '<unset>'}",
+                _presence_evidence(env, "KUBERNETES_DEPLOYMENT"),
+            ],
+        )
+    return ReadinessCheck(
+        check_id="kubernetes_helm_rehearsal",
+        status="manual_required",
+        summary="Kubernetes deployment is selected, but Helm lint/template evidence is required.",
+        evidence=[
+            f"DEPLOYMENT_TARGET={deployment_target or '<unset>'}",
+            _presence_evidence(env, "KUBERNETES_DEPLOYMENT"),
+            _presence_evidence(env, "HELM_RELEASE_EVIDENCE"),
+        ],
+        next_action=(
+            "Run helm lint and helm template against company values, then attach "
+            "the reviewed output reference as manual evidence."
+        ),
     )
 
 
