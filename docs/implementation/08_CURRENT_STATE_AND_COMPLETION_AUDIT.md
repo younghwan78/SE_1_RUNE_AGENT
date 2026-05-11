@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `dee09af Trace model gateway usage metrics`
 - `149bb81 Require observability staging evidence`
 - `7ac8a0a Refresh audit after observability assets`
 - `2e530f3 Add observability deployment assets`
@@ -148,7 +149,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25697872197` for `149bb81`: completed successfully
+- GitHub Actions `CI` run `25698270513` for `dee09af`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
