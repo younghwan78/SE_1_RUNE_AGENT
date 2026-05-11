@@ -45,8 +45,10 @@ POC에서 그대로 가져오지 않을 것:
 | --- | --- |
 | `docs/api/README.md` | FastAPI route/OpenAPI 문서화 기준 |
 | `docs/ontology/ONTOLOGY_V1.md` | ontology v1의 사람이 읽는 기준 문서 |
+| `docs/security/DATA_POLICY.md` | 데이터 등급과 모델 전송 허용 정책 |
 | `docs/security/RBAC_MATRIX.md` | 역할/권한 matrix |
 | `docs/runbooks/BACKUP_RESTORE.md` | backup/restore runbook |
+| `docs/runbooks/MODEL_POLICY.md` | model profile, prompt promotion, replay/eval 정책 |
 | `ops/migrations/README.md` | packaged PostgreSQL migration 운영 기준 |
 | `ops/helm/README.md` | Helm packaging deferred scope와 진입 조건 |
 | `tests/evals/README.md` | eval regression test 확장 위치 |
