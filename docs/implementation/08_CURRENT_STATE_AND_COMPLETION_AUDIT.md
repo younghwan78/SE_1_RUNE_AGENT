@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `f3fd0ee Require reviewed readiness evidence metadata`
 - `844b52e Link rollback validator to release blockers`
 - `fd888a7 Add postgres migration rollback validation gate`
 - `f4f70d4 Add postgres typed mirror validation gate`
@@ -121,7 +122,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25693661671` for `844b52e`: completed successfully
+- GitHub Actions `CI` run `25693942538` for `f3fd0ee`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
