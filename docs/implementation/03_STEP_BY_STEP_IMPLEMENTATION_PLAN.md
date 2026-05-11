@@ -569,6 +569,7 @@ Dummy 검증:
 - JIRA REST source adapter foundation behind the shared `SourceAdapter` contract
 - Confluence REST source adapter foundation behind the shared `SourceAdapter` contract
 - JIRA/Confluence REST retry, rate-limit, permission-denied, and warning handling foundation
+- local JIRA/Confluence REST source smoke harness for HTTP pagination and permission warnings
 - ingestion normalization, masking, chunking, evidence span path
 - deterministic node extraction, source-link edge candidate generation, findings rules
 - graph/vector backend protocols for production backend replacement
@@ -597,7 +598,7 @@ Dummy 검증:
 
 - production-grade typed PostgreSQL query repositories beyond the current core mirrors
 - company/staging PostgreSQL, Neo4j, and Qdrant rehearsal beyond disposable Docker validation
-- direct production transport implementations behind the source skill/export boundary
+- real company JIRA/Confluence sandbox rehearsal behind the source skill/export boundary
 - real external/sandbox LLM payload diff validation after endpoint access is available
 - direct IdP/OIDC token validation and company group mapping rehearsal
 - React/React Flow migration decision after real graph shape validation

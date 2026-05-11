@@ -26,8 +26,9 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 83 passed, 3 skipped
+- `uv run pytest`: 84 passed, 3 skipped
 - `uv run python ops/integration/run_backend_integration.py`: 3 passed
+- `uv run python ops/source/smoke_source_adapters.py`: passed
 
 Latest GitHub verification:
 
@@ -38,7 +39,7 @@ Latest GitHub verification:
 | Requirement | Current evidence | Status |
 | --- | --- | --- |
 | Production plan is the source of truth | `PRODUCTION_EXECUTION_PLAN.md`, `docs/implementation/03_STEP_BY_STEP_IMPLEMENTATION_PLAN.md` | Complete |
-| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry and permission-warning foundation complete; restricted decision/email file path complete; Email live access pending |
+| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, `ops/source/smoke_source_adapters.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry, pagination, permission-warning, and local HTTP smoke validation complete; restricted decision/email file path complete; Email live access and real company sandbox validation pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests, `ops/model_gateway/smoke_model_gateway.py` | Profile/registry/live-shaped HTTP foundation complete; real external provider sandbox validation pending |
@@ -75,12 +76,13 @@ Latest GitHub verification:
 
 ### P2: JIRA Production Connector
 
-- Run JIRA connector against a disposable or sandbox JIRA project.
+- Run JIRA connector against a real company sandbox JIRA project.
 - Keep MCP/REST/export selection inside Claude Code source skills and local
   config, not in core Python workflow code.
 - Map source permission results to project authorization policy after real
   company identity rules are available.
-- Extend the same live-source validation path to Confluence sandbox access.
+- Extend the same live-source validation path to a real company Confluence
+  sandbox space.
 
 ### P3: Model Provider and Debug Workbench
 

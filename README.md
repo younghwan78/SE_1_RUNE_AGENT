@@ -129,6 +129,16 @@ uv run python ops/model_gateway/smoke_model_gateway.py
 This starts a disposable localhost JSON gateway and verifies that the production
 HTTP provider records a failed primary call and succeeds through fallback.
 
+Run local JIRA and Confluence REST adapter smoke without company systems:
+
+```powershell
+uv run python ops/source/smoke_source_adapters.py
+```
+
+This starts a disposable localhost source server and validates HTTP pagination,
+normalized artifacts, links, and permission-denied warnings through the real
+REST adapters.
+
 Ubuntu server deployment details are in `README_ubuntu.md`.
 
 ## Current Implementation Stage
@@ -143,6 +153,7 @@ Current local implementation:
 - in-memory trace recorder
 - dummy source adapter and fixture-backed analysis workflow
 - JIRA, Confluence, and restricted decision/email export-file adapters
+- local JIRA/Confluence REST source smoke harness
 - restricted decision/email export policy that skips unapproved mailbox artifacts
 - generic HTTP JSON model provider with file-backed model/prompt registry
 - local model-gateway smoke harness for HTTP fallback and trace validation

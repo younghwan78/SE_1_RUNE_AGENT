@@ -111,6 +111,12 @@ Run the local model-gateway fallback smoke without a real model endpoint:
 uv run python ops/model_gateway/smoke_model_gateway.py
 ```
 
+Run local source-adapter smoke without company systems:
+
+```bash
+uv run python ops/source/smoke_source_adapters.py
+```
+
 Run disposable backend integration tests on a development server with Docker:
 
 ```bash
