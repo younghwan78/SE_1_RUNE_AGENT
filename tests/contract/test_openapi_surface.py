@@ -25,6 +25,7 @@ def test_production_plan_endpoint_surface_is_registered(client: TestClient) -> N
         ("GET", "/api/v1/runs/{run_id}/artifacts"),
         ("GET", "/api/v1/runs/{run_id}/graph-delta"),
         ("GET", "/api/v1/replays/{replay_id}/diff"),
+        ("GET", "/api/v1/debug/source-cursors"),
         ("GET", "/api/v1/debug/approvals/{approval_id}/lineage"),
         ("GET", "/api/v1/metrics"),
         ("GET", "/api/v1/metrics/summary"),

@@ -2,11 +2,18 @@
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from req_tracker.adapters.base import SourceFetchResult, SourceScope
+from req_tracker.adapters.base import (
+    SourceFetchResult,
+    SourceScope,
+    SourceSyncCursorState,
+    SyncCursor,
+    source_sync_cursor_id,
+)
 from req_tracker.adapters.dummy.adapter import DummySourceAdapter
 from req_tracker.approvals.models import ApprovalItem
 from req_tracker.approvals.service import ApprovalService
 from req_tracker.debug.artifacts import LocalArtifactStore
+from req_tracker.debug.hash import stable_hash
 from req_tracker.debug.models import AgentRun, AgentStepTrace, RunType, TriggerSource
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.evidence.spans import build_artifact_evidence
@@ -48,6 +55,7 @@ class AnalysisResult(BaseModel):
     candidate_edges: list[TraceabilityEdge]
     findings: list[Finding]
     approvals: list[ApprovalItem]
+    source_cursor: SourceSyncCursorState
 
 
 class IngestionResult(BaseModel):
@@ -59,6 +67,7 @@ class IngestionResult(BaseModel):
     steps: list[AgentStepTrace]
     artifacts: list[SourceArtifact]
     chunks: list[ArtifactChunk]
+    source_cursor: SourceSyncCursorState
     source_warnings: list[str] = Field(default_factory=list)
 
 
@@ -110,7 +119,7 @@ class LocalAnalysisWorkflow:
             trigger_source=trigger_source,
         )
         self.traces.mark_run_running(run_id)
-        fetch, artifacts, chunks = self._run_ingestion_stages(
+        fetch, artifacts, chunks, source_cursor = self._run_ingestion_stages(
             run_id=run_id,
             project_key=project_key,
             scenario=scenario,
@@ -121,6 +130,7 @@ class LocalAnalysisWorkflow:
             steps=self.traces.list_steps(run_id),
             artifacts=artifacts,
             chunks=chunks,
+            source_cursor=source_cursor,
             source_warnings=fetch.source_warnings,
         )
 
@@ -143,7 +153,7 @@ class LocalAnalysisWorkflow:
             trigger_source=trigger_source,
         )
         self.traces.mark_run_running(run_id)
-        fetch, artifacts, chunks = self._run_ingestion_stages(
+        fetch, artifacts, chunks, source_cursor = self._run_ingestion_stages(
             run_id=run_id,
             project_key=project_key,
             scenario=scenario,
@@ -266,6 +276,7 @@ class LocalAnalysisWorkflow:
             candidate_edges=edges,
             findings=findings,
             approvals=approvals,
+            source_cursor=source_cursor,
         )
 
     def _run_ingestion_stages(
@@ -274,7 +285,12 @@ class LocalAnalysisWorkflow:
         run_id: str,
         project_key: str,
         scenario: str,
-    ) -> tuple[SourceFetchResult, list[SourceArtifact], list[ArtifactChunk]]:
+    ) -> tuple[
+        SourceFetchResult,
+        list[SourceArtifact],
+        list[ArtifactChunk],
+        SourceSyncCursorState,
+    ]:
         """Run shared deterministic ingestion stages for ingest and analyze."""
         fetch_step = self.traces.start_step(
             step_id=f"step_{run_id}_source_fetch",
@@ -291,9 +307,31 @@ class LocalAnalysisWorkflow:
             validation_status="passed" if not fetch.partial_failure else "failed",
             validation_result={
                 "artifact_count": len(fetch.artifacts),
+                "page_count": fetch.page_count,
+                "source_sync_cursor_id": source_sync_cursor_id(
+                    source_type=self.adapter.source_type,
+                    project_key=project_key,
+                    scenario=scenario,
+                ),
+                "completed_cursor": (
+                    fetch.completed_cursor.model_dump(mode="json")
+                    if fetch.completed_cursor is not None
+                    else None
+                ),
+                "next_cursor": (
+                    fetch.next_cursor.model_dump(mode="json")
+                    if fetch.next_cursor is not None
+                    else None
+                ),
                 "source_warnings": fetch.source_warnings,
                 "partial_failure": fetch.partial_failure,
             },
+        )
+        source_cursor = self._source_sync_cursor_state(
+            run_id=run_id,
+            project_key=project_key,
+            scenario=scenario,
+            fetch=fetch,
         )
 
         norm_step = self.traces.start_step(
@@ -350,7 +388,7 @@ class LocalAnalysisWorkflow:
                 "vector_upserted": True,
             },
         )
-        return fetch, artifacts, chunks
+        return fetch, artifacts, chunks, source_cursor
 
     def _fetch_all(self, *, project_key: str, scenario: str) -> SourceFetchResult:
         """Fetch all source pages for a local analysis run."""
@@ -360,17 +398,55 @@ class LocalAnalysisWorkflow:
         warnings = list(first_page.source_warnings)
         partial_failure = first_page.partial_failure
         cursor = first_page.next_cursor
+        page_count = 1
         while cursor is not None:
             page = self.adapter.fetch_incremental(scope, cursor)
             artifacts.extend(page.artifacts)
             warnings.extend(page.source_warnings)
             partial_failure = partial_failure or page.partial_failure
             cursor = page.next_cursor
+            page_count += 1
+        completed_cursor = SyncCursor(
+            offset=len(artifacts),
+            content_hash=stable_hash(artifacts),
+        )
         return SourceFetchResult(
             artifacts=artifacts,
             next_cursor=None,
+            initial_cursor=None,
+            completed_cursor=completed_cursor,
+            page_count=page_count,
             source_warnings=warnings,
             partial_failure=partial_failure,
+        )
+
+    def _source_sync_cursor_state(
+        self,
+        *,
+        run_id: str,
+        project_key: str,
+        scenario: str,
+        fetch: SourceFetchResult,
+    ) -> SourceSyncCursorState:
+        """Create the persisted source cursor snapshot for this fetch."""
+        return SourceSyncCursorState(
+            cursor_id=source_sync_cursor_id(
+                source_type=self.adapter.source_type,
+                project_key=project_key,
+                scenario=scenario,
+            ),
+            source_type=self.adapter.source_type,
+            project_key=project_key,
+            scenario=scenario,
+            run_id=run_id,
+            initial_cursor=fetch.initial_cursor,
+            completed_cursor=fetch.completed_cursor,
+            next_cursor=fetch.next_cursor,
+            artifact_count=len(fetch.artifacts),
+            page_count=fetch.page_count,
+            content_hash=stable_hash(fetch.artifacts),
+            source_warnings=fetch.source_warnings,
+            partial_failure=fetch.partial_failure,
         )
 
     def _run_llm_edge_reasoning(

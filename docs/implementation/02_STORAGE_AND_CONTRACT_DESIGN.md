@@ -98,6 +98,31 @@ idempotency_keys
 
 ### 5.2 `source_artifacts`
 
+`source_sync_cursors` stores the latest source/scope cursor snapshot used to
+debug incremental ingestion. The local implementation persists this collection
+through the shared `StateStore` contract and PostgreSQL `state_entities`
+fallback path.
+
+| column | type | note |
+| --- | --- | --- |
+| `cursor_id` | text pk | stable `source_type/project/scenario` cursor id |
+| `source_type` | text | jira/confluence/email/decision_archive/dummy |
+| `project_key` | text | project scope |
+| `scenario` | text | source scenario/scope label |
+| `run_id` | text | run that last updated the cursor snapshot |
+| `initial_cursor` | json | cursor supplied to source fetch |
+| `completed_cursor` | json | high-watermark cursor after a completed local fetch |
+| `next_cursor` | json | next page cursor if the fetch ended before draining pages |
+| `artifact_count` | int | artifacts fetched for the run |
+| `page_count` | int | source pages fetched for the run |
+| `content_hash` | text | stable hash of fetched raw artifacts |
+| `source_warnings` | json | normalized source warnings |
+| `partial_failure` | bool | whether source fetch returned a partial failure |
+| `updated_at` | timestamptz | snapshot update time |
+| `schema_version` | text | contract version |
+
+### 5.3 `source_artifacts`
+
 | column | type | note |
 | --- | --- | --- |
 | `artifact_id` | text pk | stable id |
@@ -416,7 +441,8 @@ Artifact store는 raw snapshot, masked payload, stage output, raw LLM response, 
 단, public interface와 Pydantic contract는 production과 동일하게 유지한다.
 
 현재 구현된 PostgreSQL foundation은 `schema_migrations`와 `state_entities` JSONB
-원장을 사용한다. 또한 `agent_runs`, `agent_step_traces`, `source_artifacts`,
+원장을 사용한다. `source_sync_cursors`는 현재 generic `state_entities` fallback으로
+저장/조회한다. 또한 `agent_runs`, `agent_step_traces`, `source_artifacts`,
 `artifact_chunks`, `graph_nodes`, `candidate_edges`, `graph_edges`, `graph_deltas`,
 `approval_items`, `findings`, `feedback_events`, `audit_events` typed table migration과
 mirror upsert를 제공한다. 이는 SQLite state store와 같은 `StateStore` contract를

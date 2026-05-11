@@ -1,5 +1,6 @@
 """Source adapter contracts."""
 
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -28,6 +29,37 @@ class SyncCursor(AdapterModel):
     content_hash: str | None = None
 
 
+class SourceSyncCursorState(AdapterModel):
+    """Persisted source sync cursor snapshot for incremental sync debugging."""
+
+    cursor_id: str
+    source_type: SourceType
+    project_key: str
+    scenario: str
+    run_id: str
+    stage_name: str = "source_fetch"
+    initial_cursor: SyncCursor | None = None
+    completed_cursor: SyncCursor | None = None
+    next_cursor: SyncCursor | None = None
+    artifact_count: int = Field(ge=0)
+    page_count: int = Field(ge=0)
+    content_hash: str
+    source_warnings: list[str] = Field(default_factory=list)
+    partial_failure: bool = False
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    schema_version: str = "v1"
+
+
+def source_sync_cursor_id(
+    *,
+    source_type: SourceType,
+    project_key: str,
+    scenario: str,
+) -> str:
+    """Return a stable source sync cursor id for one source/scope pair."""
+    return f"src_cursor_{source_type}_{project_key}_{scenario}"
+
+
 class RawSourceArtifact(AdapterModel):
     """Source-shaped artifact before normalization."""
 
@@ -54,6 +86,9 @@ class SourceFetchResult(AdapterModel):
 
     artifacts: list[RawSourceArtifact]
     next_cursor: SyncCursor | None
+    initial_cursor: SyncCursor | None = None
+    completed_cursor: SyncCursor | None = None
+    page_count: int = Field(default=1, ge=0)
     source_warnings: list[str] = Field(default_factory=list)
     partial_failure: bool = False
 

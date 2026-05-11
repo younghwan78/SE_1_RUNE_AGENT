@@ -4,6 +4,7 @@ from typing import Any
 
 from psycopg.types.json import Jsonb
 
+from req_tracker.adapters.base import SourceSyncCursorState, SyncCursor
 from req_tracker.audit.models import AuditRetentionPolicy
 from req_tracker.audit.service import AuditService
 from req_tracker.debug.models import AgentRun
@@ -279,6 +280,36 @@ def test_postgres_store_typed_operation_state_tables() -> None:
     assert any("insert into registry_activations" in sql for sql in fake.executed_sql)
     assert store.get("idempotency_results", idempotency["record_id"]) == idempotency
     assert store.get("registry_activations", activation["activation_id"]) == activation
+
+
+def test_postgres_store_persists_source_sync_cursor_in_state_entities() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+    cursor = SourceSyncCursorState(
+        cursor_id="src_cursor_dummy_RUNE_CAM_ALPHA_RUNE_CAM_ALPHA",
+        source_type="dummy",
+        project_key="RUNE_CAM_ALPHA",
+        scenario="RUNE_CAM_ALPHA",
+        run_id="run_cursor_postgres",
+        completed_cursor=SyncCursor(offset=10, content_hash="hash_page"),
+        artifact_count=10,
+        page_count=1,
+        content_hash="hash_all",
+    )
+
+    store.upsert(
+        collection="source_sync_cursors",
+        entity_id=cursor.cursor_id,
+        project_key=cursor.project_key,
+        payload=cursor,
+    )
+
+    assert not any("insert into source_sync_cursors" in sql for sql in fake.executed_sql)
+    stored = store.get("source_sync_cursors", cursor.cursor_id)
+    assert stored is not None
+    assert stored["completed_cursor"]["offset"] == 10
+    listed = store.list("source_sync_cursors", project_key="RUNE_CAM_ALPHA")
+    assert listed[0]["cursor_id"] == cursor.cursor_id
 
 
 def test_postgres_store_acquires_renews_and_releases_scheduler_lease() -> None:

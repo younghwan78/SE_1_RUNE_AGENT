@@ -48,6 +48,7 @@ def test_sqlite_state_store_persists_runtime_outputs(tmp_path) -> None:  # type:
     assert counts["agent_step_traces"] >= 8
     assert counts["llm_call_traces"] == 1
     assert counts["source_artifacts"] == 10
+    assert counts["source_sync_cursors"] == 1
     assert counts["graph_nodes"] == 10
     assert counts["approval_items"] >= 1
     assert counts["graph_edges"] == 1
@@ -169,6 +170,14 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     assert replay_diff.json()["compared_model_profile_ids"] == ["dummy-local"]
     assert replay_diff.json()["compared_prompt_version_ids"] == ["pv_edge_linking_v1"]
     runtime = second_app.state.runtime
+    restored_cursor = runtime.source_sync_cursors[
+        "src_cursor_dummy_RUNE_CAM_ALPHA_RUNE_CAM_ALPHA"
+    ]
+    assert restored_cursor.run_id == "run_restore_1"
+    assert restored_cursor.artifact_count == 10
+    assert restored_cursor.page_count == 1
+    assert restored_cursor.completed_cursor is not None
+    assert restored_cursor.completed_cursor.offset == 10
     assert (
         runtime.registry_activations["prompt_version:pv_edge_linking_v1"]["status"]
         == "active"

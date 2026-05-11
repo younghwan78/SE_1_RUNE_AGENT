@@ -23,6 +23,27 @@ def list_debug_runs(request: Request) -> list[dict[str, Any]]:
     ]
 
 
+@router.get("/debug/source-cursors")
+def list_source_sync_cursors(
+    request: Request,
+    project_key: str | None = Query(default=None),
+) -> list[dict[str, Any]]:
+    """List source sync cursor snapshots for ingestion debugging."""
+    user = require_role(request, "developer")
+    runtime = request.app.state.runtime
+    cursors = sorted(
+        runtime.source_sync_cursors.values(),
+        key=lambda cursor: cursor.updated_at,
+        reverse=True,
+    )
+    return [
+        cursor.model_dump(mode="json")
+        for cursor in cursors
+        if (project_key is None or cursor.project_key == project_key)
+        and ("*" in user.project_keys or cursor.project_key in user.project_keys)
+    ]
+
+
 @router.get("/debug/runs/{run_id}/summary")
 def debug_run_summary(request: Request, run_id: str) -> dict[str, Any]:
     """Return run, step, LLM call, artifact, and graph delta debug summary."""

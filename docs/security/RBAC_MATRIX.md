@@ -9,7 +9,7 @@ group, project, and shared-secret headers.
 | Role | Intended users | Minimum protected access |
 | --- | --- | --- |
 | `viewer` | read-only project users | non-sensitive health/read endpoints |
-| `developer` | agent/debug developers | findings, debug run list, debug run summary, approval lineage, debug artifact read |
+| `developer` | agent/debug developers | findings, debug run list, source sync cursor snapshots, debug run summary, approval lineage, debug artifact read |
 | `operator` | service operators and reviewers | developer access plus audit event read |
 | `admin` | service administrators | all local protected routes |
 
@@ -24,6 +24,7 @@ Current protected routes:
 | `GET /api/v1/approvals` | `developer` | exposes pending graph proposals and evidence references |
 | `POST /api/v1/approvals/{approval_id}/decision` | `operator` | commits/rejects/holds approved graph proposals |
 | `GET /api/v1/debug/runs` | `developer` | exposes run inventory for debug navigation |
+| `GET /api/v1/debug/source-cursors` | `developer` | exposes source sync cursor state for ingestion debugging |
 | `GET /api/v1/debug/runs/{run_id}/summary` | `developer` | may expose model trace and artifact refs |
 | `GET /api/v1/debug/runs/{run_id}/diff-view` | `developer` | exposes side-by-side LLM and graph delta debug payloads |
 | `GET /api/v1/metrics` | `operator` | exposes operational counters for Prometheus scraping |

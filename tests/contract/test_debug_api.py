@@ -20,6 +20,12 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
     assert runs.status_code == 200
     assert any(run["run_id"] == "run_debug_1" for run in runs.json())
 
+    cursors = client.get("/api/v1/debug/source-cursors?project_key=RUNE_CAM_ALPHA")
+    assert cursors.status_code == 200
+    assert cursors.json()[0]["cursor_id"] == "src_cursor_dummy_RUNE_CAM_ALPHA_RUNE_CAM_ALPHA"
+    assert cursors.json()[0]["run_id"] == "run_debug_1"
+    assert cursors.json()[0]["completed_cursor"]["offset"] == 10
+
     summary = client.get("/api/v1/debug/runs/run_debug_1/summary")
     assert summary.status_code == 200
     payload = summary.json()

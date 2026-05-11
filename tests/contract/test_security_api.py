@@ -423,6 +423,18 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
             "/api/v1/debug/runs",
             headers=wrong_project_headers,
         )
+        viewer_source_cursors = client.get(
+            "/api/v1/debug/source-cursors",
+            headers=viewer_headers,
+        )
+        developer_source_cursors = client.get(
+            "/api/v1/debug/source-cursors",
+            headers=developer_headers,
+        )
+        wrong_project_source_cursors = client.get(
+            "/api/v1/debug/source-cursors",
+            headers=wrong_project_headers,
+        )
         viewer_steps = client.get(
             "/api/v1/runs/run_query_auth/steps",
             headers=viewer_headers,
@@ -502,6 +514,11 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
     assert len(developer_debug_runs.json()) == 2
     assert wrong_project_debug_runs.status_code == 200
     assert wrong_project_debug_runs.json() == []
+    assert viewer_source_cursors.status_code == 403
+    assert developer_source_cursors.status_code == 200
+    assert developer_source_cursors.json()[0]["project_key"] == "RUNE_CAM_ALPHA"
+    assert wrong_project_source_cursors.status_code == 200
+    assert wrong_project_source_cursors.json() == []
     assert viewer_steps.status_code == 403
     assert developer_steps.status_code == 200
     assert viewer_graph_delta.status_code == 403

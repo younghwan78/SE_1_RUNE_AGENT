@@ -35,6 +35,7 @@ Implemented route groups:
 - feedback, eval candidates, improvement candidates, and improvement rollback
 - admin model profile and prompt version activation/rollback records
 - debug traces and diff views
+- source sync cursor snapshots for ingestion debugging
 - audit events and retention
 - scheduler controls
 - static UI route
@@ -57,6 +58,11 @@ Run step responses include step-level `retrieval_context_ref`,
 `validation_status`, and `validation_result` fields so debug screens can show
 the stage retrieval context and structured validation result without requiring a
 separate LLM-call lookup.
+The source-fetch step records `source_sync_cursor_id`, page count, completed
+cursor, next cursor, warning, and partial-failure metadata. Developers can query
+the latest persisted cursor snapshots through `GET /api/v1/debug/source-cursors`
+without exposing company-specific JIRA, Confluence, Email, or MCP details in the
+application layer.
 
 Replay responses include `compared_model_profile_ids` and
 `compared_prompt_version_ids` so model/prompt comparison reports keep the exact

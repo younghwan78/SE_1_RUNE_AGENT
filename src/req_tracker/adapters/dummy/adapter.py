@@ -3,12 +3,13 @@
 from req_tracker.adapters.base import SourceFetchResult, SourceScope, SyncCursor
 from req_tracker.adapters.dummy.fixtures import fixture_by_name
 from req_tracker.debug.hash import stable_hash
+from req_tracker.ontology.models import SourceType
 
 
 class DummySourceAdapter:
     """Production-shaped source adapter backed by deterministic fixtures."""
 
-    source_type = "dummy"
+    source_type: SourceType = "dummy"
 
     def fetch_incremental(
         self,
@@ -24,4 +25,3 @@ class DummySourceAdapter:
         if next_offset < len(artifacts):
             next_cursor = SyncCursor(offset=next_offset, content_hash=stable_hash(page))
         return SourceFetchResult(artifacts=page, next_cursor=next_cursor)
-

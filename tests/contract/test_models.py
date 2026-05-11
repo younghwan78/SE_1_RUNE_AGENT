@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
+from req_tracker.adapters.base import SourceSyncCursorState, SyncCursor, source_sync_cursor_id
 from req_tracker.approvals.models import ApprovalItem, GraphDelta, GraphDeltaOperation
 from req_tracker.debug.models import AgentRun, AgentStepTrace, LLMCallTrace
 from req_tracker.feedback.models import FeedbackEvent, ImprovementCandidate
@@ -46,6 +47,31 @@ def test_source_artifact_round_trip() -> None:
     )
     dumped = artifact.model_dump(mode="json")
     assert SourceArtifact.model_validate(dumped).artifact_id == artifact.artifact_id
+
+
+def test_source_sync_cursor_state_round_trip() -> None:
+    cursor_id = source_sync_cursor_id(
+        source_type="jira",
+        project_key="RUNE_CAM_ALPHA",
+        scenario="RUNE_CAM_ALPHA",
+    )
+    state = SourceSyncCursorState(
+        cursor_id=cursor_id,
+        source_type="jira",
+        project_key="RUNE_CAM_ALPHA",
+        scenario="RUNE_CAM_ALPHA",
+        run_id="run_cursor_001",
+        completed_cursor=SyncCursor(offset=42, content_hash="hash_page"),
+        artifact_count=42,
+        page_count=3,
+        content_hash="hash_all",
+        source_warnings=[],
+    )
+
+    dumped = state.model_dump(mode="json")
+
+    assert dumped["cursor_id"] == "src_cursor_jira_RUNE_CAM_ALPHA_RUNE_CAM_ALPHA"
+    assert SourceSyncCursorState.model_validate(dumped).completed_cursor is not None
 
 
 def test_ontology_node_requires_evidence() -> None:

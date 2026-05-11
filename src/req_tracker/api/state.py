@@ -5,6 +5,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
+from req_tracker.adapters.base import SourceSyncCursorState
 from req_tracker.approvals.models import ApprovalItem, GraphDelta
 from req_tracker.approvals.service import ApprovalService
 from req_tracker.audit.archive import AuditArchiveWriter, LocalAuditArchiveStore
@@ -46,6 +47,7 @@ class RuntimeState(BaseModel):
     ingestions: dict[str, IngestionResult]
     findings: dict[str, Finding]
     replays: dict[str, ReplayResult]
+    source_sync_cursors: dict[str, SourceSyncCursorState]
     idempotency_results: dict[str, dict[str, Any]]
     registry_activations: dict[str, dict[str, Any]]
     improvement_decisions: dict[str, dict[str, Any]]
@@ -78,6 +80,7 @@ class RuntimeState(BaseModel):
             ingestions={},
             findings={},
             replays={},
+            source_sync_cursors={},
             idempotency_results={},
             registry_activations={},
             improvement_decisions={},
@@ -138,6 +141,7 @@ class RuntimeState(BaseModel):
             )
             raise
         self.analyses[run_id] = result
+        self.source_sync_cursors[result.source_cursor.cursor_id] = result.source_cursor
         for finding in result.findings:
             self.findings[finding.finding_id] = finding
         self.audit.record(
@@ -196,6 +200,7 @@ class RuntimeState(BaseModel):
             )
             raise
         self.ingestions[run_id] = result
+        self.source_sync_cursors[result.source_cursor.cursor_id] = result.source_cursor
         self.audit.record(
             action="run_completed",
             actor_id="local",
@@ -310,6 +315,12 @@ class RuntimeState(BaseModel):
                 project_key=project_key,
                 payload=chunk,
             )
+        self.state_store.upsert(
+            collection="source_sync_cursors",
+            entity_id=result.source_cursor.cursor_id,
+            project_key=project_key,
+            payload=result.source_cursor,
+        )
         self.persist_approval_state()
 
     def persist_analysis_result(self, result: AnalysisResult) -> None:
@@ -353,6 +364,12 @@ class RuntimeState(BaseModel):
                 project_key=project_key,
                 payload=chunk,
             )
+        self.state_store.upsert(
+            collection="source_sync_cursors",
+            entity_id=result.source_cursor.cursor_id,
+            project_key=project_key,
+            payload=result.source_cursor,
+        )
         for node in result.nodes:
             self.state_store.upsert(
                 collection="graph_nodes",
@@ -610,6 +627,9 @@ class RuntimeState(BaseModel):
         for payload in self.state_store.list("replay_results"):
             replay = ReplayResult.model_validate(payload)
             self.replays[replay.replay_run_id] = replay
+        for payload in self.state_store.list("source_sync_cursors"):
+            cursor = SourceSyncCursorState.model_validate(payload)
+            self.source_sync_cursors[cursor.cursor_id] = cursor
         for payload in self.state_store.list("findings"):
             finding = Finding.model_validate(payload)
             self.findings[finding.finding_id] = finding
