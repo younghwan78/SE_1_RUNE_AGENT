@@ -72,6 +72,11 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
             },
         )
         assert response.status_code == 200
+        replay = client.post(
+            "/api/v1/runs/run_restore_1/replay",
+            json={"replay_run_id": "replay_restore_1", "scenario": "RUNE_CAM_ALPHA"},
+        )
+        assert replay.status_code == 200
         approval = client.get("/api/v1/approvals").json()[0]
         decision = client.post(
             f"/api/v1/approvals/{approval['approval_id']}/decision",
@@ -90,6 +95,7 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
         approvals = client.get("/api/v1/approvals")
         audit = client.get("/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
         llm_calls = client.get("/api/v1/runs/run_restore_1/llm-calls")
+        replay_diff = client.get("/api/v1/replays/replay_restore_1/diff")
 
     assert runs.status_code == 200
     assert runs.json()[0]["run_id"] == "run_restore_1"
@@ -99,6 +105,9 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     assert any(item["status"] == "approved" for item in approvals.json())
     assert llm_calls.status_code == 200
     assert llm_calls.json()[0]["model_profile_id"] == "dummy-local"
+    assert replay_diff.status_code == 200
+    assert replay_diff.json()["source_run_id"] == "run_restore_1"
+    assert replay_diff.json()["replay_run_id"] == "replay_restore_1"
     assert audit.status_code == 200
     assert {event["action"] for event in audit.json()} >= {
         "run_completed",

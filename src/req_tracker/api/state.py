@@ -211,6 +211,18 @@ class RuntimeState(BaseModel):
                 payload=edge,
             )
 
+    def persist_replay_result(self, result: ReplayResult) -> None:
+        """Persist replay metadata and diff for restart-safe debug lookup."""
+        if self.state_store is None:
+            return
+        source_run = self.traces.runs.get(result.source_run_id)
+        self.state_store.upsert(
+            collection="replay_results",
+            entity_id=result.replay_run_id,
+            project_key=source_run.project_key if source_run is not None else None,
+            payload=result,
+        )
+
     def archive_and_prune_audit(self) -> dict[str, object]:
         """Archive/prune audit events and mirror pruned rows into the state store."""
         result = self.audit.archive_and_prune(archive_writer=self.audit_archive_store)
@@ -233,6 +245,9 @@ class RuntimeState(BaseModel):
         for payload in self.state_store.list("llm_call_traces"):
             llm_call = LLMCallTrace.model_validate(payload)
             self.traces.llm_calls[llm_call.llm_call_id] = llm_call
+        for payload in self.state_store.list("replay_results"):
+            replay = ReplayResult.model_validate(payload)
+            self.replays[replay.replay_run_id] = replay
         for payload in self.state_store.list("approval_items"):
             approval = ApprovalItem.model_validate(payload)
             self.approvals.items[approval.approval_id] = approval

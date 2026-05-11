@@ -167,6 +167,7 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
         replay_mode=payload.replay_mode,
     )
     runtime.replays[replay_run_id] = result
+    runtime.persist_replay_result(result)
     return result.model_dump(mode="json")
 
 
