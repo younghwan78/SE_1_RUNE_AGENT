@@ -249,6 +249,93 @@ def test_api_key_auth_protects_feedback_eval_and_improvement_activation(tmp_path
     assert admin_activation.status_code == 200
 
 
+def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    app = create_app(
+        Settings(
+            artifact_root=tmp_path / "artifacts",
+            auth_mode="api_key",
+            api_key="secret",
+        )
+    )
+    developer_headers = {
+        "x-rune-api-key": "secret",
+        "x-rune-role": "developer",
+        "x-rune-projects": "RUNE_CAM_ALPHA",
+    }
+    operator_headers = {
+        **developer_headers,
+        "x-rune-role": "operator",
+        "x-rune-user": "operator@example.com",
+    }
+    viewer_headers = {
+        **developer_headers,
+        "x-rune-role": "viewer",
+    }
+    wrong_project_headers = {
+        **developer_headers,
+        "x-rune-projects": "OTHER_PROJECT",
+    }
+    with TestClient(app) as client:
+        run = client.post(
+            "/api/v1/runs/analyze",
+            headers=developer_headers,
+            json={
+                "project_key": "RUNE_CAM_ALPHA",
+                "scenario": "RUNE_CAM_ALPHA",
+                "run_id": "run_query_auth",
+            },
+        )
+        missing_findings_key = client.get("/api/v1/findings")
+        viewer_findings = client.get("/api/v1/findings", headers=viewer_headers)
+        developer_findings = client.get("/api/v1/findings", headers=developer_headers)
+        wrong_project_findings = client.get("/api/v1/findings", headers=wrong_project_headers)
+        missing_schedule_key = client.get("/api/v1/schedule")
+        allowed_schedule = client.get("/api/v1/schedule", headers=developer_headers)
+        wrong_project_schedule = client.get("/api/v1/schedule", headers=wrong_project_headers)
+        viewer_debug_runs = client.get("/api/v1/debug/runs", headers=viewer_headers)
+        developer_debug_runs = client.get("/api/v1/debug/runs", headers=developer_headers)
+        wrong_project_debug_runs = client.get(
+            "/api/v1/debug/runs",
+            headers=wrong_project_headers,
+        )
+        configured = client.put(
+            "/api/v1/schedule",
+            headers=operator_headers,
+            json={
+                "enabled": False,
+                "interval_seconds": 5,
+                "project_key": "RUNE_CAM_ALPHA",
+                "scenario": "RUNE_CAM_ALPHA",
+                "run_id_prefix": "auth_sched",
+            },
+        )
+        audit_events = client.get(
+            "/api/v1/audit/events?project_key=RUNE_CAM_ALPHA",
+            headers=operator_headers,
+        )
+
+    assert run.status_code == 200
+    assert missing_findings_key.status_code == 401
+    assert viewer_findings.status_code == 403
+    assert developer_findings.status_code == 200
+    assert wrong_project_findings.status_code == 200
+    assert wrong_project_findings.json() == []
+    assert missing_schedule_key.status_code == 401
+    assert allowed_schedule.status_code == 200
+    assert wrong_project_schedule.status_code == 403
+    assert viewer_debug_runs.status_code == 403
+    assert developer_debug_runs.status_code == 200
+    assert len(developer_debug_runs.json()) == 1
+    assert wrong_project_debug_runs.status_code == 200
+    assert wrong_project_debug_runs.json() == []
+    assert configured.status_code == 200
+    assert any(
+        event["action"] == "schedule_configured"
+        and event["actor_id"] == "operator@example.com"
+        for event in audit_events.json()
+    )
+
+
 def test_trusted_proxy_auth_maps_groups_to_roles_and_projects(tmp_path) -> None:  # type: ignore[no-untyped-def]
     app = create_app(
         Settings(

@@ -13,9 +13,14 @@ router = APIRouter(tags=["debug"])
 @router.get("/debug/runs")
 def list_debug_runs(request: Request) -> list[dict[str, Any]]:
     """List runs for debug navigation."""
+    user = require_role(request, "developer")
     runtime = request.app.state.runtime
     runs = sorted(runtime.traces.runs.values(), key=lambda run: run.started_at, reverse=True)
-    return [run.model_dump(mode="json") for run in runs]
+    return [
+        run.model_dump(mode="json")
+        for run in runs
+        if "*" in user.project_keys or run.project_key in user.project_keys
+    ]
 
 
 @router.get("/debug/runs/{run_id}/summary")

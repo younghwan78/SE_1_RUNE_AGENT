@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from req_tracker.api.security import require_project
+from req_tracker.api.security import require_project, require_role
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings
 from req_tracker.debug.replay import ReplayService
@@ -116,10 +116,12 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
 @router.get("/findings")
 def list_findings(request: Request) -> list[dict[str, Any]]:
     """Return findings from all local analysis runs."""
+    user = require_role(request, "developer")
     runtime = request.app.state.runtime
     findings: list[dict[str, Any]] = []
     for result in runtime.analyses.values():
-        require_project(request, result.run.project_key)
+        if "*" not in user.project_keys and result.run.project_key not in user.project_keys:
+            continue
         findings.extend(finding.model_dump(mode="json") for finding in result.findings)
     return findings
 
@@ -128,6 +130,7 @@ def list_findings(request: Request) -> list[dict[str, Any]]:
 def get_schedule(request: Request) -> dict[str, Any]:
     """Return periodic run schedule status."""
     runtime: RuntimeState = request.app.state.runtime
+    require_project(request, runtime.scheduler.config.project_key)
     result: dict[str, Any] = runtime.scheduler.status().model_dump(mode="json")
     return result
 
@@ -135,7 +138,7 @@ def get_schedule(request: Request) -> dict[str, Any]:
 @router.put("/schedule")
 async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[str, Any]:
     """Configure periodic analysis runs."""
-    require_project(request, payload.project_key, "operator")
+    user = require_project(request, payload.project_key, "operator")
     runtime: RuntimeState = request.app.state.runtime
     settings: Settings = request.app.state.settings
     status = await runtime.scheduler.configure(
@@ -149,8 +152,8 @@ async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[
     )
     runtime.audit.record(
         action="schedule_configured",
-        actor_id="local_operator",
-        actor_role="operator",
+        actor_id=user.user_id,
+        actor_role=user.role,
         project_key=payload.project_key,
         target_type="schedule",
         target_id="default",
@@ -165,7 +168,7 @@ async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[
 async def run_schedule_now(request: Request) -> dict[str, Any]:
     """Run one scheduled analysis immediately."""
     runtime: RuntimeState = request.app.state.runtime
-    require_project(request, runtime.scheduler.config.project_key, "operator")
+    user = require_project(request, runtime.scheduler.config.project_key, "operator")
     settings: Settings = request.app.state.settings
     result = await runtime.scheduler.run_now(
         runner=lambda run_id, project_key, scenario: runtime.run_analysis(
@@ -177,8 +180,8 @@ async def run_schedule_now(request: Request) -> dict[str, Any]:
     )
     runtime.audit.record(
         action="schedule_run_now",
-        actor_id="local_operator",
-        actor_role="operator",
+        actor_id=user.user_id,
+        actor_role=user.role,
         project_key=runtime.scheduler.config.project_key,
         target_type="run",
         target_id=result.run_id,

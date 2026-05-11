@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `b6c06c4 Refresh audit after feedback RBAC`
 - `11a19e6 Protect feedback improvement endpoints`
 - `03d266d Refresh audit after approval RBAC`
 - `3e9a713 Protect approval decisions with RBAC`
@@ -37,12 +38,14 @@ Latest confirmed commits:
 Latest local verification:
 
 - `uv run ruff check .`: passed
-- `uv run mypy src`: passed
-- `uv run pytest`: 91 passed, 3 skipped
+- `uv run mypy src ops/rehearsal/check_production_readiness.py`: passed
+- `uv run pytest`: 94 passed, 3 skipped
 - `uv run python ops/integration/run_backend_integration.py`: 3 passed
 - `uv run python ops/source/smoke_source_adapters.py`: passed
+- `uv run python ops/model_gateway/smoke_model_gateway.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
+- `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced 6 failed env checks and 9 manual-required gates without secret values
 
 Latest GitHub verification:
 
@@ -65,10 +68,10 @@ Latest GitHub verification:
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test, Docker integration runner | Qdrant foundation complete; disposable Docker Qdrant integration passed; company/staging vector rehearsal pending |
 | Approval workflow | approval queue, approve/reject/hold/modify path, graph commit, developer/operator RBAC and project-scope checks | Complete for local and protected API paths |
 | Feedback loop | feedback events, eval candidates, improvement candidates, eval gate, controlled review/canary promotion, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary rehearsal complete; real production feedback calibration pending |
-| Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, approval decision RBAC, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; direct company IdP validation pending |
+| Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, approval/query/scheduler/debug RBAC, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
-| Scheduler | process-local `RunScheduler`, API/UI/runbook | Single-process complete; multi-worker orchestration pending |
-| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py` | Local/server scaffold, readiness checks, disposable full-stack rehearsal, and API restart restore check complete; company/staging environment rehearsal pending |
+| Scheduler | process-local `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture | Single-process complete; multi-worker orchestration pending |
+| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py` | Local/server scaffold, readiness checks, disposable full-stack rehearsal, API restart restore check, and production-readiness gate reporting complete; company/staging environment rehearsal pending |
 | CI | `.github/workflows/ci.yml` | Complete |
 
 ## 3. Remaining Implementation Backlog
@@ -112,6 +115,9 @@ Latest GitHub verification:
   replace it with direct IdP token validation only if required.
 - Run backup/restore and load rehearsals against company/staging PostgreSQL,
   Neo4j, Qdrant, and artifact store environments.
+- Run `ops/rehearsal/check_production_readiness.py --run-local-gates` on a
+  staging host with production-shaped environment variables before release
+  approval.
 - Decide React/React Flow migration after real graph shape validation.
 
 ## 4. Completion Gate

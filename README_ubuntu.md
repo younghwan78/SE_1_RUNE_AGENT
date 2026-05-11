@@ -95,9 +95,21 @@ In another shell:
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/health
 curl -s http://127.0.0.1:8000/api/v1/ready
-curl -s -X POST http://127.0.0.1:8000/api/v1/schedule/run-now
-curl -s http://127.0.0.1:8000/api/v1/schedule
-curl -s http://127.0.0.1:8000/api/v1/debug/runs
+curl -s -H "x-rune-trusted-secret: $TRUSTED_PROXY_SECRET" \
+  -H "x-rune-user: smoke.operator@example.com" \
+  -H "x-rune-groups: rune-operators" \
+  -H "x-rune-projects: RUNE_CAM_ALPHA" \
+  -X POST http://127.0.0.1:8000/api/v1/schedule/run-now
+curl -s -H "x-rune-trusted-secret: $TRUSTED_PROXY_SECRET" \
+  -H "x-rune-user: smoke.viewer@example.com" \
+  -H "x-rune-groups: rune-viewers" \
+  -H "x-rune-projects: RUNE_CAM_ALPHA" \
+  http://127.0.0.1:8000/api/v1/schedule
+curl -s -H "x-rune-trusted-secret: $TRUSTED_PROXY_SECRET" \
+  -H "x-rune-user: smoke.developer@example.com" \
+  -H "x-rune-groups: rune-developers" \
+  -H "x-rune-projects: RUNE_CAM_ALPHA" \
+  http://127.0.0.1:8000/api/v1/debug/runs
 ```
 
 Run a small API load smoke after the service is up:
@@ -135,6 +147,18 @@ Run feedback/eval/canary rehearsal:
 ```bash
 uv run python ops/evals/run_feedback_eval_rehearsal.py
 ```
+
+Check release-readiness gates:
+
+```bash
+uv run python ops/rehearsal/check_production_readiness.py
+```
+
+The checker reports missing production environment variables and separates
+local gates from company/staging rehearsals that must be run against real
+PostgreSQL, Neo4j, Qdrant, JIRA, Confluence, SSO/OIDC, model gateway, backup,
+restore, and load-test targets. Use `--run-local-gates` on a development or
+staging host when you want it to execute the local regression command list.
 
 Use `RUNE_IT_POSTGRES_PORT`, `RUNE_IT_NEO4J_BOLT_PORT`, and
 `RUNE_IT_QDRANT_HTTP_PORT` if the default local ports conflict with existing

@@ -74,6 +74,17 @@ uv run python ops/evals/run_feedback_eval_rehearsal.py
 This validates that feedback-derived improvements pass through eval,
 review-ready, canary, and active states, while security feedback remains blocked.
 
+Check production-readiness gates before a release decision:
+
+```powershell
+uv run python ops/rehearsal/check_production_readiness.py
+```
+
+The checker reports required production environment variables, company/staging
+rehearsal gates, and the local regression command list without printing secret
+values. Add `--run-local-gates` to execute the local regression and rehearsal
+commands from the report.
+
 Run the API locally:
 
 ```powershell
