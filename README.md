@@ -85,7 +85,8 @@ The checker reports required production environment variables, company/staging
 rehearsal gates, and the local regression command list without printing secret
 values. Add `--run-local-gates` to execute the local regression and rehearsal
 commands from the report. After a staging rehearsal, pass a reviewed evidence
-file to resolve manual gates:
+file to resolve manual gates. The release gate passes only when there are no
+failed, warning, or manual-required checks:
 
 ```powershell
 uv run python ops/rehearsal/check_production_readiness.py `

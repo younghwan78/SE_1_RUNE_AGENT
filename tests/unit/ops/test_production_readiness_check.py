@@ -115,6 +115,106 @@ def test_load_manual_evidence_from_json(tmp_path) -> None:  # type: ignore[no-un
     assert evidence[0].status == "passed"
 
 
+def test_readiness_report_passes_with_complete_env_and_reviewed_evidence() -> None:
+    checker = _load_checker_module()
+
+    report = checker.build_readiness_report(
+        _complete_production_env(),
+        manual_evidence=[
+            checker.ManualEvidence(
+                check_id=check_id,
+                status="passed",
+                summary=f"{check_id} passed.",
+                evidence=[f"artifact:{check_id}.json"],
+            )
+            for check_id in _manual_gate_ids()
+        ],
+    )
+
+    assert report["passed"] is True
+    assert report["summary"] == {
+        "passed": 16,
+        "warning": 0,
+        "failed": 0,
+        "manual_required": 0,
+    }
+    assert report["manual_evidence_count"] == len(_manual_gate_ids())
+    assert "secret-value" not in str(report)
+
+
+def test_readiness_report_blocks_unknown_manual_evidence_warning() -> None:
+    checker = _load_checker_module()
+
+    report = checker.build_readiness_report(
+        _complete_production_env(),
+        manual_evidence=[
+            *[
+                checker.ManualEvidence(
+                    check_id=check_id,
+                    status="passed",
+                    summary=f"{check_id} passed.",
+                    evidence=[f"artifact:{check_id}.json"],
+                )
+                for check_id in _manual_gate_ids()
+            ],
+            checker.ManualEvidence(
+                check_id="unknown_gate",
+                status="passed",
+                summary="Unknown gate passed.",
+                evidence=["artifact:unknown.json"],
+            ),
+        ],
+    )
+
+    assert report["passed"] is False
+    assert report["summary"]["warning"] == 1
+    checks = {check["check_id"]: check for check in report["checks"]}
+    assert checks["unknown_manual_evidence:unknown_gate"]["status"] == "warning"
+
+
+def _complete_production_env() -> dict[str, str]:
+    return {
+        "STATE_STORE": "postgres",
+        "POSTGRES_DSN": "postgresql://rune:secret-value@db/rune_agent",
+        "POSTGRES_TEST_DSN": "postgresql://rune:secret-value@db/rune_agent_test",
+        "GRAPH_BACKEND": "neo4j",
+        "NEO4J_URI": "bolt://neo4j:7687",
+        "NEO4J_TEST_URI": "bolt://neo4j:7687",
+        "NEO4J_USERNAME": "neo4j",
+        "NEO4J_PASSWORD": "secret-value",
+        "VECTOR_BACKEND": "qdrant",
+        "QDRANT_URL": "http://qdrant:6333",
+        "QDRANT_TEST_URL": "http://qdrant:6333",
+        "QDRANT_COLLECTION": "rune_chunks",
+        "MODEL_GATEWAY_MODE": "http_json",
+        "MODEL_GATEWAY_ENDPOINT_URL": "https://models.example.test/v1/complete",
+        "AUTH_MODE": "trusted_proxy",
+        "TRUSTED_PROXY_SECRET": "secret-value",
+        "TRUSTED_GROUP_ROLE_MAP": '{"rune-admins":"admin"}',
+        "RUNE_API_BASE_URL": "https://rune-agent.example.test",
+        "ARTIFACT_ROOT": "/var/lib/rune-agent/artifacts",
+        "JIRA_BASE_URL": "https://jira.example.test",
+        "CONFLUENCE_BASE_URL": "https://confluence.example.test",
+        "RUNE_EMAIL_EXPORT_PATH": "/secure/exports/decision_email.jsonl",
+        "BACKUP_ROOT": "/var/backups/rune-agent/20260512T000000Z",
+    }
+
+
+def _manual_gate_ids() -> tuple[str, ...]:
+    return (
+        "company_postgres_rehearsal",
+        "company_neo4j_rehearsal",
+        "company_qdrant_rehearsal",
+        "company_model_gateway_rehearsal",
+        "company_jira_sandbox_rehearsal",
+        "company_confluence_sandbox_rehearsal",
+        "company_email_policy_rehearsal",
+        "backup_restore_load_rehearsal",
+        "trusted_proxy_rbac_rehearsal",
+        "local_regression_gates",
+    )
+
+
 def _load_checker_module() -> ModuleType:
     module_path = Path("ops/rehearsal/check_production_readiness.py")
     spec = importlib.util.spec_from_file_location("check_production_readiness", module_path)

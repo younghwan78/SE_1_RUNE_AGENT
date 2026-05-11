@@ -84,7 +84,11 @@ def build_readiness_report(
     checks = _apply_manual_evidence(checks, manual_evidence)
     summary = _summarize_checks(checks)
     return {
-        "passed": summary["failed"] == 0 and summary["manual_required"] == 0,
+        "passed": (
+            summary["failed"] == 0
+            and summary["manual_required"] == 0
+            and summary["warning"] == 0
+        ),
         "summary": summary,
         "checks": [asdict(check) for check in checks],
         "local_gate_commands": [" ".join(command) for command in LOCAL_GATE_COMMANDS],

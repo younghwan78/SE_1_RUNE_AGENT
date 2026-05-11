@@ -213,7 +213,9 @@ The checker reports missing production environment variables and separates
 local gates from company/staging rehearsals that must be run against real
 PostgreSQL, Neo4j, Qdrant, JIRA, Confluence, SSO/OIDC, model gateway, backup,
 restore, and load-test targets. Use `--run-local-gates` on a development or
-staging host when you want it to execute the local regression command list.
+staging host when you want it to execute the local regression command list. The
+release gate passes only when there are no failed, warning, or manual-required
+checks.
 After real staging rehearsals, copy
 `ops/rehearsal/production_readiness_evidence.example.json` outside the repo,
 replace the placeholder evidence references with reviewed CI/artifact IDs, and
