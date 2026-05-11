@@ -35,6 +35,7 @@ POC에서 그대로 가져오지 않을 것:
 | `05_DEBUG_REPLAY_FEEDBACK_DESIGN.md` | debug trace, replay, feedback 기반 개선 설계 |
 | `06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Claude Code skill과 MCP/REST/export/dummy source 접근 설계 |
 | `07_GRAPH_VIEW_SCALABILITY_PLAN.md` | 100+ node graph view 확장 계획과 단계별 구현 전략 |
+| `08_CURRENT_STATE_AND_COMPLETION_AUDIT.md` | 구현 증거, 남은 backlog, completion gate 점검 |
 
 ## 첫 구현 원칙
 
