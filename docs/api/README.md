@@ -43,6 +43,9 @@ Run execution records both `run_started` and `run_completed` audit events.
 The start event carries `scenario`, `run_type`, and `trigger_source` metadata
 so operators can distinguish API, manual, scheduled, and system-originated
 runs even when a later stage needs failure triage.
+If a run raises during execution, the runtime marks the run as `failed`, stores
+`failure_code` and `failure_message`, and records a failed `run_completed`
+audit event before re-raising the error to the API layer.
 
 Run step responses include step-level `retrieval_context_ref`,
 `validation_status`, and `validation_result` fields so debug screens can show

@@ -118,13 +118,25 @@ class RuntimeState(BaseModel):
             triggered_by=triggered_by,
             trigger_source=trigger_source,
         )
-        result = self.workflow().run(
-            run_id=run_id,
-            project_key=project_key,
-            scenario=scenario,
-            triggered_by=triggered_by,
-            trigger_source=trigger_source,
-        )
+        try:
+            result = self.workflow().run(
+                run_id=run_id,
+                project_key=project_key,
+                scenario=scenario,
+                triggered_by=triggered_by,
+                trigger_source=trigger_source,
+            )
+        except Exception as exc:
+            self._record_run_failed(
+                run_id=run_id,
+                project_key=project_key,
+                scenario=scenario,
+                run_type="analysis",
+                triggered_by=triggered_by,
+                trigger_source=trigger_source,
+                exc=exc,
+            )
+            raise
         self.analyses[run_id] = result
         for finding in result.findings:
             self.findings[finding.finding_id] = finding
@@ -164,13 +176,25 @@ class RuntimeState(BaseModel):
             triggered_by=triggered_by,
             trigger_source=trigger_source,
         )
-        result = self.workflow().ingest(
-            run_id=run_id,
-            project_key=project_key,
-            scenario=scenario,
-            triggered_by=triggered_by,
-            trigger_source=trigger_source,
-        )
+        try:
+            result = self.workflow().ingest(
+                run_id=run_id,
+                project_key=project_key,
+                scenario=scenario,
+                triggered_by=triggered_by,
+                trigger_source=trigger_source,
+            )
+        except Exception as exc:
+            self._record_run_failed(
+                run_id=run_id,
+                project_key=project_key,
+                scenario=scenario,
+                run_type="ingestion",
+                triggered_by=triggered_by,
+                trigger_source=trigger_source,
+                exc=exc,
+            )
+            raise
         self.ingestions[run_id] = result
         self.audit.record(
             action="run_completed",
@@ -200,7 +224,7 @@ class RuntimeState(BaseModel):
         trigger_source: TriggerSource,
     ) -> None:
         """Record the start boundary for a runtime run."""
-        self.audit.record(
+        event = self.audit.record(
             action="run_started",
             actor_id=triggered_by,
             actor_role=_run_actor_role(trigger_source),
@@ -213,6 +237,46 @@ class RuntimeState(BaseModel):
                 "trigger_source": trigger_source,
             },
         )
+        self._persist_audit_event(event)
+
+    def _record_run_failed(
+        self,
+        *,
+        run_id: str,
+        project_key: str,
+        scenario: str,
+        run_type: str,
+        triggered_by: str,
+        trigger_source: TriggerSource,
+        exc: Exception,
+    ) -> None:
+        """Record failed run state and audit evidence before re-raising."""
+        failure_code = type(exc).__name__
+        failure_message = str(exc)
+        if run_id in self.traces.runs:
+            self.traces.complete_run(
+                run_id,
+                status="failed",
+                failure_code=failure_code,
+                failure_message=failure_message,
+            )
+        self.audit.record(
+            action="run_completed",
+            actor_id=triggered_by,
+            actor_role=_run_actor_role(trigger_source),
+            project_key=project_key,
+            target_type="run",
+            target_id=run_id,
+            outcome="failed",
+            reason_code=failure_code,
+            metadata={
+                "scenario": scenario,
+                "run_type": run_type,
+                "trigger_source": trigger_source,
+                "failure_message": failure_message,
+            },
+        )
+        self.persist_runtime_failure(run_id=run_id, project_key=project_key)
 
     def persist_ingestion_result(self, result: IngestionResult) -> None:
         """Persist completed ingestion outputs into the configured state store."""
@@ -311,6 +375,40 @@ class RuntimeState(BaseModel):
                 payload=finding,
             )
         self.persist_approval_state()
+
+    def persist_runtime_failure(self, *, run_id: str, project_key: str) -> None:
+        """Persist failed run metadata and audit events for post-mortem debugging."""
+        if self.state_store is None:
+            return
+        run = self.traces.runs.get(run_id)
+        if run is not None:
+            self.state_store.upsert(
+                collection="agent_runs",
+                entity_id=run.run_id,
+                project_key=project_key,
+                payload=run,
+            )
+        for step in self.traces.list_steps(run_id):
+            self.state_store.upsert(
+                collection="agent_step_traces",
+                entity_id=step.step_id,
+                project_key=project_key,
+                payload=step,
+            )
+        for event in self.audit.events.values():
+            if event.target_type == "run" and event.target_id == run_id:
+                self._persist_audit_event(event)
+
+    def _persist_audit_event(self, event: AuditEvent) -> None:
+        """Persist a single audit event when a state store is configured."""
+        if self.state_store is None:
+            return
+        self.state_store.upsert(
+            collection="audit_events",
+            entity_id=event.audit_id,
+            project_key=event.project_key,
+            payload=event,
+        )
 
     def persist_approval_state(self) -> None:
         """Persist approval queue, graph deltas, feedback, and approved edges."""

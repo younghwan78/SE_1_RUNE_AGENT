@@ -129,10 +129,13 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 198 passed, 3 skipped
+- `uv run pytest`: 201 passed, 3 skipped
 - `uv run pytest tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   15 passed, validating run-start audit capture, analysis/ingestion run audit
   metadata, and SQLite restore of audit events
+- `uv run pytest tests/unit/api/test_runtime_state.py tests/unit/debug/test_trace_recorder.py tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
+  20 passed, validating immediate run-start audit persistence, failed run
+  state, failed completion audit events, and failure audit persistence
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -154,7 +157,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed,
   including API restart restore, `audit_total_events=3`, metrics surface check
   (`http_total_requests=7`, `graph_nodes=14`, `llm_calls=1`), and smoke-load
-  pass (`load_smoke.p95_ms` about 3153 ms against a 5000 ms local rehearsal
+  pass (`load_smoke.p95_ms` about 3253 ms against a 5000 ms local rehearsal
   threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed, including review-ready, canary, active, rollback, and security-blocked eval paths
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
@@ -203,7 +206,7 @@ Latest GitHub verification:
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test, Docker integration runner | Qdrant foundation complete; disposable Docker Qdrant integration passed; company/staging vector rehearsal pending |
 | Approval workflow | approval queue, deterministic confidence/relation-based risk routing in `src/req_tracker/reasoning/scoring.py`, approve/reject/hold/modify path, expected-version/proposal-hash stale approval guard with blocked audit outcome, graph commit, developer/operator RBAC and project-scope checks | Complete for local and protected API paths |
 | Feedback loop | feedback events, command-style feedback action/reason aliases normalized to canonical taxonomy, eval candidates, improvement candidates including few-shot-example and ontology-normalization candidate contracts, ontology-normalization candidates for wrong-node-type feedback, eval gate, controlled review/canary promotion, canary/active rollback, persisted improvement decisions, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary/rollback rehearsal complete; real production feedback calibration pending |
-| Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, run start/completion audit boundary events with trigger metadata, blocked debug artifact read audit events, finding status change audit events, improvement activation/rollback audit events, model/prompt activation/rollback audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
+| Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, run start/completion audit boundary events with trigger metadata, failed run status and failed completion audit events, blocked debug artifact read audit events, finding status change audit events, improvement activation/rollback audit events, model/prompt activation/rollback audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, and truncation metadata are locally validated; React Flow decision pending after real graph shape validation |
 | Scheduler | `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture, PostgreSQL `scheduler_leases` table, lease acquire/release tests, Ubuntu multi-replica note | Periodic run path complete for single-process and PostgreSQL lease-backed multi-worker deployments; external orchestration/Kubernetes CronJob remains an optional platform decision |
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `ops/rehearsal/validate_postgres_typed_mirrors.py`, `ops/rehearsal/validate_evidence_example.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, PostgreSQL migration rollback validation, PostgreSQL typed mirror drift validation, observability dashboard manual evidence gate, review-safe manual-evidence template generation, non-passable committed evidence example validation, reviewer metadata, schema-version, non-empty evidence, unique check-id, and UTC review timestamp enforcement for passed manual evidence, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
@@ -297,9 +300,11 @@ blocking:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `198 passed, 3 skipped`
+- `uv run pytest`: `201 passed, 3 skipped`
 - `uv run pytest tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   `15 passed`
+- `uv run pytest tests/unit/api/test_runtime_state.py tests/unit/debug/test_trace_recorder.py tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
+  `20 passed`
 - `uv run python ops/observability/validate_observability_assets.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including
   `audit_total_events=3`, metrics surface check with `http_total_requests=7`,

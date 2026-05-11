@@ -8,6 +8,7 @@ from req_tracker.debug.models import (
     AgentRun,
     AgentStepTrace,
     LLMCallTrace,
+    RunStatus,
     RunType,
     TriggerSource,
     ValidationStatus,
@@ -48,10 +49,21 @@ class InMemoryTraceRepository:
         self.runs[run_id] = run
         return run
 
-    def complete_run(self, run_id: str, status: str = "succeeded") -> AgentRun:
+    def complete_run(
+        self,
+        run_id: str,
+        status: RunStatus = "succeeded",
+        failure_code: str | None = None,
+        failure_message: str | None = None,
+    ) -> AgentRun:
         """Complete a run."""
         run = self.runs[run_id].model_copy(
-            update={"status": status, "completed_at": datetime.now(UTC)}
+            update={
+                "status": status,
+                "completed_at": datetime.now(UTC),
+                "failure_code": failure_code,
+                "failure_message": failure_message,
+            }
         )
         self.runs[run_id] = run
         return run
