@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `c499394 Add model gateway rehearsal runner`
 - `8b80d0f Add company source rehearsal runner`
 - `91b1d1e Add load smoke to full stack rehearsal`
 - `d73849b Support production readiness evidence files`
@@ -57,7 +58,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25684226868` for `8b80d0f`: completed successfully
+- GitHub Actions `CI` run `25684450778` for `c499394`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
