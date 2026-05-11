@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `8b80d0f Add company source rehearsal runner`
 - `91b1d1e Add load smoke to full stack rehearsal`
 - `d73849b Support production readiness evidence files`
 - `a65315e Add production readiness gate checker`
@@ -55,7 +56,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25683923615` for `91b1d1e`: completed successfully
+- GitHub Actions `CI` run `25684226868` for `8b80d0f`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
