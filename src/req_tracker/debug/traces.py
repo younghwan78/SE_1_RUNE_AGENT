@@ -1,9 +1,17 @@
 """In-memory trace repository for local and test workflows."""
 
 from datetime import UTC, datetime
+from typing import Any
 
 from req_tracker.debug.hash import stable_hash
-from req_tracker.debug.models import AgentRun, AgentStepTrace, LLMCallTrace, RunType, TriggerSource
+from req_tracker.debug.models import (
+    AgentRun,
+    AgentStepTrace,
+    LLMCallTrace,
+    RunType,
+    TriggerSource,
+    ValidationStatus,
+)
 
 
 class InMemoryTraceRepository:
@@ -55,6 +63,7 @@ class InMemoryTraceRepository:
         run_id: str,
         stage_name: str,
         input_payload: object,
+        retrieval_context_ref: str | None = None,
         retry_count: int = 0,
     ) -> AgentStepTrace:
         """Start a step trace."""
@@ -64,6 +73,7 @@ class InMemoryTraceRepository:
             stage_name=stage_name,
             status="running",
             input_hash=stable_hash(input_payload),
+            retrieval_context_ref=retrieval_context_ref,
             retry_count=retry_count,
         )
         self.steps[step_id] = step
@@ -75,14 +85,25 @@ class InMemoryTraceRepository:
         step_id: str,
         output_payload: object,
         output_ref: str | None = None,
+        retrieval_context_ref: str | None = None,
+        validation_status: ValidationStatus = "not_applicable",
+        validation_result: dict[str, Any] | None = None,
     ) -> AgentStepTrace:
         """Finish a step successfully."""
         current = self.steps[step_id]
+        effective_retrieval_context_ref = (
+            retrieval_context_ref
+            if retrieval_context_ref is not None
+            else current.retrieval_context_ref
+        )
         updated = current.model_copy(
             update={
                 "status": "succeeded",
                 "output_hash": stable_hash(output_payload),
                 "output_ref": output_ref,
+                "retrieval_context_ref": effective_retrieval_context_ref,
+                "validation_status": validation_status,
+                "validation_result": validation_result or {},
                 "completed_at": datetime.now(UTC),
             }
         )
@@ -117,4 +138,3 @@ class InMemoryTraceRepository:
     def list_steps(self, run_id: str) -> list[AgentStepTrace]:
         """List steps for a run."""
         return [step for step in self.steps.values() if step.run_id == run_id]
-

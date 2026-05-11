@@ -17,7 +17,12 @@ from req_tracker.ingestion.masking import mask_text
 from req_tracker.ingestion.normalization import normalize_raw_artifact
 from req_tracker.model_gateway.client import ModelGatewayClient
 from req_tracker.model_gateway.dummy_provider import DummyModelProvider
-from req_tracker.model_gateway.models import ModelProfile, ModelRequest, PromptVersion
+from req_tracker.model_gateway.models import (
+    ModelProfile,
+    ModelRequest,
+    PromptVersion,
+    StructuredValidationResult,
+)
 from req_tracker.ontology.models import (
     ArtifactChunk,
     Finding,
@@ -161,6 +166,13 @@ class LocalAnalysisWorkflow:
         self.traces.finish_step(
             step_id=extract_step.step_id,
             output_payload=[node.model_dump(mode="json") for node in nodes],
+            retrieval_context_ref="chunks",
+            validation_status="passed",
+            validation_result={
+                "node_count": len(nodes),
+                "evidence_required": True,
+                "evidence_attached": all(node.evidence for node in nodes),
+            },
         )
 
         link_step = self.traces.start_step(
@@ -173,6 +185,12 @@ class LocalAnalysisWorkflow:
         self.traces.finish_step(
             step_id=link_step.step_id,
             output_payload=[edge.model_dump(mode="json") for edge in edges],
+            retrieval_context_ref="evidence_by_external",
+            validation_status="passed",
+            validation_result={
+                "edge_count": len(edges),
+                "evidence_attached": all(edge.evidence for edge in edges),
+            },
         )
 
         llm_step = self.traces.start_step(
@@ -184,8 +202,9 @@ class LocalAnalysisWorkflow:
                 "model_profile_id": "dummy-local",
                 "prompt_version_id": "pv_edge_linking_v1",
             },
+            retrieval_context_ref="candidate_edges",
         )
-        llm_reasoning = self._run_llm_edge_reasoning(
+        llm_reasoning, llm_validation = self._run_llm_edge_reasoning(
             run_id=run_id,
             step_id=llm_step.step_id,
             nodes=nodes,
@@ -194,6 +213,8 @@ class LocalAnalysisWorkflow:
         self.traces.finish_step(
             step_id=llm_step.step_id,
             output_payload=llm_reasoning.model_dump(mode="json"),
+            validation_status=llm_validation.status,
+            validation_result=llm_validation.model_dump(mode="json"),
         )
 
         finding_step = self.traces.start_step(
@@ -206,6 +227,8 @@ class LocalAnalysisWorkflow:
         self.traces.finish_step(
             step_id=finding_step.step_id,
             output_payload=[finding.model_dump(mode="json") for finding in findings],
+            validation_status="passed",
+            validation_result={"finding_count": len(findings)},
         )
 
         approval_step = self.traces.start_step(
@@ -223,6 +246,12 @@ class LocalAnalysisWorkflow:
         self.traces.finish_step(
             step_id=approval_step.step_id,
             output_payload=[approval.model_dump(mode="json") for approval in approvals],
+            retrieval_context_ref="candidate_edges",
+            validation_status="passed",
+            validation_result={
+                "approval_count": len(approvals),
+                "graph_delta_preview_created": bool(approvals),
+            },
         )
         completed = self.traces.complete_run(run_id)
 
@@ -257,6 +286,12 @@ class LocalAnalysisWorkflow:
             step_id=fetch_step.step_id,
             output_payload=fetch.model_dump(mode="json"),
             output_ref=fetch_ref.artifact_ref,
+            validation_status="passed" if not fetch.partial_failure else "failed",
+            validation_result={
+                "artifact_count": len(fetch.artifacts),
+                "source_warnings": fetch.source_warnings,
+                "partial_failure": fetch.partial_failure,
+            },
         )
 
         norm_step = self.traces.start_step(
@@ -279,6 +314,12 @@ class LocalAnalysisWorkflow:
             step_id=norm_step.step_id,
             output_payload=[artifact.model_dump(mode="json") for artifact in artifacts],
             output_ref=norm_ref.artifact_ref,
+            retrieval_context_ref=fetch_ref.artifact_ref,
+            validation_status="passed",
+            validation_result={
+                "artifact_count": len(artifacts),
+                "input_snapshot_ids": [artifact.artifact_id for artifact in artifacts],
+            },
         )
 
         chunk_step = self.traces.start_step(
@@ -299,6 +340,13 @@ class LocalAnalysisWorkflow:
             step_id=chunk_step.step_id,
             output_payload=[chunk.model_dump(mode="json") for chunk in chunks],
             output_ref=chunk_ref.artifact_ref,
+            retrieval_context_ref=norm_ref.artifact_ref,
+            validation_status="passed",
+            validation_result={
+                "chunk_count": len(chunks),
+                "masking_applied": True,
+                "vector_upserted": True,
+            },
         )
         return fetch, artifacts, chunks
 
@@ -330,7 +378,7 @@ class LocalAnalysisWorkflow:
         step_id: str,
         nodes: list[OntologyNode],
         edges: list[TraceabilityEdge],
-    ) -> EdgeReasoningOutput:
+    ) -> tuple[EdgeReasoningOutput, StructuredValidationResult]:
         """Run a deterministic dummy model-gateway call for traceable LLM reasoning."""
         profile = ModelProfile(
             model_profile_id="dummy-local",
@@ -402,7 +450,7 @@ class LocalAnalysisWorkflow:
         )
         if parsed is None:
             raise RuntimeError(f"dummy LLM edge reasoning failed validation: {validation}")
-        return parsed
+        return parsed, validation
 
     def _record_model_metadata(
         self,

@@ -137,6 +137,7 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
         rollback_audit = client.get("/api/v1/audit/events?action=improvement_rolled_back")
         restored_improvements = client.get("/api/v1/improvements/candidates")
         llm_calls = client.get("/api/v1/runs/run_restore_1/llm-calls")
+        steps = client.get("/api/v1/runs/run_restore_1/steps")
         replay_diff = client.get("/api/v1/replays/replay_restore_1/diff")
         findings = client.get("/api/v1/findings")
         finding_detail = client.get(f"/api/v1/findings/{finding['finding_id']}")
@@ -149,6 +150,12 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     assert any(item["status"] == "approved" for item in approvals.json())
     assert llm_calls.status_code == 200
     assert llm_calls.json()[0]["model_profile_id"] == "dummy-local"
+    assert steps.status_code == 200
+    restored_llm_step = next(
+        step for step in steps.json() if step["stage_name"] == "llm_assisted_reasoning"
+    )
+    assert restored_llm_step["retrieval_context_ref"] == "candidate_edges"
+    assert restored_llm_step["validation_result"]["status"] == "passed"
     assert replay_diff.status_code == 200
     assert replay_diff.json()["source_run_id"] == "run_restore_1"
     assert replay_diff.json()["replay_run_id"] == "replay_restore_1"

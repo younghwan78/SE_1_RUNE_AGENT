@@ -522,7 +522,9 @@ const renderDebugSummary = async () => {
         ${step.step_id}<br>
         input=${step.input_hash}<br>
         output=${step.output_hash || "none"}<br>
-        artifact=${step.output_ref || "none"}
+        artifact=${step.output_ref || "none"}<br>
+        retrieval=${step.retrieval_context_ref || "none"}<br>
+        validation=${step.validation_status || "not_applicable"}
       </div>
     `;
     item.addEventListener("click", () => {

@@ -27,6 +27,14 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
     assert payload["counts"]["steps"] >= 7
     assert payload["counts"]["artifact_refs"] >= 2
     assert payload["graph_deltas"]
+    llm_step = next(
+        step
+        for step in payload["steps"]
+        if step["stage_name"] == "llm_assisted_reasoning"
+    )
+    assert llm_step["retrieval_context_ref"] == "candidate_edges"
+    assert llm_step["validation_status"] == "passed"
+    assert llm_step["validation_result"]["status"] == "passed"
 
     llm_calls = client.get("/api/v1/runs/run_debug_1/llm-calls")
     assert llm_calls.status_code == 200
@@ -111,6 +119,8 @@ def test_debug_approval_lineage_links_run_step_delta_feedback_and_audit(
     assert payload["approval"]["approval_id"] == approval["approval_id"]
     assert payload["run"]["run_id"] == "run_lineage_1"
     assert payload["step"]["step_id"] == approval["created_from_step_id"]
+    assert payload["step"]["validation_status"] == "passed"
+    assert payload["step"]["validation_result"]["graph_delta_preview_created"] is True
     assert payload["graph_delta"]["delta_id"] == approval["graph_delta_ref"]
     assert payload["feedback"][0]["reason_code"] == "wrong_relation"
     assert payload["audit_events"][0]["action"] == "approval_decided"

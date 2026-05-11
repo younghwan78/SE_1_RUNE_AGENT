@@ -96,7 +96,8 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
 
     steps = client.get("/api/v1/runs/run_api_1/steps")
     assert steps.status_code == 200
-    assert {step["stage_name"] for step in steps.json()} >= {
+    step_payload = steps.json()
+    assert {step["stage_name"] for step in step_payload} >= {
         "source_fetch",
         "normalize",
         "mask_chunk",
@@ -106,6 +107,14 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
         "detect_findings",
         "stage_approval",
     }
+    llm_step = next(
+        step for step in step_payload if step["stage_name"] == "llm_assisted_reasoning"
+    )
+    assert llm_step["retrieval_context_ref"] == "candidate_edges"
+    assert llm_step["validation_status"] == "passed"
+    assert llm_step["validation_result"]["schema_version"] == "v1"
+    chunk_step = next(step for step in step_payload if step["stage_name"] == "mask_chunk")
+    assert chunk_step["validation_result"]["masking_applied"] is True
 
     approvals = client.get("/api/v1/approvals")
     approval = approvals.json()[0]

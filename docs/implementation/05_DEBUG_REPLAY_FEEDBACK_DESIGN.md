@@ -26,6 +26,9 @@ status
 input_hash
 output_hash
 output_ref
+retrieval_context_ref
+validation_status
+validation_result
 schema_version
 started_at
 completed_at

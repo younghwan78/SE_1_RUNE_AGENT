@@ -1,7 +1,7 @@
 """Debug and trace data contracts."""
 
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -58,6 +58,9 @@ class AgentStepTrace(DebugModel):
     input_hash: str
     output_hash: str | None = None
     output_ref: str | None = None
+    retrieval_context_ref: str | None = None
+    validation_status: ValidationStatus = "not_applicable"
+    validation_result: dict[str, Any] = Field(default_factory=dict)
     started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     completed_at: datetime | None = None
     retry_count: int = Field(default=0, ge=0)
