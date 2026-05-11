@@ -45,7 +45,7 @@ Latest local verification:
 - `uv run python ops/integration/run_backend_integration.py`: 3 passed
 - `uv run python ops/source/smoke_source_adapters.py`: passed
 - `uv run python ops/model_gateway/smoke_model_gateway.py`: passed
-- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3250 ms against a 5000 ms local rehearsal threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced 6 failed env checks and 9 manual-required gates without secret values
 - `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected on this local shell because production env checks are still unset; manual evidence resolved 9 manual gates
@@ -75,7 +75,7 @@ Latest GitHub verification:
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, approval/query/scheduler/debug RBAC, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
 | Scheduler | process-local `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture | Single-process complete; multi-worker orchestration pending |
-| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, disposable full-stack rehearsal, API restart restore check, production-readiness gate reporting, and reviewed manual-evidence input path complete; company/staging environment rehearsal pending |
+| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, and reviewed manual-evidence input path complete; company/staging environment rehearsal pending |
 | CI | `.github/workflows/ci.yml` | Complete |
 
 ## 3. Remaining Implementation Backlog

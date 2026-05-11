@@ -3,6 +3,7 @@
 import importlib.util
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 
 def test_rehearsal_env_configures_production_backends(tmp_path) -> None:  # type: ignore[no-untyped-def]
@@ -18,6 +19,38 @@ def test_rehearsal_env_configures_production_backends(tmp_path) -> None:  # type
     assert env["QDRANT_URL"] == "http://127.0.0.1:16333"
     assert env["AUTH_MODE"] == "local"
     assert env["ARTIFACT_ROOT"] == str(tmp_path / "artifacts")
+
+
+def test_load_smoke_summary_uses_smoke_runner(monkeypatch: Any) -> None:
+    rehearsal = _load_rehearsal_module()
+
+    class FakeResult:
+        def __init__(self, latency_ms: float, approvals: int) -> None:
+            self.latency_ms = latency_ms
+            self.approvals = approvals
+
+    class FakeSmokeLoad:
+        @staticmethod
+        def run_smoke_load(**_: Any) -> list[FakeResult]:
+            return [FakeResult(10.0, 2), FakeResult(20.0, 3)]
+
+        @staticmethod
+        def percentile(values: list[float], percent: int) -> float:
+            assert percent == 95
+            return max(values)
+
+    monkeypatch.setattr(rehearsal, "_load_smoke_runner", lambda: FakeSmokeLoad)
+
+    summary = rehearsal.run_load_smoke(
+        api_base_url="http://127.0.0.1:18080",
+        runs=2,
+        max_p95_ms=50.0,
+    )
+
+    assert summary["runs"] == 2
+    assert summary["p95_ms"] == 20.0
+    assert summary["approvals"] == 5
+    assert summary["passed"] is True
 
 
 def _load_rehearsal_module() -> ModuleType:

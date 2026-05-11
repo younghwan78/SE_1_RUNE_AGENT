@@ -19,6 +19,7 @@ from urllib import error, request
 
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND_RUNNER = ROOT / "ops" / "integration" / "run_backend_integration.py"
+LOAD_RUNNER = ROOT / "ops" / "load" / "smoke_load.py"
 
 
 def rehearsal_env(*, artifact_root: Path, api_port: int) -> dict[str, str]:
@@ -61,6 +62,8 @@ def main() -> int:
     parser.add_argument("--no-up", action="store_true", help="Use already running backend services")
     parser.add_argument("--keep", action="store_true", help="Leave backend services running")
     parser.add_argument("--timeout-seconds", type=int, default=180)
+    parser.add_argument("--load-runs", type=int, default=3)
+    parser.add_argument("--max-load-p95-ms", type=float, default=5000.0)
     args = parser.parse_args()
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -70,6 +73,8 @@ def main() -> int:
             start_backends=not args.no_up,
             keep_backends=args.keep,
             timeout_seconds=args.timeout_seconds,
+            load_runs=args.load_runs,
+            max_load_p95_ms=args.max_load_p95_ms,
         )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0 if result["passed"] else 1
@@ -82,6 +87,8 @@ def run_full_stack_rehearsal(
     start_backends: bool = True,
     keep_backends: bool = False,
     timeout_seconds: int = 180,
+    load_runs: int = 3,
+    max_load_p95_ms: float = 5000.0,
 ) -> dict[str, Any]:
     """Run the full-stack API rehearsal and return a structured summary."""
     backend_runner = _load_backend_runner()
@@ -130,6 +137,11 @@ def run_full_stack_rehearsal(
         restored_audit = require_array(
             get_json(f"{api_base_url}/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
         )
+        load_smoke = run_load_smoke(
+            api_base_url=api_base_url,
+            runs=load_runs,
+            max_p95_ms=max_load_p95_ms,
+        )
         restart_restored = (
             any(
                 isinstance(run, dict) and run.get("run_id") == "run_full_stack_rehearsal"
@@ -148,6 +160,7 @@ def run_full_stack_rehearsal(
             and projection["counts"]["visible_approved_edges"] >= 1
             and audit_retention["total_events"] >= 2
             and restart_restored
+            and load_smoke["passed"]
         )
         return {
             "passed": passed,
@@ -160,6 +173,7 @@ def run_full_stack_rehearsal(
             "graph_counts": projection["counts"],
             "audit_total_events": audit_retention["total_events"],
             "restart_restored": restart_restored,
+            "load_smoke": load_smoke,
             "schema_version": "v1",
         }
     finally:
@@ -199,6 +213,28 @@ def stop_api_server(server: subprocess.Popen[str]) -> None:
     except subprocess.TimeoutExpired:
         server.kill()
         server.wait(timeout=10)
+
+
+def run_load_smoke(*, api_base_url: str, runs: int, max_p95_ms: float) -> dict[str, Any]:
+    """Run a small smoke-load pass against the live rehearsal API."""
+    smoke_load = _load_smoke_runner()
+    results = smoke_load.run_smoke_load(
+        base_url=api_base_url,
+        runs=runs,
+        project_key="RUNE_CAM_ALPHA",
+        scenario="RUNE_MULTI_SOURCE",
+    )
+    latencies = [result.latency_ms for result in results]
+    p95_ms = float(smoke_load.percentile(latencies, 95))
+    approvals = sum(int(result.approvals) for result in results)
+    return {
+        "runs": len(results),
+        "p95_ms": p95_ms,
+        "max_ms": max(latencies) if latencies else 0.0,
+        "approvals": approvals,
+        "passed": p95_ms <= max_p95_ms and approvals > 0,
+        "max_p95_ms": max_p95_ms,
+    }
 
 
 def wait_for_health(base_url: str, *, timeout_seconds: int) -> dict[str, Any]:
@@ -268,6 +304,15 @@ def _load_backend_runner() -> ModuleType:
     spec = importlib.util.spec_from_file_location("run_backend_integration", BACKEND_RUNNER)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"cannot load backend runner: {BACKEND_RUNNER}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_smoke_runner() -> ModuleType:
+    spec = importlib.util.spec_from_file_location("smoke_load", LOAD_RUNNER)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load smoke-load runner: {LOAD_RUNNER}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module

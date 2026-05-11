@@ -63,7 +63,8 @@ uv run python ops/rehearsal/run_full_stack_rehearsal.py
 This starts the disposable backends, launches the API with
 `STATE_STORE=postgres`, `GRAPH_BACKEND=neo4j`, and `VECTOR_BACKEND=qdrant`, then
 runs readiness, analyze, approval commit, graph projection, audit retention, and
-API restart-restore checks.
+API restart-restore checks. It also runs a small `ops/load/smoke_load.py` pass
+against the live rehearsal API.
 
 Run feedback/eval/canary rehearsal:
 
