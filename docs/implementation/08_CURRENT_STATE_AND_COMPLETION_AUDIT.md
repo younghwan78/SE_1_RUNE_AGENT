@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `6fa6a9c Normalize feedback taxonomy aliases`
 - `6b94dee Add registry activation rollback`
 - `eb224f0 Refresh audit after improvement rollback`
 - `a98adde Add controlled improvement rollback`
@@ -114,7 +115,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 190 passed, 3 skipped
+- `uv run pytest`: 192 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -182,7 +183,7 @@ Latest GitHub verification:
 | Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, `Neo4jGraphBackend`, graph projection, traceability chain APIs, optional `NEO4J_TEST_*` integration test, Docker integration runner | Neo4j foundation complete; disposable Docker Neo4j integration passed; company/staging graph rehearsal pending |
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test, Docker integration runner | Qdrant foundation complete; disposable Docker Qdrant integration passed; company/staging vector rehearsal pending |
 | Approval workflow | approval queue, approve/reject/hold/modify path, graph commit, developer/operator RBAC and project-scope checks | Complete for local and protected API paths |
-| Feedback loop | feedback events, eval candidates, improvement candidates, eval gate, controlled review/canary promotion, canary/active rollback, persisted improvement decisions, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary/rollback rehearsal complete; real production feedback calibration pending |
+| Feedback loop | feedback events, command-style feedback action/reason aliases normalized to canonical taxonomy, eval candidates, improvement candidates, eval gate, controlled review/canary promotion, canary/active rollback, persisted improvement decisions, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary/rollback rehearsal complete; real production feedback calibration pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, blocked debug artifact read audit events, finding status change audit events, improvement activation/rollback audit events, model/prompt activation/rollback audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, and truncation metadata are locally validated; React Flow decision pending after real graph shape validation |
 | Scheduler | `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture, PostgreSQL `scheduler_leases` table, lease acquire/release tests, Ubuntu multi-replica note | Periodic run path complete for single-process and PostgreSQL lease-backed multi-worker deployments; external orchestration/Kubernetes CronJob remains an optional platform decision |
@@ -275,7 +276,7 @@ implementation:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `190 passed, 3 skipped`
+- `uv run pytest`: `192 passed, 3 skipped`
 - `uv run python ops/observability/validate_observability_assets.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including
   metrics surface check with `http_total_requests=7`, `graph_nodes=14`,
