@@ -61,11 +61,15 @@ def decide_approval(
         project_key=item.project_key,
         target_type="approval",
         target_id=approval_id,
+        outcome="blocked" if item.status == "stale" else "succeeded",
         reason_code=decision.reason_code,
         metadata={
             "decision_action": decision.action,
             "result_status": item.status,
             "proposal_ref": item.proposal_ref,
+            "expected_version": decision.expected_version,
+            "actual_version": item.version,
+            "expected_proposal_hash": decision.expected_proposal_hash,
         },
     )
     runtime.persist_approval_state()

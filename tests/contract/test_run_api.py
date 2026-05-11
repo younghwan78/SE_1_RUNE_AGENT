@@ -235,9 +235,50 @@ def test_approval_decision_idempotency_key_avoids_duplicate_side_effects(
     assert second.json() == first.json()
     assert conflict.status_code == 409
 
-    audit = client.get("/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
+    audit = client.get(
+        "/api/v1/audit/events?project_key=RUNE_CAM_ALPHA&action=approval_decided"
+    )
     assert audit.status_code == 200
     assert [event["action"] for event in audit.json()].count("approval_decided") == 1
+
+
+def test_stale_approval_decision_is_blocked_without_graph_commit(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/v1/runs/analyze",
+        json={
+            "project_key": "RUNE_CAM_ALPHA",
+            "scenario": "RUNE_CAM_ALPHA",
+            "run_id": "run_api_stale_approval",
+        },
+    )
+    assert response.status_code == 200
+    approval = client.get("/api/v1/approvals").json()[0]
+
+    stale = client.post(
+        f"/api/v1/approvals/{approval['approval_id']}/decision",
+        json={
+            "approval_id": approval["approval_id"],
+            "action": "approve",
+            "decided_by": "reviewer",
+            "expected_version": approval["version"] + 1,
+            "expected_proposal_hash": approval["proposal_hash"],
+        },
+    )
+
+    assert stale.status_code == 200
+    assert stale.json()["status"] == "stale"
+    graph = client.get("/api/v1/graph/subgraph?project_key=RUNE_CAM_ALPHA")
+    assert graph.status_code == 200
+    assert graph.json()["edges"] == []
+    audit = client.get(
+        "/api/v1/audit/events?project_key=RUNE_CAM_ALPHA&action=approval_decided"
+    )
+    assert audit.status_code == 200
+    assert audit.json()[0]["outcome"] == "blocked"
+    assert audit.json()[0]["metadata"]["result_status"] == "stale"
+    assert audit.json()[0]["metadata"]["expected_version"] == approval["version"] + 1
 
 
 def test_modify_approval_commits_corrected_edge_and_feedback(client: TestClient) -> None:

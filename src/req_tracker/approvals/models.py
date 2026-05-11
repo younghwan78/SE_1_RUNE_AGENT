@@ -73,6 +73,8 @@ class ApprovalDecision(ApprovalModel):
     approval_id: str
     action: DecisionAction
     decided_by: str
+    expected_version: int | None = Field(default=None, ge=1)
+    expected_proposal_hash: str | None = None
     decided_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     correction_payload: dict[str, Any] | None = None
     reason_code: str | None = None

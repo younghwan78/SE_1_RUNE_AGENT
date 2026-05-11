@@ -78,6 +78,16 @@ class ApprovalService:
         item = self.items[decision.approval_id]
         if item.status != "pending":
             return item
+        if _is_stale_decision(item, decision):
+            updated = item.model_copy(
+                update={
+                    "status": "stale",
+                    "version": item.version + 1,
+                    "updated_at": datetime.now(UTC),
+                }
+            )
+            self.items[item.approval_id] = updated
+            return updated
         if decision.action == "approve" and item.graph_delta_ref:
             graph.apply_delta(
                 self.deltas[item.graph_delta_ref],
@@ -159,6 +169,15 @@ def _feedback_action(status: str) -> FeedbackAction:
     if status == "held":
         return "commented"
     return "rejected"
+
+
+def _is_stale_decision(item: ApprovalItem, decision: ApprovalDecision) -> bool:
+    if decision.expected_version is not None and decision.expected_version != item.version:
+        return True
+    return (
+        decision.expected_proposal_hash is not None
+        and decision.expected_proposal_hash != item.proposal_hash
+    )
 
 
 def _correction_text(decision: ApprovalDecision) -> str | None:
