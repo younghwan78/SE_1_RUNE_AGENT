@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `80e4369 Add full stack rehearsal runner`
 - `0d2bbc5 Add source adapter smoke harness`
 - `11da7f0 Add disposable backend integration runner`
 - `8a61830 Add trusted proxy auth foundation`
@@ -35,7 +36,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `0d2bbc5`: completed successfully
+- GitHub Actions `CI` run for `80e4369`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
