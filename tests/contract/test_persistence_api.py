@@ -52,6 +52,56 @@ def test_sqlite_state_store_persists_runtime_outputs(tmp_path) -> None:  # type:
     assert counts["graph_edges"] == 1
 
 
+def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    db_path = tmp_path / "runtime.sqlite3"
+    artifact_root = tmp_path / "artifacts"
+    settings = Settings(
+        artifact_root=artifact_root,
+        state_store="sqlite",
+        sqlite_state_path=db_path,
+    )
+    first_app = create_app(settings)
+    with TestClient(first_app) as client:
+        response = client.post(
+            "/api/v1/runs/analyze",
+            json={
+                "project_key": "RUNE_CAM_ALPHA",
+                "scenario": "RUNE_CAM_ALPHA",
+                "run_id": "run_restore_1",
+            },
+        )
+        assert response.status_code == 200
+        approval = client.get("/api/v1/approvals").json()[0]
+        decision = client.post(
+            f"/api/v1/approvals/{approval['approval_id']}/decision",
+            json={
+                "approval_id": approval["approval_id"],
+                "action": "approve",
+                "decided_by": "reviewer",
+            },
+        )
+        assert decision.status_code == 200
+
+    second_app = create_app(settings)
+    with TestClient(second_app) as client:
+        runs = client.get("/api/v1/debug/runs")
+        graph = client.get("/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA")
+        approvals = client.get("/api/v1/approvals")
+        audit = client.get("/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
+
+    assert runs.status_code == 200
+    assert runs.json()[0]["run_id"] == "run_restore_1"
+    assert graph.status_code == 200
+    assert graph.json()["counts"]["visible_approved_edges"] == 1
+    assert approvals.status_code == 200
+    assert any(item["status"] == "approved" for item in approvals.json())
+    assert audit.status_code == 200
+    assert {event["action"] for event in audit.json()} >= {
+        "run_completed",
+        "approval_decided",
+    }
+
+
 def test_runtime_archive_prune_deletes_pruned_audit_rows_from_state_store(tmp_path) -> None:  # type: ignore[no-untyped-def]
     store = SQLiteStateStore(tmp_path / "runtime.sqlite3")
     runtime = RuntimeState.create(

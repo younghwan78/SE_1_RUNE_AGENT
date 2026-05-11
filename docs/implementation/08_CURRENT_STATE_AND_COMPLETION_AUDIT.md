@@ -32,10 +32,10 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 87 passed, 3 skipped
+- `uv run pytest`: 88 passed, 3 skipped
 - `uv run python ops/integration/run_backend_integration.py`: 3 passed
 - `uv run python ops/source/smoke_source_adapters.py`: passed
-- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
 
 Latest GitHub verification:
@@ -48,11 +48,11 @@ Latest GitHub verification:
 | --- | --- | --- |
 | Production plan is the source of truth | `PRODUCTION_EXECUTION_PLAN.md`, `docs/implementation/03_STEP_BY_STEP_IMPLEMENTATION_PLAN.md` | Complete |
 | Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, `ops/source/smoke_source_adapters.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry, pagination, permission-warning, and local HTTP smoke validation complete; restricted decision/email file path complete; Email live access and real company sandbox validation pending |
-| Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test | Complete |
+| Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test, persisted runtime restore test | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests, `ops/model_gateway/smoke_model_gateway.py` | Profile/registry/live-shaped HTTP foundation complete; real external provider sandbox validation pending |
 | Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, approval lineage API, run diff-view API, run debug UI, LLM/graph delta side-by-side panes | Local debug workbench foundation complete; live LLM payload validation pending |
-| SQLite state persistence | `SQLiteStateStore`, persistence contract test | Complete |
+| SQLite state persistence | `SQLiteStateStore`, persistence contract test, restart restore contract test | Complete |
 | PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, `003_audit_archive_batches.sql`, migration loader tests | Complete |
 | Typed PostgreSQL core table foundation | `002_core_state_tables.sql`, typed mirror upsert/read dispatch, rollback scripts, unit tests, optional `POSTGRES_TEST_DSN` integration test, `ops/integration/run_backend_integration.py` | Foundation complete; disposable Docker PostgreSQL integration passed; company/staging DB rehearsal pending |
 | Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, `Neo4jGraphBackend`, graph projection, traceability chain APIs, optional `NEO4J_TEST_*` integration test, Docker integration runner | Neo4j foundation complete; disposable Docker Neo4j integration passed; company/staging graph rehearsal pending |
@@ -62,7 +62,7 @@ Latest GitHub verification:
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
 | Scheduler | process-local `RunScheduler`, API/UI/runbook | Single-process complete; multi-worker orchestration pending |
-| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py` | Local/server scaffold and disposable full-stack rehearsal complete; company/staging environment rehearsal pending |
+| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py` | Local/server scaffold, disposable full-stack rehearsal, and API restart restore check complete; company/staging environment rehearsal pending |
 | CI | `.github/workflows/ci.yml` | Complete |
 
 ## 3. Remaining Implementation Backlog

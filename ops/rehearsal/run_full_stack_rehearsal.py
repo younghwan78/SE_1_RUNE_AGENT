@@ -14,7 +14,7 @@ import tempfile
 import time
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, cast
 from urllib import error, request
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -25,6 +25,8 @@ def rehearsal_env(*, artifact_root: Path, api_port: int) -> dict[str, str]:
     """Return environment variables for the full-stack rehearsal app."""
     backend_runner = _load_backend_runner()
     env = backend_runner.integration_env()
+    if not isinstance(env, dict):
+        raise RuntimeError("backend integration env must be a dictionary")
     env.update(
         {
             "REQ_TRACKER_ENV": "rehearsal",
@@ -49,7 +51,7 @@ def rehearsal_env(*, artifact_root: Path, api_port: int) -> dict[str, str]:
             "RUNE_REHEARSAL_API_PORT": str(api_port),
         }
     )
-    return env
+    return cast(dict[str, str], env)
 
 
 def main() -> int:
@@ -101,8 +103,8 @@ def run_full_stack_rehearsal(
                 "scenario": "RUNE_MULTI_SOURCE",
             },
         )
-        approvals = get_json(f"{api_base_url}/api/v1/approvals")
-        if not isinstance(approvals, list) or not approvals:
+        approvals = require_array(get_json(f"{api_base_url}/api/v1/approvals"))
+        if not approvals:
             raise RuntimeError("analysis produced no approval items")
         approval_id = str(approvals[0]["approval_id"])
         decision = post_json(
@@ -113,10 +115,28 @@ def run_full_stack_rehearsal(
                 "decided_by": "rehearsal_operator",
             },
         )
-        projection = get_json(
-            f"{api_base_url}/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA"
+        projection = require_object(
+            get_json(f"{api_base_url}/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA")
         )
-        audit_retention = get_json(f"{api_base_url}/api/v1/audit/retention")
+        audit_retention = require_object(get_json(f"{api_base_url}/api/v1/audit/retention"))
+        stop_api_server(server)
+        server = start_api_server(env, api_port)
+        wait_for_health(api_base_url, timeout_seconds=timeout_seconds)
+        restored_runs = require_array(get_json(f"{api_base_url}/api/v1/debug/runs"))
+        restored_projection = require_object(
+            get_json(f"{api_base_url}/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA")
+        )
+        restored_audit = require_array(
+            get_json(f"{api_base_url}/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
+        )
+        restart_restored = (
+            any(
+                isinstance(run, dict) and run.get("run_id") == "run_full_stack_rehearsal"
+                for run in restored_runs
+            )
+            and restored_projection["counts"]["visible_approved_edges"] >= 1
+            and len(restored_audit) >= 2
+        )
         passed = (
             health.get("state_store") == "postgres"
             and health.get("graph_backend") == "neo4j"
@@ -125,6 +145,7 @@ def run_full_stack_rehearsal(
             and decision["status"] == "approved"
             and projection["counts"]["visible_approved_edges"] >= 1
             and audit_retention["total_events"] >= 2
+            and restart_restored
         )
         return {
             "passed": passed,
@@ -135,6 +156,7 @@ def run_full_stack_rehearsal(
             "approved_status": decision["status"],
             "graph_counts": projection["counts"],
             "audit_total_events": audit_retention["total_events"],
+            "restart_restored": restart_restored,
             "schema_version": "v1",
         }
     finally:
@@ -182,7 +204,7 @@ def wait_for_health(base_url: str, *, timeout_seconds: int) -> dict[str, Any]:
     last_error: Exception | None = None
     while time.monotonic() < deadline:
         try:
-            payload = get_json(f"{base_url}/api/v1/health")
+            payload = require_object(get_json(f"{base_url}/api/v1/health"))
             if payload.get("status") == "ok":
                 return payload
         except Exception as exc:  # noqa: BLE001
@@ -223,6 +245,20 @@ def post_json(url: str, payload: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(loaded, dict):
         raise RuntimeError("response must be a JSON object")
     return loaded
+
+
+def require_object(payload: dict[str, Any] | list[Any]) -> dict[str, Any]:
+    """Return payload if it is a JSON object."""
+    if not isinstance(payload, dict):
+        raise RuntimeError("response must be a JSON object")
+    return payload
+
+
+def require_array(payload: dict[str, Any] | list[Any]) -> list[Any]:
+    """Return payload if it is a JSON array."""
+    if not isinstance(payload, list):
+        raise RuntimeError("response must be a JSON array")
+    return payload
 
 
 def _load_backend_runner() -> ModuleType:

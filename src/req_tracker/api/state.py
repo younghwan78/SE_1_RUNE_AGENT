@@ -4,14 +4,18 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from req_tracker.approvals.models import ApprovalItem, GraphDelta
 from req_tracker.approvals.service import ApprovalService
 from req_tracker.audit.archive import AuditArchiveWriter, LocalAuditArchiveStore
-from req_tracker.audit.models import AuditRetentionPolicy
+from req_tracker.audit.models import AuditEvent, AuditRetentionPolicy
 from req_tracker.audit.service import AuditService
 from req_tracker.debug.artifacts import LocalArtifactStore
+from req_tracker.debug.models import AgentRun, AgentStepTrace
 from req_tracker.debug.traces import InMemoryTraceRepository
+from req_tracker.feedback.models import FeedbackEvent
 from req_tracker.graph.base import GraphBackend
 from req_tracker.graph.memory_backend import MemoryGraphBackend
+from req_tracker.ontology.models import OntologyNode, TraceabilityEdge
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.scheduler.service import RunScheduler
 from req_tracker.storage.state_store import StateStore
@@ -48,7 +52,7 @@ class RuntimeState(BaseModel):
         audit_archive_store: AuditArchiveWriter | None = None,
     ) -> "RuntimeState":
         """Create a local runtime state."""
-        return cls(
+        runtime = cls(
             traces=InMemoryTraceRepository(),
             artifact_store=LocalArtifactStore(artifact_root),
             graph=graph or MemoryGraphBackend(),
@@ -61,6 +65,8 @@ class RuntimeState(BaseModel):
             scheduler=RunScheduler(schedule_config),
             state_store=state_store,
         )
+        runtime.restore_from_state_store()
+        return runtime
 
     def workflow(self) -> LocalAnalysisWorkflow:
         """Create a workflow bound to this runtime state."""
@@ -201,3 +207,36 @@ class RuntimeState(BaseModel):
                 if isinstance(audit_id, str):
                     self.state_store.delete("audit_events", audit_id)
         return result
+
+    def restore_from_state_store(self) -> None:
+        """Hydrate runtime caches from the configured state store after restart."""
+        if self.state_store is None:
+            return
+        for payload in self.state_store.list("agent_runs"):
+            run = AgentRun.model_validate(payload)
+            self.traces.runs[run.run_id] = run
+        for payload in self.state_store.list("agent_step_traces"):
+            step = AgentStepTrace.model_validate(payload)
+            self.traces.steps[step.step_id] = step
+        for payload in self.state_store.list("approval_items"):
+            approval = ApprovalItem.model_validate(payload)
+            self.approvals.items[approval.approval_id] = approval
+        for payload in self.state_store.list("graph_deltas"):
+            delta = GraphDelta.model_validate(payload)
+            self.approvals.deltas[delta.delta_id] = delta
+        self.approvals.feedback = [
+            FeedbackEvent.model_validate(payload)
+            for payload in self.state_store.list("feedback_events")
+        ]
+        for payload in self.state_store.list("audit_events"):
+            event = AuditEvent.model_validate(payload)
+            self.audit.events[event.audit_id] = event
+        nodes = [
+            OntologyNode.model_validate(payload)
+            for payload in self.state_store.list("graph_nodes")
+        ]
+        if nodes:
+            self.graph.stage_baseline_nodes(nodes)
+        for payload in self.state_store.list("graph_edges"):
+            edge = TraceabilityEdge.model_validate(payload)
+            self.graph.edges[edge.edge_id] = edge

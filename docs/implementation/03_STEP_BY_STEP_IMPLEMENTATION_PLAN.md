@@ -577,6 +577,7 @@ Dummy 검증:
 - Qdrant vector backend foundation with env-gated integration test
 - Docker Compose backend integration runner for disposable PostgreSQL, Neo4j, and Qdrant validation
 - full-stack API rehearsal against disposable PostgreSQL, Neo4j, and Qdrant with approval commit and graph/audit checks
+- runtime state restore from PostgreSQL/SQLite-backed state store after API restart
 - pending approval queue and approved graph separation
 - approval approve/reject/hold/modify decision path
 - feedback summary, eval candidate, improvement candidate, eval gate block
