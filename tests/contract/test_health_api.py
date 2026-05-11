@@ -46,6 +46,38 @@ def test_request_log_includes_correlation_and_user_id(
     assert record.path == "/api/v1/health"
     assert record.status_code == 200
     assert isinstance(record.duration_ms, float)
+    assert len(record.trace_id) == 32
+    assert len(record.span_id) == 16
+
+
+def test_traceparent_header_is_propagated_to_logs_and_response(
+    client: TestClient,
+    caplog: LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger="req_tracker.api.request")
+    incoming_traceparent = (
+        "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+    )
+
+    response = client.get(
+        "/api/v1/health",
+        headers={"traceparent": incoming_traceparent},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["x-rune-trace-id"] == "4bf92f3577b34da6a3ce929d0e0e4736"
+    assert response.headers["traceparent"].startswith(
+        "00-4bf92f3577b34da6a3ce929d0e0e4736-"
+    )
+    assert response.headers["traceparent"] != incoming_traceparent
+    request_records = [
+        record
+        for record in caplog.records
+        if record.name == "req_tracker.api.request" and record.getMessage() == "http_request"
+    ]
+    record = request_records[-1]
+    assert record.trace_id == "4bf92f3577b34da6a3ce929d0e0e4736"
+    assert len(record.span_id) == 16
 
 
 def test_readiness_endpoint_reports_backend_checks(client: TestClient) -> None:

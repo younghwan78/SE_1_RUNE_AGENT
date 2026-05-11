@@ -18,6 +18,8 @@ def test_json_log_formatter_includes_correlation_and_user_fields() -> None:
         exc_info=None,
     )
     record.correlation_id = "corr_test"
+    record.trace_id = "4bf92f3577b34da6a3ce929d0e0e4736"
+    record.span_id = "00f067aa0ba902b7"
     record.user_id = "user@example.com"
     record.method = "GET"
     record.path = "/api/v1/health"
@@ -28,6 +30,8 @@ def test_json_log_formatter_includes_correlation_and_user_fields() -> None:
 
     assert payload["message"] == "http_request"
     assert payload["correlation_id"] == "corr_test"
+    assert payload["trace_id"] == "4bf92f3577b34da6a3ce929d0e0e4736"
+    assert payload["span_id"] == "00f067aa0ba902b7"
     assert payload["user_id"] == "user@example.com"
     assert payload["method"] == "GET"
     assert payload["path"] == "/api/v1/health"

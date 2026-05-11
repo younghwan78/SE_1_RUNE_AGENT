@@ -6,6 +6,8 @@ from typing import Any
 
 STRUCTURED_FIELDS = (
     "correlation_id",
+    "trace_id",
+    "span_id",
     "run_id",
     "step_id",
     "user_id",

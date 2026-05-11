@@ -16,6 +16,11 @@ Production default is `ENABLE_DOCS=false`. Any externally published API
 contract must be generated from the FastAPI app and reviewed with the matching
 contract tests before release.
 
+Requests may pass a W3C `traceparent` header. The API returns a server-span
+`traceparent`, `x-rune-trace-id`, and `x-correlation-id` so logs, metrics, and
+debug traces can be correlated before a full OpenTelemetry collector is wired in
+the target environment.
+
 Implemented route groups:
 
 - health, readiness, and runtime metrics

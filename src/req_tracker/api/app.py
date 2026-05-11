@@ -27,6 +27,7 @@ from req_tracker.graph.base import GraphBackend
 from req_tracker.graph.memory_backend import MemoryGraphBackend
 from req_tracker.graph.neo4j_backend import Neo4jGraphBackend
 from req_tracker.observability.metrics import InMemoryMetrics
+from req_tracker.observability.tracing import resolve_trace_context
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.storage.postgres_store import PostgreSQLStateStore
 from req_tracker.storage.sqlite_store import SQLiteStateStore
@@ -116,7 +117,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         correlation_id = request.headers.get("x-correlation-id") or resolved_settings.new_id(
             "corr"
         )
+        trace_context = resolve_trace_context(request.headers.get("traceparent"))
         request.state.correlation_id = correlation_id
+        request.state.trace_id = trace_context.trace_id
+        request.state.span_id = trace_context.span_id
         started = perf_counter()
         try:
             response = await call_next(request)
@@ -126,6 +130,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 metrics=metrics,
                 request=request,
                 correlation_id=correlation_id,
+                trace_id=trace_context.trace_id,
+                span_id=trace_context.span_id,
                 user_id=_request_user_id(request, resolved_settings),
                 status_code=500,
                 duration_ms=duration_ms,
@@ -133,10 +139,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise
         duration_ms = round((perf_counter() - started) * 1000, 3)
         response.headers["x-correlation-id"] = correlation_id
+        response.headers["traceparent"] = trace_context.traceparent
+        response.headers["x-rune-trace-id"] = trace_context.trace_id
         _record_request_metrics(
             metrics=metrics,
             request=request,
             correlation_id=correlation_id,
+            trace_id=trace_context.trace_id,
+            span_id=trace_context.span_id,
             user_id=_request_user_id(request, resolved_settings),
             status_code=response.status_code,
             duration_ms=duration_ms,
@@ -171,6 +181,8 @@ def _record_request_metrics(
     metrics: InMemoryMetrics,
     request: Request,
     correlation_id: str,
+    trace_id: str,
+    span_id: str,
     user_id: str,
     status_code: int,
     duration_ms: float,
@@ -185,6 +197,8 @@ def _record_request_metrics(
         "http_request",
         extra={
             "correlation_id": correlation_id,
+            "trace_id": trace_id,
+            "span_id": span_id,
             "user_id": user_id,
             "method": request.method,
             "path": request.url.path,
