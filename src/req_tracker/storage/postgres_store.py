@@ -212,6 +212,28 @@ TYPED_COLLECTIONS: dict[str, TypedCollectionSpec] = {
             ("schema_version", "schema_version"),
         ),
     ),
+    "idempotency_results": TypedCollectionSpec(
+        table="idempotency_results",
+        id_column="record_id",
+        columns=(
+            ("record_id", "record_id"),
+            ("idempotency_key", "idempotency_key"),
+            ("command", "command"),
+            ("project_key", "project_key"),
+            ("request_hash", "request_hash"),
+        ),
+    ),
+    "registry_activations": TypedCollectionSpec(
+        table="registry_activations",
+        id_column="activation_id",
+        columns=(
+            ("activation_id", "activation_id"),
+            ("activation_type", "activation_type"),
+            ("item_id", "item_id"),
+            ("status", "status"),
+            ("activated_by", "activated_by"),
+        ),
+    ),
 }
 
 

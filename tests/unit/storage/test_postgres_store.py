@@ -70,11 +70,16 @@ class FakePostgresConnection:
                 "payload_hash": payload_hash,
             }
             return FakeCursor()
-        if sql.startswith("insert into agent_runs"):
-            run_id = str(_params(params)[0])
+        if (
+            sql.startswith("insert into agent_runs")
+            or sql.startswith("insert into idempotency_results")
+            or sql.startswith("insert into registry_activations")
+        ):
+            table = sql.split(" ", maxsplit=3)[2]
+            entity_id = str(_params(params)[0])
             payload_json = _params(params)[-1]
             assert isinstance(payload_json, Jsonb)
-            self.typed_entities[("agent_runs", run_id)] = {
+            self.typed_entities[(table, entity_id)] = {
                 "project_key": _params(params)[1],
                 "payload_json": payload_json.obj,
             }
@@ -100,6 +105,16 @@ class FakePostgresConnection:
         if sql.startswith("select payload_json from agent_runs where run_id"):
             run_id = str(_params(params)[0])
             row = self.typed_entities.get(("agent_runs", run_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith("select payload_json from idempotency_results where record_id"):
+            record_id = str(_params(params)[0])
+            row = self.typed_entities.get(("idempotency_results", record_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith(
+            "select payload_json from registry_activations where activation_id"
+        ):
+            activation_id = str(_params(params)[0])
+            row = self.typed_entities.get(("registry_activations", activation_id))
             return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
         if sql.startswith("select payload_json from agent_runs"):
             rows = [
@@ -139,20 +154,23 @@ class FakePostgresConnection:
 def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     migrations = load_postgres_migrations()
 
-    assert [migration.version for migration in migrations] == ["001", "002", "003"]
+    assert [migration.version for migration in migrations] == ["001", "002", "003", "004"]
     assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
     assert "JSONB" in migrations[0].sql
     assert "CREATE TABLE IF NOT EXISTS agent_runs" in migrations[1].sql
     assert "CREATE TABLE IF NOT EXISTS audit_events" in migrations[1].sql
     assert "CREATE TABLE IF NOT EXISTS audit_archive_batches" in migrations[2].sql
+    assert "CREATE TABLE IF NOT EXISTS idempotency_results" in migrations[3].sql
+    assert "CREATE TABLE IF NOT EXISTS registry_activations" in migrations[3].sql
 
 
 def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
     rollbacks = load_postgres_rollbacks()
 
-    assert sorted(rollbacks) == ["001", "002", "003"]
+    assert sorted(rollbacks) == ["001", "002", "003", "004"]
     assert "DROP TABLE IF EXISTS agent_runs" in rollbacks["002"].sql
     assert "DROP TABLE IF EXISTS audit_archive_batches" in rollbacks["003"].sql
+    assert "DROP TABLE IF EXISTS idempotency_results" in rollbacks["004"].sql
 
 
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
@@ -173,7 +191,7 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
         payload=run,
     )
 
-    assert fake.migrations == {"001", "002", "003"}
+    assert fake.migrations == {"001", "002", "003", "004"}
     assert any("insert into agent_runs" in sql for sql in fake.executed_sql)
     stored = store.get("agent_runs", run.run_id)
     assert stored is not None
@@ -181,6 +199,43 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
     stored_runs = store.list("agent_runs", project_key="RUNE_CAM_ALPHA")
     assert stored_runs[0]["project_key"] == "RUNE_CAM_ALPHA"
     assert store.counts_by_collection() == {"agent_runs": 1}
+
+
+def test_postgres_store_typed_operation_state_tables() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+    idempotency = {
+        "record_id": "runs.analyze:idem-1",
+        "idempotency_key": "idem-1",
+        "command": "runs.analyze",
+        "project_key": "RUNE_CAM_ALPHA",
+        "request_hash": "hash-1",
+        "response": {"ok": True},
+    }
+    activation = {
+        "activation_id": "prompt_version:pv_edge_linking_v1",
+        "activation_type": "prompt_version",
+        "item_id": "pv_edge_linking_v1",
+        "status": "active",
+        "activated_by": "admin@example.com",
+    }
+
+    store.upsert(
+        collection="idempotency_results",
+        entity_id=idempotency["record_id"],
+        project_key="RUNE_CAM_ALPHA",
+        payload=idempotency,
+    )
+    store.upsert(
+        collection="registry_activations",
+        entity_id=activation["activation_id"],
+        payload=activation,
+    )
+
+    assert any("insert into idempotency_results" in sql for sql in fake.executed_sql)
+    assert any("insert into registry_activations" in sql for sql in fake.executed_sql)
+    assert store.get("idempotency_results", idempotency["record_id"]) == idempotency
+    assert store.get("registry_activations", activation["activation_id"]) == activation
 
 
 def test_postgres_store_rolls_back_one_applied_migration() -> None:
