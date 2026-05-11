@@ -377,6 +377,18 @@ def _company_rehearsal_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
     checks.append(
         _external_rehearsal_check(
             env,
+            check_id="observability_dashboard_rehearsal",
+            keys=("PROMETHEUS_BASE_URL", "GRAFANA_DASHBOARD_UID"),
+            next_action=(
+                "Import ops/observability/grafana-dashboard.json, load "
+                "ops/observability/rune-agent-alerts.yml, and verify the "
+                "staging Prometheus target scrapes /api/v1/metrics."
+            ),
+        )
+    )
+    checks.append(
+        _external_rehearsal_check(
+            env,
             check_id="trusted_proxy_rbac_rehearsal",
             keys=("RUNE_API_BASE_URL", "TRUSTED_PROXY_SECRET"),
             next_action=(

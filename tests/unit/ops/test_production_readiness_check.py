@@ -39,6 +39,7 @@ def test_readiness_report_flags_unverified_company_gates() -> None:
     assert checks["postgres_state_store"]["status"] == "passed"
     assert checks["opentelemetry_export"]["status"] == "passed"
     assert checks["company_postgres_rehearsal"]["status"] == "manual_required"
+    assert checks["observability_dashboard_rehearsal"]["status"] == "manual_required"
     assert checks["kubernetes_helm_rehearsal"]["status"] == "passed"
     assert "secret" not in str(report)
 
@@ -422,7 +423,7 @@ def test_readiness_report_passes_with_complete_env_and_reviewed_evidence() -> No
 
     assert report["passed"] is True
     assert report["summary"] == {
-        "passed": 18,
+        "passed": 19,
         "warning": 0,
         "failed": 0,
         "manual_required": 0,
@@ -482,6 +483,8 @@ def _complete_production_env() -> dict[str, str]:
         "TRUSTED_GROUP_ROLE_MAP": '{"rune-admins":"admin"}',
         "OTEL_ENABLED": "true",
         "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4317",
+        "PROMETHEUS_BASE_URL": "https://prometheus.example.test",
+        "GRAFANA_DASHBOARD_UID": "rune-agent-ops",
         "RUNE_API_BASE_URL": "https://rune-agent.example.test",
         "ARTIFACT_ROOT": "/var/lib/rune-agent/artifacts",
         "JIRA_BASE_URL": "https://jira.example.test",
@@ -501,6 +504,7 @@ def _manual_gate_ids() -> tuple[str, ...]:
         "company_confluence_sandbox_rehearsal",
         "company_email_policy_rehearsal",
         "backup_restore_load_rehearsal",
+        "observability_dashboard_rehearsal",
         "trusted_proxy_rbac_rehearsal",
         "local_regression_gates",
     )

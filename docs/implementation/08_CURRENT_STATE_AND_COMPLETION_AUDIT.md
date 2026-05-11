@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `7ac8a0a Refresh audit after observability assets`
 - `2e530f3 Add observability deployment assets`
 - `405a0bb Require masked restricted model requests`
 - `d40bef7 Guard API methods in surface test`
@@ -135,7 +136,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -`: passed, producing a review-safe unresolved-gate evidence template with `failed` TODO placeholders
 - `uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py`: passed, validating 17 created PostgreSQL tables have matching rollback drops across 5 migration versions
 - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed, validating 14 PostgreSQL typed mirror tables against packaged migration DDL
-- `uv run python ops/rehearsal/validate_evidence_example.py`: passed, validating that the committed example evidence file has no passable placeholder entries, fake `run-123*` references, duplicate check IDs, missing evidence arrays, or missing top-level TODO metadata
+- `uv run python ops/rehearsal/validate_evidence_example.py`: passed, validating that the committed example evidence file has 11 non-passable manual gates, no passable placeholder entries, fake `run-123*` references, duplicate check IDs, missing evidence arrays, or missing top-level TODO metadata
 - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed, validating that GitHub Actions covers deterministic local release gates and only omits the documented Docker-backed integration/full-stack rehearsals
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected because the committed example evidence uses `failed` TODO placeholders and production env checks are unset; fake `run-123*` and `status: passed` examples are not present in the committed template
@@ -146,7 +147,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25697633545` for `2e530f3`: completed successfully
+- GitHub Actions `CI` run `25697689042` for `7ac8a0a`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -159,7 +160,7 @@ Latest GitHub verification:
 | Data and model policies are fixed | `docs/security/DATA_POLICY.md`, `docs/runbooks/MODEL_POLICY.md`, `config/model_profiles.json`, `config/prompt_versions.json`, `src/req_tracker/model_gateway/models.py`, `src/req_tracker/model_gateway/policy.py`, `src/req_tracker/api/routes/admin.py`, `ops/security/rehearse_masking_policy.py`, `ops/model_gateway/smoke_model_gateway.py` | Complete for local policy baseline, restricted/confidential `masking_applied` and `access_checked` enforcement, and gated activation records; company model profile approval pending |
 | Release blocker coverage | `ops/security/check_release_blockers.py`, `ops/security/rehearse_masking_policy.py`, `tests/contract/test_security_api.py`, `tests/contract/test_admin_registry_api.py`, `tests/contract/test_replay_feedback_api.py`, `tests/unit/storage/test_postgres_store.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `tests/unit/model_gateway/test_dummy_gateway.py` | Local release-blocker evidence manifest complete, including explicit migration rollback coverage validation and restricted model payload masking/access policy tests; company/staging evidence still required for real endpoints |
 | Structured request logging, trace context, and OpenTelemetry export foundation | `src/req_tracker/config/logging.py`, `src/req_tracker/api/app.py`, `src/req_tracker/observability/tracing.py`, `src/req_tracker/observability/otel.py`, `tests/contract/test_health_api.py`, `tests/unit/config/test_logging.py`, `tests/unit/observability/test_tracing.py`, `tests/unit/observability/test_otel.py` | Complete for JSON request logs with correlation id, W3C trace id, span id, user id, method, path, status, duration, `traceparent` response propagation, optional OTLP FastAPI span export, disabled/missing-endpoint safeguards, and enabled-path exporter/instrumentor wiring tests |
-| Runtime metrics and scrape surface | `src/req_tracker/observability/metrics.py`, `src/req_tracker/api/routes/health.py`, `/api/v1/metrics`, `/api/v1/metrics/summary`, `ops/observability/prometheus.yml`, `ops/observability/rune-agent-alerts.yml`, `ops/observability/grafana-dashboard.json`, `ops/observability/validate_observability_assets.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `tests/contract/test_health_api.py`, `tests/unit/observability/test_metrics.py`, `tests/unit/ops/test_full_stack_rehearsal.py`, `tests/unit/ops/test_observability_assets.py` | Complete for in-process HTTP/runtime/LLM/graph/approval/finding/feedback/audit/scheduler counters, Prometheus text exposition, packaged Prometheus scrape/alert starter assets, Grafana dashboard JSON, asset validation gate, and disposable full-stack metrics rehearsal; company collector and dashboard import remain target-environment tasks |
+| Runtime metrics and scrape surface | `src/req_tracker/observability/metrics.py`, `src/req_tracker/api/routes/health.py`, `/api/v1/metrics`, `/api/v1/metrics/summary`, `ops/observability/prometheus.yml`, `ops/observability/rune-agent-alerts.yml`, `ops/observability/grafana-dashboard.json`, `ops/observability/validate_observability_assets.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `tests/contract/test_health_api.py`, `tests/unit/observability/test_metrics.py`, `tests/unit/ops/test_full_stack_rehearsal.py`, `tests/unit/ops/test_observability_assets.py` | Complete for in-process HTTP/runtime/LLM/graph/approval/finding/feedback/audit/scheduler counters, Prometheus text exposition, packaged Prometheus scrape/alert starter assets, Grafana dashboard JSON, asset validation gate, readiness manual evidence gate, and disposable full-stack metrics rehearsal; company collector and dashboard import remain target-environment tasks |
 | Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, `ops/source/smoke_source_adapters.py`, `ops/source/rehearse_company_sources.py`, `ops/source/rehearse_decision_email_export.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry, network `OSError` retry, pagination, permission-warning, local HTTP smoke validation, env-driven company sandbox rehearsal entrypoint, and restricted decision/email export rehearsal entrypoint complete; Email live access and real company sandbox validation pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test, readiness API, persisted runtime restore test, `ops/security/rehearse_masking_policy.py` | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
@@ -179,7 +180,7 @@ Latest GitHub verification:
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, blocked debug artifact read audit events, finding status change audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, and truncation metadata are locally validated; React Flow decision pending after real graph shape validation |
 | Scheduler | `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture, PostgreSQL `scheduler_leases` table, lease acquire/release tests, Ubuntu multi-replica note | Periodic run path complete for single-process and PostgreSQL lease-backed multi-worker deployments; external orchestration/Kubernetes CronJob remains an optional platform decision |
-| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `ops/rehearsal/validate_postgres_typed_mirrors.py`, `ops/rehearsal/validate_evidence_example.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, PostgreSQL migration rollback validation, PostgreSQL typed mirror drift validation, review-safe manual-evidence template generation, non-passable committed evidence example validation, reviewer metadata, schema-version, non-empty evidence, unique check-id, and UTC review timestamp enforcement for passed manual evidence, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
+| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `ops/rehearsal/validate_postgres_typed_mirrors.py`, `ops/rehearsal/validate_evidence_example.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, PostgreSQL migration rollback validation, PostgreSQL typed mirror drift validation, observability dashboard manual evidence gate, review-safe manual-evidence template generation, non-passable committed evidence example validation, reviewer metadata, schema-version, non-empty evidence, unique check-id, and UTC review timestamp enforcement for passed manual evidence, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
 | Migration and Helm operation tracks | packaged migrations under `src/req_tracker/storage/migrations/postgres`, `ops/migrations/README.md`, `ops/helm/rune-agent`, `ops/helm/validate_chart.py`, `tests/unit/ops/test_helm_chart.py` | Migration foundation and production-shaped Helm scaffold complete with local structural validation; target-cluster `helm lint/template` and platform-specific values remain pending until Kubernetes environment details are available |
 | Eval/security/replay test tracks | `tests/unit/evals`, `tests/contract/test_replay_feedback_api.py`, `tests/contract/test_security_api.py`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md` | Current coverage exists; dedicated folders anchored for larger end-to-end fixtures |
 | CI | `.github/workflows/ci.yml` runs ruff, mypy, pytest, masking rehearsal, release-blocker coverage, source/model gateway smokes, Helm structural validation, observability asset validation, PostgreSQL migration rollback validation, PostgreSQL typed mirror validation, readiness evidence template smoke, readiness example safety validation, CI gate coverage validation, operator UI graph smoke, and feedback eval rehearsal | Complete for deterministic local gates in GitHub Actions with automated drift detection; disposable Docker/full-stack and company/staging gates remain runbook/readiness responsibilities |
@@ -239,6 +240,8 @@ Latest GitHub verification:
 - Configure a company-approved OpenTelemetry collector and set
   `OTEL_ENABLED=true` plus `OTEL_EXPORTER_OTLP_ENDPOINT` in staging before
   release approval.
+- Import the packaged Grafana dashboard and Prometheus alert rules in staging,
+  then attach reviewed evidence for `observability_dashboard_rehearsal`.
 - Run `ops/backup/verify_backup_set.py --backup-root <BACKUP_ROOT>` on the
   staging backup set before restore rehearsal, and attach its JSON output to
   production readiness evidence.
@@ -277,8 +280,8 @@ observability asset implementation:
   all local regression gates passed, while overall readiness remained failed as
   expected because company/staging PostgreSQL, Neo4j, Qdrant, model gateway,
   trusted proxy, artifact storage, OpenTelemetry collector, source,
-  backup/restore, and load-test evidence variables are not configured in the
-  local workstation environment.
+  Prometheus/Grafana dashboard, backup/restore, and load-test evidence variables
+  are not configured in the local workstation environment.
 
 ## 5. Completion Gate
 
@@ -287,6 +290,7 @@ validated local/dummy, persistence-foundation, backend-interface, source-adapter
 debuggability, runtime-metrics, trace-context propagation, disposable backend
 integration, full-stack rehearsal, and operations-rehearsal stage. The next concrete completion gate requires
 company/staging PostgreSQL, Neo4j, Qdrant, JIRA/Confluence, SSO/OIDC proxy,
-OpenTelemetry collector, and a real sandbox model endpoint so integration,
-replay, backup, restore, load, live-source, and live-provider validation can run
-against real organization dependencies.
+OpenTelemetry collector, Prometheus/Grafana dashboard import, and a real sandbox
+model endpoint so integration, replay, backup, restore, load, live-source,
+live-provider, and observability validation can run against real organization
+dependencies.

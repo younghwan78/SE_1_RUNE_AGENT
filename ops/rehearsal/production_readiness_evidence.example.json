@@ -68,6 +68,14 @@
       ]
     },
     {
+      "check_id": "observability_dashboard_rehearsal",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Import ops/observability/grafana-dashboard.json, load ops/observability/rune-agent-alerts.yml, and verify the staging Prometheus target scrapes /api/v1/metrics.",
+      "evidence": [
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
+      ]
+    },
+    {
       "check_id": "trusted_proxy_rbac_rehearsal",
       "status": "failed",
       "summary": "TODO: replace after completing and reviewing this gate. Required action: Run ops/security/rehearse_trusted_proxy_auth.py against the company/staging trusted proxy boundary.",
