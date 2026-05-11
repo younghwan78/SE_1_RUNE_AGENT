@@ -554,6 +554,7 @@ Dummy 검증:
 완료된 축:
 
 - FastAPI skeleton, health, run analyze, scheduler
+- GitHub Actions CI for ruff, mypy, and pytest
 - core Pydantic contracts
 - local artifact store, trace repository, replay diff skeleton
 - SQLite state store for local persistence validation

@@ -13,6 +13,9 @@ uv run ruff check .
 uv run mypy src
 ```
 
+The same `ruff`, `mypy`, and `pytest` gates run in GitHub Actions on pushes to
+`main` and on pull requests.
+
 Run the API locally:
 
 ```powershell
