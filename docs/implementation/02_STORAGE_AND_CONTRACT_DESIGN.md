@@ -420,5 +420,7 @@ Artifact store는 raw snapshot, masked payload, stage output, raw LLM response, 
 `approval_items`, `findings`, `feedback_events`, `audit_events` typed table migration과
 mirror upsert를 제공한다. 이는 SQLite state store와 같은 `StateStore` contract를
 공유해서 dummy/local regression을 production persistence path에도 적용하기 위한
-단계다. 이후 repository는 typed table query/read model과 rollback migration으로
-확장한다.
+단계다. `PostgreSQLStateStore.get/list`는 지원되는 collection에 대해 typed table의
+`payload_json`을 우선 조회하고, 미지원 collection은 `state_entities`로 fallback한다.
+Rollback script는 version별로 package resource에 포함하며, 운영 자동 downgrade가
+아닌 명시적 operator action으로 실행한다.

@@ -1,5 +1,8 @@
 """PostgreSQL-backed state repository and migration runner."""
 
+from __future__ import annotations
+
+import builtins
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -14,6 +17,7 @@ from req_tracker.debug.hash import stable_hash
 from req_tracker.storage.state_store import jsonable
 
 MIGRATIONS_PACKAGE = "req_tracker.storage.migrations.postgres"
+ROLLBACKS_PACKAGE = "req_tracker.storage.migrations.postgres.rollback"
 
 
 @dataclass(frozen=True)
@@ -228,6 +232,22 @@ def load_postgres_migrations() -> list[PostgresMigration]:
     return migrations
 
 
+def load_postgres_rollbacks() -> dict[str, PostgresMigration]:
+    """Load PostgreSQL rollback scripts keyed by migration version."""
+    root = files(ROLLBACKS_PACKAGE)
+    rollbacks: dict[str, PostgresMigration] = {}
+    for resource in sorted(root.iterdir(), key=lambda item: item.name):
+        if not resource.name.endswith(".sql"):
+            continue
+        version = resource.name.split("_", maxsplit=1)[0]
+        rollbacks[version] = PostgresMigration(
+            version=version,
+            name=resource.name,
+            sql=resource.read_text(encoding="utf-8"),
+        )
+    return rollbacks
+
+
 class PostgreSQLStateStore:
     """Persist state contracts into PostgreSQL with migration tracking.
 
@@ -278,6 +298,28 @@ class PostgreSQLStateStore:
                     (migration.version, migration.name, datetime.now(UTC)),
                 )
 
+    def rollback_migration(self, version: str) -> bool:
+        """Rollback one applied migration by version.
+
+        This is intentionally explicit. Automated downgrade across many versions
+        should be an operator decision in production.
+        """
+        rollbacks = load_postgres_rollbacks()
+        rollback = rollbacks.get(version)
+        if rollback is None:
+            raise ValueError(f"rollback migration not found: {version}")
+        with self._connect() as conn:
+            applied = conn.execute(
+                "SELECT 1 FROM schema_migrations WHERE version = %s",
+                (version,),
+            ).fetchone()
+            if applied is None:
+                return False
+            for statement in _split_sql_statements(rollback.sql):
+                conn.execute(statement)
+            conn.execute("DELETE FROM schema_migrations WHERE version = %s", (version,))
+        return True
+
     def upsert(
         self,
         *,
@@ -318,6 +360,9 @@ class PostgreSQLStateStore:
 
     def get(self, collection: str, entity_id: str) -> dict[str, Any] | None:
         """Return one serialized entity payload."""
+        spec = TYPED_COLLECTIONS.get(collection)
+        if spec is not None:
+            return self._get_typed(spec, entity_id)
         with self._connect() as conn:
             row = conn.execute(
                 """
@@ -340,6 +385,11 @@ class PostgreSQLStateStore:
         project_key: str | None = None,
     ) -> list[dict[str, Any]]:
         """List serialized entity payloads in deterministic order."""
+        spec = TYPED_COLLECTIONS.get(collection)
+        if spec is not None and (
+            project_key is None or _spec_has_payload_key(spec, "project_key")
+        ):
+            return self._list_typed(spec, project_key=project_key)
         sql = "SELECT payload_json FROM state_entities WHERE collection = %s"
         params: list[str] = [collection]
         if project_key is not None:
@@ -368,6 +418,32 @@ class PostgreSQLStateStore:
             return self._connection_factory()
         return psycopg.connect(self.dsn, row_factory=dict_row)
 
+    def _get_typed(self, spec: TypedCollectionSpec, entity_id: str) -> dict[str, Any] | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                f"SELECT payload_json FROM {spec.table} WHERE {spec.id_column} = %s",
+                (entity_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return _payload_from_row(row)
+
+    def _list_typed(
+        self,
+        spec: TypedCollectionSpec,
+        *,
+        project_key: str | None = None,
+    ) -> builtins.list[dict[str, Any]]:
+        sql = f"SELECT payload_json FROM {spec.table}"
+        params: builtins.list[str] = []
+        if project_key is not None:
+            sql += " WHERE project_key = %s"
+            params.append(project_key)
+        sql += f" ORDER BY {spec.id_column}"
+        with self._connect() as conn:
+            rows = conn.execute(sql, params).fetchall()
+        return [_payload_from_row(row) for row in rows]
+
 
 def _payload_from_row(row: dict[str, Any]) -> dict[str, Any]:
     loaded = row["payload_json"]
@@ -378,6 +454,10 @@ def _payload_from_row(row: dict[str, Any]) -> dict[str, Any]:
 
 def _split_sql_statements(script: str) -> list[str]:
     return [statement.strip() for statement in script.split(";") if statement.strip()]
+
+
+def _spec_has_payload_key(spec: TypedCollectionSpec, payload_key: str) -> bool:
+    return any(column_payload_key == payload_key for _column, column_payload_key in spec.columns)
 
 
 def _upsert_typed_entity(conn: Any, collection: str, payload: Any) -> None:

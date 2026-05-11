@@ -1,0 +1,12 @@
+DROP TABLE IF EXISTS audit_events;
+DROP TABLE IF EXISTS feedback_events;
+DROP TABLE IF EXISTS findings;
+DROP TABLE IF EXISTS approval_items;
+DROP TABLE IF EXISTS graph_deltas;
+DROP TABLE IF EXISTS graph_edges;
+DROP TABLE IF EXISTS candidate_edges;
+DROP TABLE IF EXISTS graph_nodes;
+DROP TABLE IF EXISTS artifact_chunks;
+DROP TABLE IF EXISTS source_artifacts;
+DROP TABLE IF EXISTS agent_step_traces;
+DROP TABLE IF EXISTS agent_runs;

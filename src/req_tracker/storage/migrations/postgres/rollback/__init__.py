@@ -1,0 +1,1 @@
+"""PostgreSQL rollback migration resources."""

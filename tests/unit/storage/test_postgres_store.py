@@ -5,7 +5,11 @@ from typing import Any
 from psycopg.types.json import Jsonb
 
 from req_tracker.debug.models import AgentRun
-from req_tracker.storage.postgres_store import PostgreSQLStateStore, load_postgres_migrations
+from req_tracker.storage.postgres_store import (
+    PostgreSQLStateStore,
+    load_postgres_migrations,
+    load_postgres_rollbacks,
+)
 
 
 class FakeCursor:
@@ -28,6 +32,7 @@ class FakeCursor:
 class FakePostgresConnection:
     def __init__(self) -> None:
         self.entities: dict[tuple[str, str], dict[str, Any]] = {}
+        self.typed_entities: dict[tuple[str, str], dict[str, Any]] = {}
         self.migrations: set[str] = set()
         self.executed_sql: list[str] = []
 
@@ -47,6 +52,10 @@ class FakePostgresConnection:
             version = str(_params(params)[0])
             self.migrations.add(version)
             return FakeCursor()
+        if "delete from schema_migrations" in sql:
+            version = str(_params(params)[0])
+            self.migrations.discard(version)
+            return FakeCursor()
         if "insert into state_entities" in sql:
             collection, entity_id, project_key, payload_json, payload_hash, *_ = _params(params)
             assert isinstance(payload_json, Jsonb)
@@ -58,6 +67,26 @@ class FakePostgresConnection:
                 "payload_hash": payload_hash,
             }
             return FakeCursor()
+        if sql.startswith("insert into agent_runs"):
+            run_id = str(_params(params)[0])
+            payload_json = _params(params)[-1]
+            assert isinstance(payload_json, Jsonb)
+            self.typed_entities[("agent_runs", run_id)] = {
+                "project_key": _params(params)[1],
+                "payload_json": payload_json.obj,
+            }
+            return FakeCursor()
+        if sql.startswith("select payload_json from agent_runs where run_id"):
+            run_id = str(_params(params)[0])
+            row = self.typed_entities.get(("agent_runs", run_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith("select payload_json from agent_runs"):
+            rows = [
+                {"payload_json": row["payload_json"]}
+                for (_table, _entity_id), row in sorted(self.typed_entities.items())
+                if row["project_key"] == _params(params)[0]
+            ]
+            return FakeCursor(many=rows)
         if "select payload_json from state_entities" in sql and "order by entity_id" not in sql:
             collection, entity_id = _params(params)
             row = self.entities.get((str(collection), str(entity_id)))
@@ -96,6 +125,13 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     assert "CREATE TABLE IF NOT EXISTS audit_events" in migrations[1].sql
 
 
+def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
+    rollbacks = load_postgres_rollbacks()
+
+    assert sorted(rollbacks) == ["001", "002"]
+    assert "DROP TABLE IF EXISTS agent_runs" in rollbacks["002"].sql
+
+
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
     fake = FakePostgresConnection()
     store = PostgreSQLStateStore("", connection_factory=lambda: fake)
@@ -122,6 +158,17 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
     stored_runs = store.list("agent_runs", project_key="RUNE_CAM_ALPHA")
     assert stored_runs[0]["project_key"] == "RUNE_CAM_ALPHA"
     assert store.counts_by_collection() == {"agent_runs": 1}
+
+
+def test_postgres_store_rolls_back_one_applied_migration() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+
+    rolled_back = store.rollback_migration("002")
+
+    assert rolled_back is True
+    assert "002" not in fake.migrations
+    assert any("drop table if exists agent_runs" in sql for sql in fake.executed_sql)
 
 
 def _params(params: object) -> tuple[Any, ...]:
