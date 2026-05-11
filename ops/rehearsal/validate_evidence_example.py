@@ -15,9 +15,16 @@ def validate_example(path: Path = EXAMPLE_PATH) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     checks = payload.get("checks", [])
     failures: list[str] = []
+    if payload.get("schema_version") != "v1":
+        failures.append("schema_version_not_v1")
+    for field_name in ("reviewed_by", "reviewed_at"):
+        value = payload.get(field_name)
+        if not isinstance(value, str) or "TODO:" not in value:
+            failures.append(f"{field_name}:missing_todo_placeholder")
     if not isinstance(checks, list) or not checks:
         failures.append("checks_missing_or_empty")
         checks = []
+    seen_check_ids: set[str] = set()
     for index, item in enumerate(checks):
         if not isinstance(item, dict):
             failures.append(f"checks[{index}]:not_object")
@@ -28,6 +35,14 @@ def validate_example(path: Path = EXAMPLE_PATH) -> dict[str, Any]:
         evidence = item.get("evidence", [])
         evidence_values = evidence if isinstance(evidence, list) else []
         joined = "\n".join([summary, *[str(value) for value in evidence_values]])
+        if not isinstance(check_id, str) or not check_id:
+            failures.append(f"checks[{index}]:missing_check_id")
+            check_id = f"index_{index}"
+        if check_id in seen_check_ids:
+            failures.append(f"{check_id}:duplicate_check_id")
+        seen_check_ids.add(check_id)
+        if status != "failed":
+            failures.append(f"{check_id}:status_not_failed")
         if status == "passed":
             failures.append(f"{check_id}:status_passed")
         if "TODO:" not in joined:
