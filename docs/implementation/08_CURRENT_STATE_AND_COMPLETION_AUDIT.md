@@ -10,11 +10,11 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `d9dd7e5 Opt CI actions into Node 24`
+- `e992c84 Harden REST source adapter retries`
 - `0174d2b Add Confluence REST source adapter foundation`
 - `9ec511f Add API key RBAC foundation`
 - `5ec1b0c Add debug approval lineage API`
-- `5a6b3e5 Add model gateway retry and fallback traces`
-- `98df703 Add JIRA REST source adapter foundation`
 
 Latest local verification:
 
@@ -24,7 +24,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `0174d2b`: completed successfully
+- GitHub Actions `CI` run for `d9dd7e5`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
