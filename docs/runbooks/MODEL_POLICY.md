@@ -18,6 +18,8 @@ Each call must be traceable by:
 - response hash
 - validation status
 - retry count
+- input/output token counts when the provider reports them
+- cost estimate when the provider reports it
 - raw response reference when storage policy allows it
 
 ## Model Profile Rules
@@ -70,8 +72,8 @@ Before changing an active model profile or prompt:
 - run masking policy rehearsal
 - run model gateway smoke or company sandbox rehearsal
 - run replay or diff comparison for representative fixed inputs
-- compare node, edge, finding, confidence, validation error, latency, and
-  fallback behavior
+- compare node, edge, finding, confidence, validation error, latency, token
+  usage, cost estimate, and fallback behavior
 - record reviewer approval and canary decision
 - keep rollback information for the previous active profile or prompt
 

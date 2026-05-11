@@ -30,7 +30,14 @@ def test_http_json_model_provider_sends_provider_neutral_payload() -> None:
                 "timeout_seconds": timeout_seconds,
             }
         )
-        return {"output": {"node_id": "CAM-REQ-001", "confidence_score": 0.91}}
+        return {
+            "output": {"node_id": "CAM-REQ-001", "confidence_score": 0.91},
+            "usage": {
+                "input_tokens": 123,
+                "output_tokens": 45,
+                "cost_usd": 0.00123,
+            },
+        }
 
     provider = HttpJsonModelProvider(
         endpoint_url="https://models.example.com/v1/complete",
@@ -57,6 +64,38 @@ def test_http_json_model_provider_sends_provider_neutral_payload() -> None:
     assert calls[0]["payload"]["payload"] == {"text": "camera latency"}
     assert calls[0]["timeout_seconds"] == 30
     assert response.output == {"node_id": "CAM-REQ-001", "confidence_score": 0.91}
+    assert response.input_tokens == 123
+    assert response.output_tokens == 45
+    assert response.cost_usd == 0.00123
+
+
+def test_http_json_model_provider_reads_openai_style_usage_aliases() -> None:
+    provider = HttpJsonModelProvider(
+        endpoint_url="https://models.example.com/v1/complete",
+        transport=lambda *_args: {
+            "output": {"node_id": "CAM-REQ-001"},
+            "usage": {
+                "prompt_tokens": "12",
+                "completion_tokens": 7,
+                "cost_usd": "0.0004",
+            },
+        },
+    )
+
+    response = provider.complete(
+        ModelRequest(
+            model_profile_id="internal-json",
+            prompt_version_id="pv_node_v1",
+            payload={},
+            data_classification="public_internal",
+        ),
+        _profile(),
+        _prompt(),
+    )
+
+    assert response.input_tokens == 12
+    assert response.output_tokens == 7
+    assert response.cost_usd == 0.0004
 
 
 def test_http_json_model_provider_rejects_non_object_output() -> None:

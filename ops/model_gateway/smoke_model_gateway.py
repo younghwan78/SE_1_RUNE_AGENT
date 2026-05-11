@@ -65,7 +65,12 @@ class _GatewayHandler(BaseHTTPRequestHandler):
                 "output": {
                     "node_id": str(inner_payload.get("node_id", "SMOKE-NODE-001")),
                     "confidence_score": float(inner_payload.get("confidence_score", 0.91)),
-                }
+                },
+                "usage": {
+                    "input_tokens": 18,
+                    "output_tokens": 6,
+                    "cost_usd": 0.0009,
+                },
             }
         )
 
@@ -134,6 +139,9 @@ def run_model_gateway_smoke(*, port: int = 0, artifact_root: Path | None = None)
                 "prompt_version_id": response.prompt_version_id,
                 "trace_count": len(traces),
                 "trace_statuses": trace_statuses,
+                "input_tokens_total": sum(trace.input_tokens or 0 for trace in traces),
+                "output_tokens_total": sum(trace.output_tokens or 0 for trace in traces),
+                "cost_usd_total": round(sum(trace.cost_usd or 0 for trace in traces), 6),
                 "raw_response_refs": [trace.raw_response_ref for trace in traces],
                 "error_messages": [trace.error_message for trace in traces],
                 "output": None if parsed is None else parsed.model_dump(mode="json"),

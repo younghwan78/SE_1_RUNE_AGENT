@@ -68,6 +68,7 @@ def build_metrics_summary(runtime: Any, metrics: InMemoryMetrics) -> dict[str, A
     llm_call_count = len(runtime.traces.llm_calls)
     llm_input_tokens = sum(call.input_tokens or 0 for call in runtime.traces.llm_calls.values())
     llm_output_tokens = sum(call.output_tokens or 0 for call in runtime.traces.llm_calls.values())
+    llm_cost_total = sum(call.cost_usd or 0 for call in runtime.traces.llm_calls.values())
     scheduler_status = runtime.scheduler.status().model_dump(mode="json")
 
     return {
@@ -95,6 +96,7 @@ def build_metrics_summary(runtime: Any, metrics: InMemoryMetrics) -> dict[str, A
                 else 0,
                 "input_tokens_total": llm_input_tokens,
                 "output_tokens_total": llm_output_tokens,
+                "cost_usd_total": round(llm_cost_total, 6),
                 "retry_count_total": sum(
                     call.retry_count for call in runtime.traces.llm_calls.values()
                 ),
@@ -182,6 +184,13 @@ def render_prometheus_metrics(summary: dict[str, Any]) -> str:
         runtime["llm_calls"]["by_validation_status"],
     )
     _append_gauge(lines, "rune_llm_call_latency_ms_sum", runtime["llm_calls"]["latency_ms_total"])
+    _append_gauge(lines, "rune_llm_input_tokens_total", runtime["llm_calls"]["input_tokens_total"])
+    _append_gauge(
+        lines,
+        "rune_llm_output_tokens_total",
+        runtime["llm_calls"]["output_tokens_total"],
+    )
+    _append_gauge(lines, "rune_llm_cost_usd_total", runtime["llm_calls"]["cost_usd_total"])
     _append_gauge(lines, "rune_graph_nodes", runtime["graph"]["nodes"])
     _append_gauge(lines, "rune_graph_approved_edges", runtime["graph"]["approved_edges"])
     _append_counter_by_label(

@@ -117,6 +117,9 @@ def test_metrics_summary_reports_http_and_runtime_counts(client: TestClient) -> 
     assert body["runtime"]["runs"]["total"] == 1
     assert body["runtime"]["steps"]["total"] >= 1
     assert body["runtime"]["llm_calls"]["total"] == 1
+    assert "input_tokens_total" in body["runtime"]["llm_calls"]
+    assert "output_tokens_total" in body["runtime"]["llm_calls"]
+    assert "cost_usd_total" in body["runtime"]["llm_calls"]
     assert body["runtime"]["graph"]["nodes"] >= 1
     assert body["runtime"]["approvals"]["by_status"]["pending"] >= 1
     assert body["runtime"]["scheduler"]["runs_started"] == 0
@@ -136,4 +139,7 @@ def test_prometheus_metrics_endpoint_renders_text_exposition(client: TestClient)
     assert "rune_agent_runs_total" in text
     assert 'status="succeeded"' in text
     assert "rune_llm_calls_total" in text
+    assert "rune_llm_input_tokens_total" in text
+    assert "rune_llm_output_tokens_total" in text
+    assert "rune_llm_cost_usd_total" in text
     assert "rune_graph_nodes" in text

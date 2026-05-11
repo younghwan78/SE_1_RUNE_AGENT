@@ -173,8 +173,9 @@ export MODEL_GATEWAY_PROFILE_ID=company-sandbox
 uv run python ops/model_gateway/rehearse_model_gateway.py
 ```
 
-The rehearsal output masks secrets and includes trace hashes plus structured
-validation status for the public internal probe payload.
+The rehearsal output masks secrets and includes trace hashes, structured
+validation status, and provider-reported token/cost usage for the public
+internal probe payload.
 
 Run local source-adapter smoke without company systems:
 

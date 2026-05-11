@@ -81,6 +81,7 @@ class LLMCallTrace(DebugModel):
     parsed_output_ref: str | None = None
     input_tokens: int | None = Field(default=None, ge=0)
     output_tokens: int | None = Field(default=None, ge=0)
+    cost_usd: float | None = Field(default=None, ge=0.0)
     latency_ms: int = Field(ge=0)
     validation_status: ValidationStatus
     retry_count: int = Field(default=0, ge=0)
@@ -108,4 +109,3 @@ class ReplayDiff(DebugModel):
     removed: list[str] = Field(default_factory=list)
     changed: list[str] = Field(default_factory=list)
     schema_version: str = SCHEMA_VERSION
-

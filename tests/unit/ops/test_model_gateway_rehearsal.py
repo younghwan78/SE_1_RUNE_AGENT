@@ -37,6 +37,9 @@ def test_model_gateway_rehearsal_validates_probe_and_traces(monkeypatch: Any) ->
                     "probe_id": "MODEL-GATEWAY-PROBE-001",
                     "confidence_score": 0.9,
                 },
+                input_tokens=20,
+                output_tokens=8,
+                cost_usd=0.001,
                 latency_ms=12,
             )
 
@@ -54,6 +57,9 @@ def test_model_gateway_rehearsal_validates_probe_and_traces(monkeypatch: Any) ->
     assert report["output"]["probe_id"] == "MODEL-GATEWAY-PROBE-001"
     assert report["trace_count"] == 1
     assert report["traces"][0]["validation_status"] == "passed"
+    assert report["traces"][0]["input_tokens"] == 20
+    assert report["traces"][0]["output_tokens"] == 8
+    assert report["traces"][0]["cost_usd"] == 0.001
     assert report["config"]["endpoint_url"] == "<set>"
     assert "model-secret" not in str(report)
 

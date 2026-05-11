@@ -81,6 +81,32 @@
       "id": 4,
       "targets": [
         {
+          "expr": "rune_llm_input_tokens_total",
+          "legendFormat": "input tokens"
+        },
+        {
+          "expr": "rune_llm_output_tokens_total",
+          "legendFormat": "output tokens"
+        },
+        {
+          "expr": "rune_llm_cost_usd_total",
+          "legendFormat": "cost usd"
+        }
+      ],
+      "title": "LLM Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "id": 5,
+      "targets": [
+        {
           "expr": "rune_graph_nodes",
           "legendFormat": "nodes"
         },
@@ -97,10 +123,10 @@
       "gridPos": {
         "h": 8,
         "w": 8,
-        "x": 16,
-        "y": 8
+        "x": 0,
+        "y": 16
       },
-      "id": 5,
+      "id": 6,
       "targets": [
         {
           "expr": "sum by (status) (rune_approval_items_total)",
@@ -119,10 +145,10 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
+        "x": 8,
         "y": 16
       },
-      "id": 6,
+      "id": 7,
       "targets": [
         {
           "expr": "rune_scheduler_runs_started_total",
@@ -141,10 +167,10 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 16
+        "x": 0,
+        "y": 24
       },
-      "id": 7,
+      "id": 8,
       "targets": [
         {
           "expr": "rune_audit_events",

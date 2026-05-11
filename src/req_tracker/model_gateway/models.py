@@ -75,6 +75,9 @@ class ModelResponse(GatewayModel):
     raw_response_ref: str | None = None
     parsed_output_ref: str | None = None
     output: dict[str, Any] = Field(default_factory=dict)
+    input_tokens: int | None = Field(default=None, ge=0)
+    output_tokens: int | None = Field(default=None, ge=0)
+    cost_usd: float | None = Field(default=None, ge=0.0)
     latency_ms: int = Field(ge=0)
     schema_version: str = SCHEMA_VERSION
 

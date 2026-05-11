@@ -15,6 +15,9 @@ def test_model_gateway_smoke_exercises_http_fallback(tmp_path) -> None:  # type:
     assert result["model_profile_id"] == "smoke-fallback"
     assert result["trace_count"] == 2
     assert result["trace_statuses"] == ["failed", "passed"]
+    assert result["input_tokens_total"] == 18
+    assert result["output_tokens_total"] == 6
+    assert result["cost_usd_total"] == 0.0009
     assert result["output"]["node_id"] == "SMOKE-NODE-001"
     assert result["raw_response_refs"][0] is None
     assert result["raw_response_refs"][1] is not None

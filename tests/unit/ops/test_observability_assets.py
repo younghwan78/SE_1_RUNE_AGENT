@@ -27,6 +27,9 @@ def test_observability_assets_reference_runtime_metrics() -> None:
     for metric in [
         "rune_http_requests_total",
         "rune_llm_calls_total",
+        "rune_llm_input_tokens_total",
+        "rune_llm_output_tokens_total",
+        "rune_llm_cost_usd_total",
         "rune_graph_nodes",
         "rune_scheduler_lease_skips_total",
     ]:

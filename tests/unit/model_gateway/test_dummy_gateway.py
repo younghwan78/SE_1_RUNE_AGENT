@@ -34,10 +34,13 @@ class SequencedProvider:
     ) -> ModelResponse:
         output = self.outputs[self.calls]
         self.calls += 1
-        return DummyModelProvider(fixtures={"selected": output}).complete(
+        response = DummyModelProvider(fixtures={"selected": output}).complete(
             request.model_copy(update={"payload": {"fixture_name": "selected"}}),
             active_profile,
             active_prompt,
+        )
+        return response.model_copy(
+            update={"input_tokens": 11, "output_tokens": 5, "cost_usd": 0.0007}
         )
 
 
@@ -98,6 +101,38 @@ def test_dummy_gateway_validates_structured_output(tmp_path) -> None:  # type: i
     assert parsed.node_id == "node_001"
     assert response.raw_response_ref is not None
     assert list(traces.llm_calls.values())[0].validation_status == "passed"
+
+
+def test_gateway_records_usage_metadata_from_provider() -> None:
+    traces = InMemoryTraceRepository()
+    client = ModelGatewayClient(
+        provider=SequencedProvider([{"node_id": "node_001", "confidence_score": 0.9}]),
+        profile=profile(),
+        prompt=prompt(),
+        trace_repo=traces,
+    )
+    request = ModelRequest(
+        model_profile_id="dummy-fast",
+        prompt_version_id="pv_node_v1",
+        payload={"fixture_name": "unused"},
+        data_classification="public_internal",
+    )
+
+    response, _parsed, validation = client.complete(
+        run_id="run_usage",
+        step_id="step_usage",
+        request=request,
+        response_model=NodeExtractionOutput,
+    )
+
+    trace = list(traces.llm_calls.values())[0]
+    assert validation.status == "passed"
+    assert response.input_tokens == 11
+    assert response.output_tokens == 5
+    assert response.cost_usd == 0.0007
+    assert trace.input_tokens == 11
+    assert trace.output_tokens == 5
+    assert trace.cost_usd == 0.0007
 
 
 def test_dummy_gateway_records_validation_failure() -> None:

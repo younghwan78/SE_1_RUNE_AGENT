@@ -122,6 +122,9 @@ def _run_probe(config: GatewayRehearsalConfig) -> dict[str, Any]:
                 "response_hash_present": trace.response_hash is not None,
                 "raw_response_ref_present": trace.raw_response_ref is not None,
                 "parsed_output_ref_present": trace.parsed_output_ref is not None,
+                "input_tokens": trace.input_tokens,
+                "output_tokens": trace.output_tokens,
+                "cost_usd": trace.cost_usd,
                 "error_type": None if trace.error_message is None else "model_gateway_error",
             }
             for trace in traces

@@ -51,6 +51,9 @@ def test_prometheus_renderer_escapes_label_values() -> None:
                 "llm_calls": {
                     "by_validation_status": {"passed": 1},
                     "latency_ms_total": 10,
+                    "input_tokens_total": 12,
+                    "output_tokens_total": 5,
+                    "cost_usd_total": 0.0004,
                 },
                 "graph": {"nodes": 3, "approved_edges": 4},
                 "approvals": {"by_status": {"pending": 5}},
@@ -64,3 +67,6 @@ def test_prometheus_renderer_escapes_label_values() -> None:
 
     assert 'path="/api/v1/path\\"with\\\\quote"' in text
     assert "rune_scheduler_runs_started_total 9" in text
+    assert "rune_llm_input_tokens_total 12" in text
+    assert "rune_llm_output_tokens_total 5" in text
+    assert "rune_llm_cost_usd_total 0.0004" in text
