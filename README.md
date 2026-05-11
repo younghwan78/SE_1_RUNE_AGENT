@@ -42,6 +42,18 @@ $env:QDRANT_TEST_URL="http://127.0.0.1:6333"
 uv run pytest tests/integration/test_qdrant_vector_backend.py
 ```
 
+Run disposable Docker-backed PostgreSQL, Neo4j, and Qdrant integration tests:
+
+```powershell
+uv run python ops/integration/run_backend_integration.py
+```
+
+The runner starts `ops/integration/docker-compose.integration.yml`, waits for
+real client readiness, executes the env-gated integration tests, and tears the
+stack down. Override host ports with `RUNE_IT_POSTGRES_PORT`,
+`RUNE_IT_NEO4J_BOLT_PORT`, and `RUNE_IT_QDRANT_HTTP_PORT` when local ports are
+already in use.
+
 Run the API locally:
 
 ```powershell
@@ -148,6 +160,7 @@ Current local implementation:
 - API-key project-scope authorization foundation with `x-rune-projects`
 - trusted SSO/OIDC proxy header auth foundation with group-to-role mapping
 - backup/restore rehearsal runbook and smoke load runner
+- Docker Compose backend integration runner for PostgreSQL, Neo4j, and Qdrant
 - periodic analysis scheduler for server operation
 
 Enable local SQLite persistence:

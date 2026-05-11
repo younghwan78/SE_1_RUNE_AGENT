@@ -26,7 +26,8 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 81 passed, 3 skipped
+- `uv run pytest`: 83 passed, 3 skipped
+- `uv run python ops/integration/run_backend_integration.py`: 3 passed
 
 Latest GitHub verification:
 
@@ -44,9 +45,9 @@ Latest GitHub verification:
 | Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, approval lineage API, run diff-view API, run debug UI, LLM/graph delta side-by-side panes | Local debug workbench foundation complete; live LLM payload validation pending |
 | SQLite state persistence | `SQLiteStateStore`, persistence contract test | Complete |
 | PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, `003_audit_archive_batches.sql`, migration loader tests | Complete |
-| Typed PostgreSQL core table foundation | `002_core_state_tables.sql`, typed mirror upsert/read dispatch, rollback scripts, unit tests, optional `POSTGRES_TEST_DSN` integration test | Foundation complete; production DB environment validation pending |
-| Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, `Neo4jGraphBackend`, graph projection, traceability chain APIs, optional `NEO4J_TEST_*` integration test | Neo4j foundation complete; production DB environment validation pending |
-| Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test | Qdrant foundation complete; production DB environment validation pending |
+| Typed PostgreSQL core table foundation | `002_core_state_tables.sql`, typed mirror upsert/read dispatch, rollback scripts, unit tests, optional `POSTGRES_TEST_DSN` integration test, `ops/integration/run_backend_integration.py` | Foundation complete; disposable Docker PostgreSQL integration passed; company/staging DB rehearsal pending |
+| Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, `Neo4jGraphBackend`, graph projection, traceability chain APIs, optional `NEO4J_TEST_*` integration test, Docker integration runner | Neo4j foundation complete; disposable Docker Neo4j integration passed; company/staging graph rehearsal pending |
+| Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test, Docker integration runner | Qdrant foundation complete; disposable Docker Qdrant integration passed; company/staging vector rehearsal pending |
 | Approval workflow | approval queue, approve/reject/hold/modify path, graph commit | Complete for local backend |
 | Feedback loop | feedback events, eval candidates, improvement candidates, eval gate | Local foundation complete; real eval datasets/canary pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; direct company IdP validation pending |
@@ -59,15 +60,17 @@ Latest GitHub verification:
 
 ### P0: Production Persistence Hardening
 
-- Run the optional PostgreSQL integration test in a disposable production-like
-  database environment.
+- Extend typed PostgreSQL repositories beyond the current core mirror tables as
+  API query needs grow.
+- Re-run PostgreSQL integration tests against company/staging PostgreSQL once
+  that environment exists.
 
 ### P1: Production Backend Expansion
 
-- Run the optional Neo4j integration test in a disposable production-like
-  database environment.
-- Run the optional Qdrant integration test in a disposable production-like
-  database environment.
+- Re-run Neo4j integration tests against company/staging Neo4j once that
+  environment exists.
+- Re-run Qdrant integration tests against company/staging Qdrant once that
+  environment exists.
 - Keep memory backends as deterministic contract-test baselines.
 
 ### P2: JIRA Production Connector

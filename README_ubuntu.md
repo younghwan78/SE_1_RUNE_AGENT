@@ -111,6 +111,16 @@ Run the local model-gateway fallback smoke without a real model endpoint:
 uv run python ops/model_gateway/smoke_model_gateway.py
 ```
 
+Run disposable backend integration tests on a development server with Docker:
+
+```bash
+uv run python ops/integration/run_backend_integration.py
+```
+
+Use `RUNE_IT_POSTGRES_PORT`, `RUNE_IT_NEO4J_BOLT_PORT`, and
+`RUNE_IT_QDRANT_HTTP_PORT` if the default local ports conflict with existing
+services.
+
 ## 5. systemd Service
 
 Create `/etc/systemd/system/rune-agent.service`:
