@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `3984793 Add step validation debug metadata`
 - `d44cc70 Validate source integration boundaries`
 - `6777c28 Refresh audit after ontology improvement candidate`
 - `3f59ab7 Add ontology normalization improvement candidate`
@@ -159,7 +160,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25698457449` for `6863fe5`: completed successfully
+- GitHub Actions `CI` run `25699859054` for `3984793`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
