@@ -45,7 +45,8 @@ def test_sqlite_state_store_persists_runtime_outputs(tmp_path) -> None:  # type:
     store = SQLiteStateStore(db_path)
     counts = store.counts_by_collection()
     assert counts["agent_runs"] == 1
-    assert counts["agent_step_traces"] >= 7
+    assert counts["agent_step_traces"] >= 8
+    assert counts["llm_call_traces"] == 1
     assert counts["source_artifacts"] == 10
     assert counts["graph_nodes"] == 10
     assert counts["approval_items"] >= 1
@@ -88,6 +89,7 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
         graph = client.get("/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA")
         approvals = client.get("/api/v1/approvals")
         audit = client.get("/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
+        llm_calls = client.get("/api/v1/runs/run_restore_1/llm-calls")
 
     assert runs.status_code == 200
     assert runs.json()[0]["run_id"] == "run_restore_1"
@@ -95,6 +97,8 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     assert graph.json()["counts"]["visible_approved_edges"] == 1
     assert approvals.status_code == 200
     assert any(item["status"] == "approved" for item in approvals.json())
+    assert llm_calls.status_code == 200
+    assert llm_calls.json()[0]["model_profile_id"] == "dummy-local"
     assert audit.status_code == 200
     assert {event["action"] for event in audit.json()} >= {
         "run_completed",

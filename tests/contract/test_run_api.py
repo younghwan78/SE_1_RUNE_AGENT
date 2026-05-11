@@ -25,6 +25,7 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
         "mask_chunk",
         "extract_nodes",
         "link_edges",
+        "llm_assisted_reasoning",
         "detect_findings",
         "stage_approval",
     }

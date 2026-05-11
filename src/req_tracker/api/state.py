@@ -10,7 +10,7 @@ from req_tracker.audit.archive import AuditArchiveWriter, LocalAuditArchiveStore
 from req_tracker.audit.models import AuditEvent, AuditRetentionPolicy
 from req_tracker.audit.service import AuditService
 from req_tracker.debug.artifacts import LocalArtifactStore
-from req_tracker.debug.models import AgentRun, AgentStepTrace
+from req_tracker.debug.models import AgentRun, AgentStepTrace, LLMCallTrace
 from req_tracker.debug.replay import ReplayResult
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.feedback.models import FeedbackEvent
@@ -125,6 +125,15 @@ class RuntimeState(BaseModel):
                 project_key=project_key,
                 payload=step,
             )
+        for llm_call in self.traces.llm_calls.values():
+            if llm_call.run_id != result.run.run_id:
+                continue
+            self.state_store.upsert(
+                collection="llm_call_traces",
+                entity_id=llm_call.llm_call_id,
+                project_key=project_key,
+                payload=llm_call,
+            )
         for artifact in result.artifacts:
             self.state_store.upsert(
                 collection="source_artifacts",
@@ -221,6 +230,9 @@ class RuntimeState(BaseModel):
         for payload in self.state_store.list("agent_step_traces"):
             step = AgentStepTrace.model_validate(payload)
             self.traces.steps[step.step_id] = step
+        for payload in self.state_store.list("llm_call_traces"):
+            llm_call = LLMCallTrace.model_validate(payload)
+            self.traces.llm_calls[llm_call.llm_call_id] = llm_call
         for payload in self.state_store.list("approval_items"):
             approval = ApprovalItem.model_validate(payload)
             self.approvals.items[approval.approval_id] = approval

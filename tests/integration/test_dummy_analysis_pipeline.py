@@ -32,6 +32,10 @@ def test_dummy_analysis_creates_findings_and_approvals(tmp_path) -> None:  # typ
     assert any(f.finding_type == "conflict" for f in result.findings)
     assert len(result.approvals) == len(result.candidate_edges)
     assert graph.approved_edges() == []
+    assert result.run.model_profile_id == "dummy-local"
+    assert result.run.prompt_version_ids == ["pv_edge_linking_v1"]
+    assert len(workflow.traces.llm_calls) == 1
+    assert list(workflow.traces.llm_calls.values())[0].validation_status == "passed"
 
     first = result.approvals[0]
     approvals.decide(

@@ -1,6 +1,6 @@
 """Dummy/local end-to-end analysis workflow."""
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from req_tracker.adapters.base import SourceFetchResult, SourceScope
 from req_tracker.adapters.dummy.adapter import DummySourceAdapter
@@ -15,6 +15,9 @@ from req_tracker.graph.base import GraphBackend
 from req_tracker.ingestion.chunking import chunk_artifact
 from req_tracker.ingestion.masking import mask_text
 from req_tracker.ingestion.normalization import normalize_raw_artifact
+from req_tracker.model_gateway.client import ModelGatewayClient
+from req_tracker.model_gateway.dummy_provider import DummyModelProvider
+from req_tracker.model_gateway.models import ModelProfile, ModelRequest, PromptVersion
 from req_tracker.ontology.models import (
     ArtifactChunk,
     Finding,
@@ -40,6 +43,16 @@ class AnalysisResult(BaseModel):
     candidate_edges: list[TraceabilityEdge]
     findings: list[Finding]
     approvals: list[ApprovalItem]
+
+
+class EdgeReasoningOutput(BaseModel):
+    """Structured output produced by the local dummy LLM reasoning stage."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_edge_count: int = Field(ge=0)
+    confidence_score: float = Field(ge=0.0, le=1.0)
+    rationale: str
 
 
 class LocalAnalysisWorkflow:
@@ -158,6 +171,27 @@ class LocalAnalysisWorkflow:
             output_payload=[edge.model_dump(mode="json") for edge in edges],
         )
 
+        llm_step = self.traces.start_step(
+            step_id=f"step_{run_id}_llm_reason_edges",
+            run_id=run_id,
+            stage_name="llm_assisted_reasoning",
+            input_payload={
+                "candidate_edge_ids": [edge.edge_id for edge in edges],
+                "model_profile_id": "dummy-local",
+                "prompt_version_id": "pv_edge_linking_v1",
+            },
+        )
+        llm_reasoning = self._run_llm_edge_reasoning(
+            run_id=run_id,
+            step_id=llm_step.step_id,
+            nodes=nodes,
+            edges=edges,
+        )
+        self.traces.finish_step(
+            step_id=llm_step.step_id,
+            output_payload=llm_reasoning.model_dump(mode="json"),
+        )
+
         finding_step = self.traces.start_step(
             step_id=f"step_{run_id}_detect_findings",
             run_id=run_id,
@@ -218,4 +252,99 @@ class LocalAnalysisWorkflow:
             next_cursor=None,
             source_warnings=warnings,
             partial_failure=partial_failure,
+        )
+
+    def _run_llm_edge_reasoning(
+        self,
+        *,
+        run_id: str,
+        step_id: str,
+        nodes: list[OntologyNode],
+        edges: list[TraceabilityEdge],
+    ) -> EdgeReasoningOutput:
+        """Run a deterministic dummy model-gateway call for traceable LLM reasoning."""
+        profile = ModelProfile(
+            model_profile_id="dummy-local",
+            provider="dummy",
+            model_name="deterministic-dummy",
+            endpoint_alias="local-fixture",
+            allowed_data_classes=[
+                "public_internal",
+                "restricted",
+                "confidential",
+                "no_external_llm",
+            ],
+            supports_json_schema=True,
+            supports_tool_calling=False,
+            max_context_tokens=8192,
+            default_temperature=0.0,
+            timeout_seconds=30,
+        )
+        prompt = PromptVersion(
+            prompt_version_id="pv_edge_linking_v1",
+            task_name="edge_linking",
+            template="Propose MBSE traceability edges from approved source evidence.",
+            schema_version_ref="ontology.v1.edge_linking",
+            retrieval_policy_id="ret_dummy_v1",
+            created_by="system",
+            status="active",
+        )
+        provider = DummyModelProvider(
+            fixtures={
+                "edge_reasoning": {
+                    "candidate_edge_count": len(edges),
+                    "confidence_score": 0.82 if edges else 0.0,
+                    "rationale": (
+                        "Deterministic dummy LLM reviewed candidate edges "
+                        "behind the model gateway."
+                    ),
+                }
+            }
+        )
+        client = ModelGatewayClient(
+            provider=provider,
+            profile=profile,
+            prompt=prompt,
+            trace_repo=self.traces,
+            artifact_store=self.artifact_store,
+        )
+        request = ModelRequest(
+            model_profile_id=profile.model_profile_id,
+            prompt_version_id=prompt.prompt_version_id,
+            payload={
+                "fixture_name": "edge_reasoning",
+                "node_ids": [node.node_id for node in nodes],
+                "candidate_edge_ids": [edge.edge_id for edge in edges],
+            },
+            data_classification="restricted",
+        )
+        _response, parsed, validation = client.complete(
+            run_id=run_id,
+            step_id=step_id,
+            request=request,
+            response_model=EdgeReasoningOutput,
+        )
+        self._record_model_metadata(
+            run_id=run_id,
+            model_profile_id=profile.model_profile_id,
+            prompt_version_id=prompt.prompt_version_id,
+        )
+        if parsed is None:
+            raise RuntimeError(f"dummy LLM edge reasoning failed validation: {validation}")
+        return parsed
+
+    def _record_model_metadata(
+        self,
+        *,
+        run_id: str,
+        model_profile_id: str,
+        prompt_version_id: str,
+    ) -> None:
+        run = self.traces.runs[run_id]
+        prompt_ids = list(dict.fromkeys([*run.prompt_version_ids, prompt_version_id]))
+        self.traces.runs[run_id] = run.model_copy(
+            update={
+                "model_profile_id": model_profile_id,
+                "prompt_version_ids": prompt_ids,
+            }
         )

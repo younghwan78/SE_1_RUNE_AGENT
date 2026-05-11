@@ -30,7 +30,11 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
 
     llm_calls = client.get("/api/v1/runs/run_debug_1/llm-calls")
     assert llm_calls.status_code == 200
-    assert llm_calls.json() == []
+    llm_payload = llm_calls.json()
+    assert len(llm_payload) == 1
+    assert llm_payload[0]["model_profile_id"] == "dummy-local"
+    assert llm_payload[0]["prompt_version_id"] == "pv_edge_linking_v1"
+    assert llm_payload[0]["validation_status"] == "passed"
 
     artifacts = client.get("/api/v1/runs/run_debug_1/artifacts")
     assert artifacts.status_code == 200
@@ -52,7 +56,8 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
     assert diff_payload["counts"]["graph_delta_previews"] >= 1
     assert diff_payload["graph_delta_previews"][0]["left"]["label"] == "approved_graph_edges"
     assert diff_payload["graph_delta_previews"][0]["right"]["operations"]
-    assert "llm_payload_pairs" in diff_payload
+    assert diff_payload["counts"]["llm_payload_pairs"] == 1
+    assert diff_payload["llm_payload_pairs"][0]["parsed"]["payload"]["candidate_edge_count"] >= 1
 
 
 def test_debug_run_summary_requires_existing_run(client: TestClient) -> None:
