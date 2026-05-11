@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `2e530f3 Add observability deployment assets`
 - `405a0bb Require masked restricted model requests`
 - `d40bef7 Guard API methods in surface test`
 - `e2ed56f Guard debug API surface`
@@ -145,7 +146,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25697389737` for `405a0bb`: completed successfully
+- GitHub Actions `CI` run `25697633545` for `2e530f3`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
