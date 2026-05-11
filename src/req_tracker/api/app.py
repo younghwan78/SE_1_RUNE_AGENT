@@ -24,14 +24,16 @@ from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.storage.postgres_store import PostgreSQLStateStore
 from req_tracker.storage.sqlite_store import SQLiteStateStore
 from req_tracker.storage.state_store import StateStore
+from req_tracker.vector.base import VectorBackend
+from req_tracker.vector.memory_backend import MemoryVectorBackend
+from req_tracker.vector.qdrant_backend import QdrantVectorBackend
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Create the API application."""
     resolved_settings = settings or get_settings()
-    if resolved_settings.vector_backend != "memory":
-        raise ValueError(f"unsupported VECTOR_BACKEND: {resolved_settings.vector_backend}")
     graph = _create_graph_backend(resolved_settings)
+    vector = _create_vector_backend(resolved_settings)
     state_store: StateStore | None = None
     if resolved_settings.state_store == "sqlite":
         state_store = SQLiteStateStore(resolved_settings.sqlite_state_path)
@@ -49,6 +51,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ),
         state_store=state_store,
         graph=graph,
+        vector=vector,
     )
 
     @asynccontextmanager
@@ -116,6 +119,21 @@ def _create_graph_backend(settings: Settings) -> GraphBackend:
             database=settings.neo4j_database,
         )
     raise ValueError(f"unsupported GRAPH_BACKEND: {settings.graph_backend}")
+
+
+def _create_vector_backend(settings: Settings) -> VectorBackend:
+    if settings.vector_backend == "memory":
+        return MemoryVectorBackend()
+    if settings.vector_backend == "qdrant":
+        if not settings.qdrant_url:
+            raise ValueError("QDRANT_URL is required for VECTOR_BACKEND=qdrant")
+        return QdrantVectorBackend(
+            url=settings.qdrant_url,
+            api_key=settings.qdrant_api_key or None,
+            collection_name=settings.qdrant_collection,
+            vector_size=settings.qdrant_vector_size,
+        )
+    raise ValueError(f"unsupported VECTOR_BACKEND: {settings.vector_backend}")
 
 
 app = create_app()

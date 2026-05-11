@@ -34,6 +34,14 @@ $env:NEO4J_TEST_PASSWORD="password"
 uv run pytest tests/integration/test_neo4j_graph_backend.py
 ```
 
+Optional real Qdrant integration tests are skipped unless `QDRANT_TEST_URL`
+points to a disposable Qdrant collection:
+
+```powershell
+$env:QDRANT_TEST_URL="http://127.0.0.1:6333"
+uv run pytest tests/integration/test_qdrant_vector_backend.py
+```
+
 Run the API locally:
 
 ```powershell
@@ -98,6 +106,15 @@ $env:GRAPH_BACKEND="neo4j"
 $env:NEO4J_URI="bolt://127.0.0.1:7687"
 $env:NEO4J_USERNAME="neo4j"
 $env:NEO4J_PASSWORD="password"
+uv run uvicorn req_tracker.api.app:app --host 127.0.0.1 --port 8000
+```
+
+Enable Qdrant retrieval persistence:
+
+```powershell
+$env:VECTOR_BACKEND="qdrant"
+$env:QDRANT_URL="http://127.0.0.1:6333"
+$env:QDRANT_COLLECTION="rune_chunks"
 uv run uvicorn req_tracker.api.app:app --host 127.0.0.1 --port 8000
 ```
 
