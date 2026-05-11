@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `676e783 Validate CI release gate coverage`
 - `ab21131 Validate readiness example evidence arrays`
 - `72f103a Tighten readiness evidence example validation`
 - `e843b48 Reject duplicate readiness evidence checks`
@@ -128,7 +129,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25694929143` for `ab21131`: completed successfully
+- GitHub Actions `CI` run `25695219629` for `676e783`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
