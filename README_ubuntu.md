@@ -124,6 +124,18 @@ Run the local model-gateway fallback smoke without a real model endpoint:
 uv run python ops/model_gateway/smoke_model_gateway.py
 ```
 
+Run a model gateway rehearsal against a company-approved sandbox endpoint:
+
+```bash
+export MODEL_GATEWAY_ENDPOINT_URL=https://models.example.com/v1/complete
+export MODEL_GATEWAY_API_KEY=<from-secret-store>
+export MODEL_GATEWAY_PROFILE_ID=company-sandbox
+uv run python ops/model_gateway/rehearse_model_gateway.py
+```
+
+The rehearsal output masks secrets and includes trace hashes plus structured
+validation status for the public internal probe payload.
+
 Run local source-adapter smoke without company systems:
 
 ```bash

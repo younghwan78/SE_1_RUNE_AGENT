@@ -168,6 +168,18 @@ uv run python ops/model_gateway/smoke_model_gateway.py
 This starts a disposable localhost JSON gateway and verifies that the production
 HTTP provider records a failed primary call and succeeds through fallback.
 
+Run a model gateway rehearsal against a company-approved sandbox endpoint:
+
+```powershell
+$env:MODEL_GATEWAY_ENDPOINT_URL="https://models.example.com/v1/complete"
+$env:MODEL_GATEWAY_API_KEY="<from-secret-store>"
+$env:MODEL_GATEWAY_PROFILE_ID="company-sandbox"
+uv run python ops/model_gateway/rehearse_model_gateway.py
+```
+
+The rehearsal sends only a public internal probe payload and reports trace
+hashes, validation status, and artifact-reference presence with secrets masked.
+
 Run local JIRA and Confluence REST adapter smoke without company systems:
 
 ```powershell

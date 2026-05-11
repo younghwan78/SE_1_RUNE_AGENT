@@ -214,7 +214,8 @@ def _company_rehearsal_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
             check_id="company_model_gateway_rehearsal",
             keys=("MODEL_GATEWAY_ENDPOINT_URL",),
             next_action=(
-                "Run model gateway smoke against the company-approved model provider sandbox."
+                "Run ops/model_gateway/rehearse_model_gateway.py against the "
+                "company-approved model provider sandbox."
             ),
         ),
         _external_rehearsal_check(
