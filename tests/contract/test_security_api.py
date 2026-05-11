@@ -192,6 +192,63 @@ def test_api_key_auth_protects_approval_review_and_decision(tmp_path) -> None:  
     assert operator_decision.status_code == 200
 
 
+def test_api_key_auth_protects_feedback_eval_and_improvement_activation(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    app = create_app(
+        Settings(
+            artifact_root=tmp_path / "artifacts",
+            auth_mode="api_key",
+            api_key="secret",
+        )
+    )
+    viewer_headers = {"x-rune-api-key": "secret", "x-rune-role": "viewer"}
+    developer_headers = {"x-rune-api-key": "secret", "x-rune-role": "developer"}
+    admin_headers = {"x-rune-api-key": "secret", "x-rune-role": "admin"}
+    feedback_payloads = [
+        {
+            "feedback_id": f"fb_security_eval_{index}",
+            "target_type": "edge",
+            "target_id": f"edge_security_eval_{index}",
+            "action": "rejected",
+            "user_id": "reviewer",
+            "user_role": "System Architect",
+            "reason_code": "wrong_relation",
+        }
+        for index in range(2)
+    ]
+    with TestClient(app) as client:
+        viewer_feedback = client.post(
+            "/api/v1/feedback",
+            headers=viewer_headers,
+            json=feedback_payloads[0],
+        )
+        developer_feedback = [
+            client.post("/api/v1/feedback", headers=developer_headers, json=payload)
+            for payload in feedback_payloads
+        ]
+        viewer_summary = client.get("/api/v1/feedback/summary", headers=viewer_headers)
+        developer_summary = client.get("/api/v1/feedback/summary", headers=developer_headers)
+        improvements = client.get("/api/v1/improvements/candidates", headers=developer_headers)
+        candidate_id = improvements.json()[0]["candidate_id"]
+        developer_activation = client.post(
+            f"/api/v1/improvements/{candidate_id}/activate",
+            headers=developer_headers,
+            json={"reviewer_approved": True, "canary_passed": True},
+        )
+        admin_activation = client.post(
+            f"/api/v1/improvements/{candidate_id}/activate",
+            headers=admin_headers,
+            json={"reviewer_approved": True, "canary_passed": True},
+        )
+
+    assert viewer_feedback.status_code == 403
+    assert all(response.status_code == 200 for response in developer_feedback)
+    assert viewer_summary.status_code == 403
+    assert developer_summary.status_code == 200
+    assert improvements.status_code == 200
+    assert developer_activation.status_code == 403
+    assert admin_activation.status_code == 200
+
+
 def test_trusted_proxy_auth_maps_groups_to_roles_and_projects(tmp_path) -> None:  # type: ignore[no-untyped-def]
     app = create_app(
         Settings(

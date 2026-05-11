@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from req_tracker.api.security import require_role
 from req_tracker.evals.datasets import build_eval_candidates, feedback_counts_by_reason
 from req_tracker.evals.runner import run_local_eval_gate
 from req_tracker.feedback.models import FeedbackEvent
@@ -23,6 +24,7 @@ class ImprovementActivationRequest(BaseModel):
 @router.post("/feedback")
 def record_feedback(request: Request, event: FeedbackEvent) -> dict[str, Any]:
     """Record feedback in local runtime state."""
+    require_role(request, "developer")
     runtime = request.app.state.runtime
     runtime.approvals.feedback.append(event)
     runtime.audit.record(
@@ -41,6 +43,7 @@ def record_feedback(request: Request, event: FeedbackEvent) -> dict[str, Any]:
 @router.get("/eval/candidates")
 def eval_candidates(request: Request) -> list[dict[str, Any]]:
     """Return feedback grouped as eval dataset candidates."""
+    require_role(request, "developer")
     runtime = request.app.state.runtime
     return [
         candidate.model_dump(mode="json")
@@ -51,6 +54,7 @@ def eval_candidates(request: Request) -> list[dict[str, Any]]:
 @router.get("/eval/gate")
 def eval_gate(request: Request) -> dict[str, Any]:
     """Run the local eval gate for current feedback-derived datasets."""
+    require_role(request, "developer")
     runtime = request.app.state.runtime
     settings = request.app.state.settings
     candidates = build_eval_candidates(runtime.approvals.feedback)
@@ -61,6 +65,7 @@ def eval_gate(request: Request) -> dict[str, Any]:
 @router.get("/improvements/candidates")
 def improvement_candidates(request: Request) -> list[dict[str, Any]]:
     """Return controlled improvement candidates derived from feedback."""
+    require_role(request, "developer")
     runtime = request.app.state.runtime
     return [
         candidate.model_dump(mode="json")
@@ -75,6 +80,7 @@ def activate_improvement(
     payload: ImprovementActivationRequest | None = None,
 ) -> dict[str, Any]:
     """Promote an improvement only through eval, review, canary, and active stages."""
+    require_role(request, "admin")
     runtime = request.app.state.runtime
     settings = request.app.state.settings
     promotion = payload or ImprovementActivationRequest()
@@ -116,5 +122,6 @@ def activate_improvement(
 @router.get("/feedback/summary")
 def feedback_summary(request: Request) -> dict[str, int]:
     """Return local feedback counts by reason."""
+    require_role(request, "developer")
     runtime = request.app.state.runtime
     return feedback_counts_by_reason(runtime.approvals.feedback)

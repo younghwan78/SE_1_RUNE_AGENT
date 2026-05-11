@@ -22,6 +22,12 @@ Current protected routes:
 | `GET /api/v1/debug/runs/{run_id}/summary` | `developer` | may expose model trace and artifact refs |
 | `GET /api/v1/debug/approvals/{approval_id}/lineage` | `developer` | links reviewer decisions, feedback, audit |
 | `GET /api/v1/debug/artifact` | `developer` | reads raw local debug artifacts |
+| `POST /api/v1/feedback` | `developer` | records reviewer feedback that feeds eval datasets |
+| `GET /api/v1/feedback/summary` | `developer` | exposes reviewer feedback taxonomy counts |
+| `GET /api/v1/eval/candidates` | `developer` | exposes feedback-derived eval dataset candidates |
+| `GET /api/v1/eval/gate` | `developer` | runs local eval gate over feedback-derived datasets |
+| `GET /api/v1/improvements/candidates` | `developer` | exposes controlled improvement candidates |
+| `POST /api/v1/improvements/{candidate_id}/activate` | `admin` | promotes improvement candidates through review/canary/active states |
 | `GET /api/v1/audit/events` | `operator` | exposes operational audit history |
 
 Trusted proxy mode:
