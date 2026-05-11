@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `cc0d36b Restore replay idempotency after restart`
 - `3e6cb08 Trace replay runs separately`
 - `55e3ef2 Record failed run audit state`
 - `dd5aff7 Record run start audit events`
@@ -185,7 +186,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25701501361` for `3e6cb08`: completed successfully
+- GitHub Actions `CI` run `25701722127` for `cc0d36b`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
