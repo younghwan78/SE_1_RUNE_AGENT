@@ -71,6 +71,8 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/events `
   -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="operator";"x-rune-projects"="RUNE_CAM_ALPHA"}
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/retention `
   -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="operator"}
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/audit/retention/archive-prune `
+  -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="admin"}
 ```
 
 Configure periodic runs:
@@ -122,6 +124,7 @@ Current local implementation:
 - debug side-by-side panes for LLM payloads and graph delta previews
 - debug artifact store root access policy with blocked-read audit events
 - audit retention policy status API
+- admin-only audit archive/prune API with local JSONL archive writer
 - API-key project-scope authorization foundation with `x-rune-projects`
 - backup/restore rehearsal runbook and smoke load runner
 - periodic analysis scheduler for server operation

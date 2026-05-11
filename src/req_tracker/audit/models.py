@@ -15,6 +15,7 @@ AuditAction = Literal[
     "debug_artifact_read",
     "schedule_configured",
     "schedule_run_now",
+    "audit_archive_pruned",
 ]
 AuditOutcome = Literal["succeeded", "failed", "blocked"]
 

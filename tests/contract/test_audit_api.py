@@ -64,3 +64,7 @@ def test_audit_events_capture_operational_actions(client: TestClient) -> None:
     assert retention.status_code == 200
     assert retention.json()["policy"]["retention_days"] == 365
     assert retention.json()["total_events"] >= 3
+
+    archive = client.post("/api/v1/audit/retention/archive-prune")
+    assert archive.status_code == 200
+    assert archive.json()["archived_events"] == 0

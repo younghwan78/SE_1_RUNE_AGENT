@@ -5,6 +5,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from req_tracker.approvals.service import ApprovalService
+from req_tracker.audit.archive import LocalAuditArchiveStore
 from req_tracker.audit.models import AuditRetentionPolicy
 from req_tracker.audit.service import AuditService
 from req_tracker.debug.artifacts import LocalArtifactStore
@@ -30,6 +31,7 @@ class RuntimeState(BaseModel):
     vector: VectorBackend
     approvals: ApprovalService
     audit: AuditService
+    audit_archive_store: LocalAuditArchiveStore
     analyses: dict[str, AnalysisResult]
     scheduler: RunScheduler
     state_store: StateStore | None = None
@@ -52,6 +54,7 @@ class RuntimeState(BaseModel):
             vector=vector or MemoryVectorBackend(),
             approvals=ApprovalService(),
             audit=AuditService(audit_policy),
+            audit_archive_store=LocalAuditArchiveStore(artifact_root / "audit_archives"),
             analyses={},
             scheduler=RunScheduler(schedule_config),
             state_store=state_store,

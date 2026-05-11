@@ -39,3 +39,23 @@ def audit_retention_report(request: Request) -> dict[str, Any]:
     runtime = request.app.state.runtime
     report: dict[str, Any] = runtime.audit.retention_report()
     return report
+
+
+@router.post("/audit/retention/archive-prune")
+def archive_and_prune_audit_events(request: Request) -> dict[str, Any]:
+    """Archive and prune audit events selected by the active retention policy."""
+    user = require_role(request, "admin")
+    runtime = request.app.state.runtime
+    result: dict[str, Any] = runtime.audit.archive_and_prune(
+        archive_writer=runtime.audit_archive_store,
+    )
+    runtime.audit.record(
+        action="audit_archive_pruned",
+        actor_id=user.user_id,
+        actor_role=user.role,
+        target_type="audit_retention",
+        target_id="default",
+        metadata=result,
+    )
+    runtime.persist_approval_state()
+    return result

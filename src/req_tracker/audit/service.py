@@ -77,18 +77,62 @@ class AuditService:
     def retention_report(self, now: datetime | None = None) -> dict[str, Any]:
         """Return non-destructive retention status for operator review."""
         reference_time = now or datetime.now(UTC)
-        cutoff = reference_time - timedelta(days=self.policy.retention_days)
-        expired = [event for event in self.events.values() if event.created_at < cutoff]
-        overflow_count = max(len(self.events) - self.policy.max_events, 0)
+        cutoff, expired, overflow = self._retention_candidates(reference_time)
         return {
             "policy": self.policy.model_dump(mode="json"),
             "cutoff_at": cutoff.isoformat(),
             "total_events": len(self.events),
             "expired_events": len(expired),
-            "overflow_events": overflow_count,
+            "overflow_events": len(overflow),
             "expired_audit_ids": [
                 event.audit_id
                 for event in sorted(expired, key=lambda event: event.created_at)
             ],
+            "overflow_audit_ids": [
+                event.audit_id
+                for event in sorted(overflow, key=lambda event: event.created_at)
+            ],
             "schema_version": "v1",
         }
+
+    def archive_and_prune(
+        self,
+        *,
+        archive_writer: Any,
+        now: datetime | None = None,
+    ) -> dict[str, Any]:
+        """Archive and remove events selected by the retention policy."""
+        reference_time = now or datetime.now(UTC)
+        _cutoff, expired, overflow = self._retention_candidates(reference_time)
+        candidates_by_id = {
+            event.audit_id: event
+            for event in [*expired, *overflow]
+        }
+        events_to_archive = sorted(candidates_by_id.values(), key=lambda event: event.created_at)
+        archive_ref = archive_writer.write_archive(
+            events=events_to_archive,
+            policy=self.policy,
+        )
+        for event in events_to_archive:
+            self.events.pop(event.audit_id, None)
+        return {
+            "archive_ref": archive_ref,
+            "archived_events": len(events_to_archive),
+            "pruned_events": len(events_to_archive),
+            "remaining_events": len(self.events),
+            "schema_version": "v1",
+        }
+
+    def _retention_candidates(
+        self,
+        reference_time: datetime,
+    ) -> tuple[datetime, list[AuditEvent], list[AuditEvent]]:
+        cutoff = reference_time - timedelta(days=self.policy.retention_days)
+        events = sorted(self.events.values(), key=lambda event: event.created_at)
+        expired = [event for event in events if event.created_at < cutoff]
+        remaining_after_expired = [
+            event for event in events if event.audit_id not in {item.audit_id for item in expired}
+        ]
+        overflow_count = max(len(remaining_after_expired) - self.policy.max_events, 0)
+        overflow = remaining_after_expired[:overflow_count]
+        return cutoff, expired, overflow
