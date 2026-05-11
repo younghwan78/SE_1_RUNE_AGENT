@@ -115,6 +115,83 @@ def test_api_key_auth_enforces_project_scope(tmp_path) -> None:  # type: ignore[
     assert audit_denied.status_code == 403
 
 
+def test_api_key_auth_protects_approval_review_and_decision(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    app = create_app(
+        Settings(
+            artifact_root=tmp_path / "artifacts",
+            auth_mode="api_key",
+            api_key="secret",
+        )
+    )
+    developer_headers = {
+        "x-rune-api-key": "secret",
+        "x-rune-role": "developer",
+        "x-rune-projects": "RUNE_CAM_ALPHA",
+    }
+    operator_headers = {
+        **developer_headers,
+        "x-rune-role": "operator",
+    }
+    viewer_headers = {
+        **developer_headers,
+        "x-rune-role": "viewer",
+    }
+    wrong_project_headers = {
+        **operator_headers,
+        "x-rune-projects": "OTHER_PROJECT",
+    }
+    with TestClient(app) as client:
+        run = client.post(
+            "/api/v1/runs/analyze",
+            headers=developer_headers,
+            json={
+                "project_key": "RUNE_CAM_ALPHA",
+                "scenario": "RUNE_CAM_ALPHA",
+                "run_id": "run_approval_auth",
+            },
+        )
+        viewer_list = client.get("/api/v1/approvals", headers=viewer_headers)
+        developer_list = client.get(
+            "/api/v1/approvals?project_key=RUNE_CAM_ALPHA",
+            headers=developer_headers,
+        )
+        approval = developer_list.json()[0]
+        developer_decision = client.post(
+            f"/api/v1/approvals/{approval['approval_id']}/decision",
+            headers=developer_headers,
+            json={
+                "approval_id": approval["approval_id"],
+                "action": "approve",
+                "decided_by": "reviewer",
+            },
+        )
+        wrong_project_decision = client.post(
+            f"/api/v1/approvals/{approval['approval_id']}/decision",
+            headers=wrong_project_headers,
+            json={
+                "approval_id": approval["approval_id"],
+                "action": "approve",
+                "decided_by": "reviewer",
+            },
+        )
+        operator_decision = client.post(
+            f"/api/v1/approvals/{approval['approval_id']}/decision",
+            headers=operator_headers,
+            json={
+                "approval_id": approval["approval_id"],
+                "action": "approve",
+                "decided_by": "reviewer",
+            },
+        )
+
+    assert run.status_code == 200
+    assert viewer_list.status_code == 403
+    assert developer_list.status_code == 200
+    assert developer_decision.status_code == 403
+    assert wrong_project_decision.status_code == 403
+    assert operator_decision.status_code == 200
+
+
 def test_trusted_proxy_auth_maps_groups_to_roles_and_projects(tmp_path) -> None:  # type: ignore[no-untyped-def]
     app = create_app(
         Settings(

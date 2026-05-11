@@ -4,16 +4,24 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 
+from req_tracker.api.security import require_project
 from req_tracker.approvals.models import ApprovalDecision
 
 router = APIRouter(tags=["approvals"])
 
 
 @router.get("/approvals")
-def list_approvals(request: Request) -> list[dict[str, Any]]:
+def list_approvals(
+    request: Request,
+    project_key: str | None = None,
+) -> list[dict[str, Any]]:
     """List approval items."""
+    require_project(request, project_key, "developer")
     runtime = request.app.state.runtime
-    return [item.model_dump(mode="json") for item in runtime.approvals.items.values()]
+    approvals = list(runtime.approvals.items.values())
+    if project_key is not None:
+        approvals = [item for item in approvals if item.project_key == project_key]
+    return [item.model_dump(mode="json") for item in approvals]
 
 
 @router.post("/approvals/{approval_id}/decision")
@@ -28,6 +36,7 @@ def decide_approval(
     runtime = request.app.state.runtime
     if approval_id not in runtime.approvals.items:
         raise HTTPException(status_code=404, detail="approval not found")
+    require_project(request, runtime.approvals.items[approval_id].project_key, "operator")
     item = runtime.approvals.decide(decision, runtime.graph)
     runtime.audit.record(
         action="approval_decided",

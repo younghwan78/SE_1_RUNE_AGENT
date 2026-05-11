@@ -17,6 +17,8 @@ Current protected routes:
 
 | Route | Minimum role | Reason |
 | --- | --- | --- |
+| `GET /api/v1/approvals` | `developer` | exposes pending graph proposals and evidence references |
+| `POST /api/v1/approvals/{approval_id}/decision` | `operator` | commits/rejects/holds approved graph proposals |
 | `GET /api/v1/debug/runs/{run_id}/summary` | `developer` | may expose model trace and artifact refs |
 | `GET /api/v1/debug/approvals/{approval_id}/lineage` | `developer` | links reviewer decisions, feedback, audit |
 | `GET /api/v1/debug/artifact` | `developer` | reads raw local debug artifacts |
