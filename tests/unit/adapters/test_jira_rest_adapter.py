@@ -93,6 +93,36 @@ def test_jira_rest_adapter_retries_rate_limited_request() -> None:
     assert result.artifacts[0].external_id == "CAM-REQ-001"
 
 
+def test_jira_rest_adapter_retries_network_os_error() -> None:
+    calls = 0
+
+    def transport(
+        _method: str,
+        _url: str,
+        _headers: dict[str, str],
+        _payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise ConnectionAbortedError("local smoke server reset")
+        return {"total": 1, "issues": [_issue("CAM-REQ-001", "Camera latency")]}
+
+    adapter = JiraRestSourceAdapter(
+        base_url="https://jira.example.com",
+        token="token",
+        transport=transport,
+        max_retries=1,
+    )
+
+    result = adapter.fetch_incremental(SourceScope(project_key="CAM"))
+
+    assert calls == 2
+    assert result.partial_failure is True
+    assert result.source_warnings == ["jira_request_retry:network_error:attempt_1"]
+    assert result.artifacts[0].external_id == "CAM-REQ-001"
+
+
 def test_jira_rest_adapter_reports_permission_denied_without_retry() -> None:
     calls = 0
 

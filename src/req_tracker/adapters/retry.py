@@ -32,6 +32,20 @@ def request_with_retry(
     while True:
         try:
             return request_call(), warnings
+        except OSError as exc:
+            request_error = SourceAdapterRequestError(
+                f"{source_type} network request failed: {exc}",
+                code="network_error",
+            )
+            if retry_count >= max_retries:
+                warnings.append(
+                    f"{source_type}_request_failed_after_retries:{request_error.status_label}"
+                )
+                return None, warnings
+            retry_count += 1
+            warnings.append(
+                f"{source_type}_request_retry:{request_error.status_label}:attempt_{retry_count}"
+            )
         except SourceAdapterRequestError as exc:
             if exc.is_permission_denied:
                 return None, [f"{source_type}_permission_denied:{exc.status_label}"]
