@@ -36,7 +36,7 @@ Latest GitHub verification:
 | Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, run debug UI | API complete; full UX diff/lineage pending |
 | SQLite state persistence | `SQLiteStateStore`, persistence contract test | Complete |
 | PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, migration loader tests | Complete |
-| Typed PostgreSQL core table foundation | `002_core_state_tables.sql`, typed mirror upsert/read dispatch, rollback scripts, tests | Foundation complete; real PostgreSQL integration pending |
+| Typed PostgreSQL core table foundation | `002_core_state_tables.sql`, typed mirror upsert/read dispatch, rollback scripts, unit tests, optional `POSTGRES_TEST_DSN` integration test | Foundation complete; production DB environment validation pending |
 | Graph backend | `MemoryGraphBackend`, graph projection, traceability chain APIs | Local memory complete; Neo4j backend pending |
 | Vector backend | `MemoryVectorBackend` | Local memory complete; Qdrant backend pending |
 | Approval workflow | approval queue, approve/reject/hold/modify path, graph commit | Complete for local backend |
@@ -52,8 +52,8 @@ Latest GitHub verification:
 ### P0: Production Persistence Hardening
 
 - Add typed PostgreSQL query repositories for production read models.
-- Add optional real PostgreSQL integration test profile gated by environment
-  variables so CI can still run without a database.
+- Run the optional PostgreSQL integration test in a disposable production-like
+  database environment.
 
 ### P1: Production Backend Expansion
 

@@ -16,6 +16,14 @@ uv run mypy src
 The same `ruff`, `mypy`, and `pytest` gates run in GitHub Actions on pushes to
 `main` and on pull requests.
 
+Optional real PostgreSQL integration tests are skipped unless
+`POSTGRES_TEST_DSN` points to a disposable PostgreSQL database:
+
+```powershell
+$env:POSTGRES_TEST_DSN="postgresql://rune:rune@127.0.0.1:5432/rune_agent_test"
+uv run pytest tests/integration/test_postgres_state_store.py
+```
+
 Run the API locally:
 
 ```powershell
