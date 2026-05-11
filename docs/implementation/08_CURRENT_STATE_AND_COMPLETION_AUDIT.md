@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `a65315e Add production readiness gate checker`
 - `b6c06c4 Refresh audit after feedback RBAC`
 - `11a19e6 Protect feedback improvement endpoints`
 - `03d266d Refresh audit after approval RBAC`
@@ -49,7 +50,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `11a19e6`: completed successfully
+- GitHub Actions `CI` run `25683379797` for `a65315e`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
