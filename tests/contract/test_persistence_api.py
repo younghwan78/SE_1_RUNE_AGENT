@@ -323,6 +323,49 @@ def test_sqlite_state_store_restores_replay_idempotency_after_restart(tmp_path) 
     assert uncached.json()["detail"] == "run analysis result not available for replay"
 
 
+def test_sqlite_state_store_restores_audit_archive_prune_idempotency_after_restart(
+    tmp_path,  # type: ignore[no-untyped-def]
+) -> None:
+    db_path = tmp_path / "runtime.sqlite3"
+    settings = Settings(
+        artifact_root=tmp_path / "artifacts",
+        state_store="sqlite",
+        sqlite_state_path=db_path,
+        audit_max_events=1,
+    )
+
+    first_app = create_app(settings)
+    with TestClient(first_app) as client:
+        analyze = client.post(
+            "/api/v1/runs/analyze",
+            json={
+                "project_key": "RUNE_CAM_ALPHA",
+                "scenario": "RUNE_CAM_ALPHA",
+                "run_id": "run_audit_archive_restore",
+            },
+        )
+        first = client.post(
+            "/api/v1/audit/retention/archive-prune",
+            headers={"Idempotency-Key": "idem-audit-archive-restore-1"},
+        )
+    assert analyze.status_code == 200
+    assert first.status_code == 200
+    assert first.json()["archived_events"] >= 1
+
+    second_app = create_app(settings)
+    with TestClient(second_app) as client:
+        second = client.post(
+            "/api/v1/audit/retention/archive-prune",
+            headers={"Idempotency-Key": "idem-audit-archive-restore-1"},
+        )
+        audit = client.get("/api/v1/audit/events?action=audit_archive_pruned")
+
+    assert second.status_code == 200
+    assert second.json() == first.json()
+    assert audit.status_code == 200
+    assert len(audit.json()) == 1
+
+
 def test_runtime_archive_prune_deletes_pruned_audit_rows_from_state_store(tmp_path) -> None:  # type: ignore[no-untyped-def]
     store = SQLiteStateStore(tmp_path / "runtime.sqlite3")
     runtime = RuntimeState.create(
