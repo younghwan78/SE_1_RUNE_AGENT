@@ -11,6 +11,7 @@ import os
 import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -161,6 +162,17 @@ def _validate_review_metadata(
             raise ValueError(
                 f"{field_name} cannot contain TODO when passed manual evidence is present"
             )
+    _validate_reviewed_at_utc(payload["reviewed_at"])
+
+
+def _validate_reviewed_at_utc(value: str) -> None:
+    timestamp = value.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(timestamp)
+    except ValueError as exc:
+        raise ValueError("reviewed_at must be an ISO-8601 UTC timestamp") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() != UTC.utcoffset(parsed):
+        raise ValueError("reviewed_at must be an ISO-8601 UTC timestamp")
 
 
 def build_manual_evidence_template(env: Mapping[str, str]) -> dict[str, Any]:

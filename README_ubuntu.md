@@ -239,7 +239,8 @@ The generated template intentionally marks every unresolved gate as `failed`
 until a release owner replaces the TODO fields with reviewed CI/artifact IDs or
 approval records. If any manual evidence entry is marked `passed`, the evidence
 file must also include non-TODO top-level `reviewed_by` and `reviewed_at`
-metadata. Validate that the committed example file is still non-passable:
+metadata, and `reviewed_at` must be an ISO-8601 UTC timestamp. Validate that the
+committed example file is still non-passable:
 
 ```bash
 uv run python ops/rehearsal/validate_evidence_example.py

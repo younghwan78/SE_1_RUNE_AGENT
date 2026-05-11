@@ -200,6 +200,32 @@ def test_load_manual_evidence_rejects_passed_todo_review_metadata(tmp_path) -> N
         checker.load_manual_evidence(evidence_path)
 
 
+def test_load_manual_evidence_rejects_non_utc_review_timestamp(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text(
+        """
+        {
+          "schema_version": "v1",
+          "reviewed_by": "release-owner@example.com",
+          "reviewed_at": "2026-05-12 09:00:00",
+          "checks": [
+            {
+              "check_id": "company_postgres_rehearsal",
+              "status": "passed",
+              "summary": "Reviewed staging run passed.",
+              "evidence": ["staging-ci:postgres:run-1"]
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="reviewed_at must be an ISO-8601 UTC timestamp"):
+        checker.load_manual_evidence(evidence_path)
+
+
 def test_load_manual_evidence_allows_failed_template_metadata(tmp_path) -> None:  # type: ignore[no-untyped-def]
     checker = _load_checker_module()
     evidence_path = tmp_path / "evidence.json"
