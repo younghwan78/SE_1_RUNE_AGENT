@@ -259,6 +259,7 @@ Validated:
 - contract test coverage for scale mode, orphan mode, pending mode, search, neighborhood, and pending edge metadata
 - contract test coverage for traceability chain pending context and missing-node handling
 - `RUNE_SCALE_150` API smoke with 150 nodes, 103 pending candidate edges, 47 findings, and 103 approval items
+- release-gate operator UI smoke for static UI assets, graph controls, SVG renderer hooks, and `RUNE_SCALE_150` overview/pending/orphan projection contracts
 - browser smoke for 120-node overview, search result narrowing to one node, node detail, and edge detail click
 - browser smoke for node detail traceability chain rendering
 
