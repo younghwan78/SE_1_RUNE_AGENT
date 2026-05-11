@@ -91,7 +91,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 165 passed, 3 skipped
+- `uv run pytest`: 166 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -108,13 +108,13 @@ Latest local verification:
 - `uv run python ops/security/rehearse_masking_policy.py`: passed, verifying representative sensitive inputs are redacted without printing raw sensitive strings or forbidden patterns
 - `uv run python ops/security/check_release_blockers.py`: passed, validating coverage evidence for masking violations, approval-gated graph mutation, project authorization leaks, prompt/model regression gates, migration rollback/restore, and forbidden model payload policy
 - `uv run pytest tests/unit/ops/test_backup_verify.py`: passed, validating backup-set required files, SHA256 mismatch detection, artifact tar, Qdrant JSON, Neo4j dump marker, and git commit marker checks
-- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3201 ms against a 5000 ms local rehearsal threshold)
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3212 ms against a 5000 ms local rehearsal threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
 - `uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -`: passed, producing a review-safe unresolved-gate evidence template with `failed` TODO placeholders
 - `uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py`: passed, validating 17 created PostgreSQL tables have matching rollback drops across 5 migration versions
 - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed, validating 14 PostgreSQL typed mirror tables against packaged migration DDL
-- `uv run python ops/rehearsal/validate_evidence_example.py`: passed, validating that the committed example evidence file has no passable placeholder entries, fake `run-123*` references, duplicate check IDs, or missing top-level TODO metadata
+- `uv run python ops/rehearsal/validate_evidence_example.py`: passed, validating that the committed example evidence file has no passable placeholder entries, fake `run-123*` references, duplicate check IDs, missing evidence arrays, or missing top-level TODO metadata
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected because the committed example evidence uses `failed` TODO placeholders and production env checks are unset; fake `run-123*` and `status: passed` examples are not present in the committed template
 - `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 18 passed, including manual evidence file loading, duplicate check-id rejection, TODO-placeholder rejection for passed evidence, reviewer metadata enforcement for passed evidence, schema-version and non-empty evidence enforcement for passed evidence, ISO-8601 UTC `reviewed_at` enforcement, failed TODO template loading, non-passable example evidence, review-safe evidence template generation, complete env/evidence pass behavior, unknown evidence warning blocking, and Kubernetes Helm evidence gating

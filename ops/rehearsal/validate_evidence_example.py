@@ -33,7 +33,13 @@ def validate_example(path: Path = EXAMPLE_PATH) -> dict[str, Any]:
         status = item.get("status")
         summary = str(item.get("summary", ""))
         evidence = item.get("evidence", [])
-        evidence_values = evidence if isinstance(evidence, list) else []
+        if not isinstance(evidence, list) or not evidence:
+            failures.append(f"{check_id}:evidence_missing_or_empty")
+            evidence_values: list[Any] = []
+        else:
+            evidence_values = evidence
+            if not all(isinstance(value, str) and value.strip() for value in evidence):
+                failures.append(f"{check_id}:evidence_must_be_non_empty_strings")
         joined = "\n".join([summary, *[str(value) for value in evidence_values]])
         if not isinstance(check_id, str) or not check_id:
             failures.append(f"checks[{index}]:missing_check_id")
