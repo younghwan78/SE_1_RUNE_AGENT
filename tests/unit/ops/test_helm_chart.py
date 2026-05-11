@@ -1,6 +1,7 @@
 """Helm chart structure tests."""
 
 from pathlib import Path
+from runpy import run_path
 
 CHART_ROOT = Path("ops/helm/rune-agent")
 
@@ -65,3 +66,15 @@ def test_helm_chart_does_not_hardcode_secret_values_or_mcp_transport_names() -> 
 
     assert all(item.lower() not in lowered for item in forbidden)
     assert "existingSecret.name is required" in combined
+
+
+def test_helm_chart_validation_script_passes() -> None:
+    namespace = run_path("ops/helm/validate_chart.py")
+
+    result = namespace["validate_chart"]()
+
+    assert result["passed"] is True
+    assert result["missing_files"] == []
+    assert result["missing_values"] == []
+    assert result["missing_secret_refs"] == []
+    assert result["forbidden_hits"] == []
