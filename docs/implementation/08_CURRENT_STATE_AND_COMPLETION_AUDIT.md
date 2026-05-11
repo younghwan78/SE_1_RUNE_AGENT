@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `f369177 Add default model registry baseline`
 - `22d7343 Add structured request logging`
 - `5a66365 Anchor production repo shape docs`
 - `93d96f0 Refresh audit after masking rehearsal`
@@ -77,7 +78,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25685672834` for `f93b973`: completed successfully
+- GitHub Actions `CI` run `25686556799` for `f369177`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
