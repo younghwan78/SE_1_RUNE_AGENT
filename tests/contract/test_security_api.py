@@ -275,6 +275,10 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
         **developer_headers,
         "x-rune-projects": "OTHER_PROJECT",
     }
+    wrong_project_operator_headers = {
+        **operator_headers,
+        "x-rune-projects": "OTHER_PROJECT",
+    }
     with TestClient(app) as client:
         run = client.post(
             "/api/v1/runs/analyze",
@@ -292,6 +296,34 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
         wrong_project_runs = client.get("/api/v1/runs", headers=wrong_project_headers)
         developer_findings = client.get("/api/v1/findings", headers=developer_headers)
         wrong_project_findings = client.get("/api/v1/findings", headers=wrong_project_headers)
+        finding_id = developer_findings.json()[0]["finding_id"]
+        viewer_finding_detail = client.get(
+            f"/api/v1/findings/{finding_id}",
+            headers=viewer_headers,
+        )
+        developer_finding_detail = client.get(
+            f"/api/v1/findings/{finding_id}",
+            headers=developer_headers,
+        )
+        wrong_project_finding_detail = client.get(
+            f"/api/v1/findings/{finding_id}",
+            headers=wrong_project_headers,
+        )
+        viewer_finding_status = client.post(
+            f"/api/v1/findings/{finding_id}/status",
+            headers=viewer_headers,
+            json={"status": "acknowledged"},
+        )
+        wrong_project_finding_status = client.post(
+            f"/api/v1/findings/{finding_id}/status",
+            headers=wrong_project_operator_headers,
+            json={"status": "acknowledged"},
+        )
+        operator_finding_status = client.post(
+            f"/api/v1/findings/{finding_id}/status",
+            headers=operator_headers,
+            json={"status": "acknowledged", "updated_by": "operator@example.com"},
+        )
         missing_schedule_key = client.get("/api/v1/schedule")
         allowed_schedule = client.get("/api/v1/schedule", headers=developer_headers)
         wrong_project_schedule = client.get("/api/v1/schedule", headers=wrong_project_headers)
@@ -354,6 +386,12 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
     assert developer_findings.status_code == 200
     assert wrong_project_findings.status_code == 200
     assert wrong_project_findings.json() == []
+    assert viewer_finding_detail.status_code == 403
+    assert developer_finding_detail.status_code == 200
+    assert wrong_project_finding_detail.status_code == 403
+    assert viewer_finding_status.status_code == 403
+    assert wrong_project_finding_status.status_code == 403
+    assert operator_finding_status.status_code == 200
     assert missing_schedule_key.status_code == 401
     assert allowed_schedule.status_code == 200
     assert wrong_project_schedule.status_code == 403

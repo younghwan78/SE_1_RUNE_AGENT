@@ -17,7 +17,7 @@ from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.feedback.models import FeedbackEvent
 from req_tracker.graph.base import GraphBackend
 from req_tracker.graph.memory_backend import MemoryGraphBackend
-from req_tracker.ontology.models import OntologyNode, TraceabilityEdge
+from req_tracker.ontology.models import Finding, OntologyNode, TraceabilityEdge
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.scheduler.service import RunScheduler
 from req_tracker.storage.state_store import StateStore
@@ -39,6 +39,7 @@ class RuntimeState(BaseModel):
     audit: AuditService
     audit_archive_store: AuditArchiveWriter
     analyses: dict[str, AnalysisResult]
+    findings: dict[str, Finding]
     replays: dict[str, ReplayResult]
     idempotency_results: dict[str, dict[str, Any]]
     scheduler: RunScheduler
@@ -66,6 +67,7 @@ class RuntimeState(BaseModel):
             audit_archive_store=audit_archive_store
             or LocalAuditArchiveStore(artifact_root / "audit_archives"),
             analyses={},
+            findings={},
             replays={},
             idempotency_results={},
             scheduler=RunScheduler(schedule_config),
@@ -102,6 +104,8 @@ class RuntimeState(BaseModel):
             trigger_source=trigger_source,
         )
         self.analyses[run_id] = result
+        for finding in result.findings:
+            self.findings[finding.finding_id] = finding
         self.audit.record(
             action="run_completed",
             actor_id="local",
@@ -224,6 +228,24 @@ class RuntimeState(BaseModel):
                 payload=edge,
             )
 
+    def persist_finding(self, finding: Finding, project_key: str | None) -> None:
+        """Persist one finding status/body update."""
+        self.findings[finding.finding_id] = finding
+        for run_id, analysis in list(self.analyses.items()):
+            updated_findings = [
+                finding if item.finding_id == finding.finding_id else item
+                for item in analysis.findings
+            ]
+            self.analyses[run_id] = analysis.model_copy(update={"findings": updated_findings})
+        if self.state_store is None:
+            return
+        self.state_store.upsert(
+            collection="findings",
+            entity_id=finding.finding_id,
+            project_key=project_key,
+            payload=finding,
+        )
+
     def persist_replay_result(self, result: ReplayResult) -> None:
         """Persist replay metadata and diff for restart-safe debug lookup."""
         if self.state_store is None:
@@ -290,6 +312,9 @@ class RuntimeState(BaseModel):
         for payload in self.state_store.list("replay_results"):
             replay = ReplayResult.model_validate(payload)
             self.replays[replay.replay_run_id] = replay
+        for payload in self.state_store.list("findings"):
+            finding = Finding.model_validate(payload)
+            self.findings[finding.finding_id] = finding
         for payload in self.state_store.list("idempotency_results"):
             record_id = payload.get("record_id")
             if isinstance(record_id, str):

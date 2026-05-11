@@ -199,3 +199,53 @@ def test_modify_approval_commits_corrected_edge_and_feedback(client: TestClient)
     feedback = client.get("/api/v1/feedback/summary")
     assert feedback.status_code == 200
     assert feedback.json()["wrong_relation"] == 1
+
+
+def test_finding_detail_and_status_update_are_idempotent(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/runs/analyze",
+        json={
+            "project_key": "RUNE_CAM_ALPHA",
+            "scenario": "RUNE_CAM_ALPHA",
+            "run_id": "run_finding_status",
+        },
+    )
+    assert response.status_code == 200
+    finding = client.get("/api/v1/findings").json()[0]
+
+    detail = client.get(f"/api/v1/findings/{finding['finding_id']}")
+    assert detail.status_code == 200
+    assert detail.json()["finding_id"] == finding["finding_id"]
+    assert detail.json()["approval_status"] == "open"
+
+    payload = {
+        "status": "acknowledged",
+        "updated_by": "reviewer",
+        "reason_code": "triaged",
+        "comment": "Reviewed during traceability triage.",
+    }
+    first = client.post(
+        f"/api/v1/findings/{finding['finding_id']}/status",
+        json=payload,
+        headers={"Idempotency-Key": "idem-finding-status-1"},
+    )
+    second = client.post(
+        f"/api/v1/findings/{finding['finding_id']}/status",
+        json=payload,
+        headers={"Idempotency-Key": "idem-finding-status-1"},
+    )
+    conflict = client.post(
+        f"/api/v1/findings/{finding['finding_id']}/status",
+        json={**payload, "status": "dismissed"},
+        headers={"Idempotency-Key": "idem-finding-status-1"},
+    )
+
+    assert first.status_code == 200
+    assert first.json()["approval_status"] == "acknowledged"
+    assert second.status_code == 200
+    assert second.json() == first.json()
+    assert conflict.status_code == 409
+
+    audit = client.get("/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
+    assert audit.status_code == 200
+    assert [event["action"] for event in audit.json()].count("finding_status_changed") == 1

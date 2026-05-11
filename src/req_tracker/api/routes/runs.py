@@ -14,6 +14,7 @@ from req_tracker.api.security import require_project, require_role
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings
 from req_tracker.debug.replay import ReplayService
+from req_tracker.ontology.models import Finding, FindingStatus
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.workflows.analysis_graph import AnalysisResult
 
@@ -34,6 +35,15 @@ class ReplayRunRequest(BaseModel):
     replay_run_id: str | None = None
     replay_mode: str = "same_model_same_prompt"
     scenario: str = "RUNE_CAM_ALPHA"
+
+
+class FindingStatusRequest(BaseModel):
+    """Change the review status for a finding."""
+
+    status: FindingStatus
+    updated_by: str = "local"
+    reason_code: str | None = None
+    comment: str | None = None
 
 
 @router.post("/runs/analyze")
@@ -243,11 +253,90 @@ def list_findings(request: Request) -> list[dict[str, Any]]:
     user = require_role(request, "developer")
     runtime = request.app.state.runtime
     findings: list[dict[str, Any]] = []
-    for result in runtime.analyses.values():
-        if "*" not in user.project_keys and result.run.project_key not in user.project_keys:
+    for finding in runtime.findings.values():
+        project_key = _finding_project_key(runtime, finding)
+        if "*" not in user.project_keys and project_key not in user.project_keys:
             continue
-        findings.extend(finding.model_dump(mode="json") for finding in result.findings)
+        findings.append(finding.model_dump(mode="json"))
     return findings
+
+
+@router.get("/findings/{finding_id}")
+def get_finding(request: Request, finding_id: str) -> dict[str, Any]:
+    """Return finding detail."""
+    runtime: RuntimeState = request.app.state.runtime
+    finding = runtime.findings.get(finding_id)
+    if finding is None:
+        raise HTTPException(status_code=404, detail="finding not found")
+    require_project(request, _finding_project_key(runtime, finding), "developer")
+    return finding.model_dump(mode="json")
+
+
+@router.post("/findings/{finding_id}/status")
+def update_finding_status(
+    request: Request,
+    finding_id: str,
+    payload: FindingStatusRequest,
+) -> dict[str, Any]:
+    """Update finding status after reviewer triage."""
+    runtime: RuntimeState = request.app.state.runtime
+    finding = runtime.findings.get(finding_id)
+    if finding is None:
+        raise HTTPException(status_code=404, detail="finding not found")
+    project_key = _finding_project_key(runtime, finding)
+    user = require_project(request, project_key, "operator")
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="findings.status",
+        payload={
+            "finding_id": finding_id,
+            "status": explicit_model_payload(payload),
+        },
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
+    updated = finding.model_copy(update={"approval_status": payload.status})
+    runtime.persist_finding(updated, project_key)
+    runtime.audit.record(
+        action="finding_status_changed",
+        actor_id=payload.updated_by or user.user_id,
+        actor_role=user.role,
+        project_key=project_key,
+        target_type="finding",
+        target_id=finding_id,
+        reason_code=payload.reason_code,
+        metadata={
+            "from_status": finding.approval_status,
+            "to_status": payload.status,
+            "comment": payload.comment,
+        },
+    )
+    runtime.persist_approval_state()
+    response = updated.model_dump(mode="json")
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="findings.status",
+        project_key=project_key,
+        response=response,
+    )
+    return response
+
+
+def _finding_project_key(runtime: RuntimeState, finding: Finding) -> str | None:
+    for node_id in finding.affected_node_ids:
+        node = runtime.graph.nodes.get(node_id)
+        if node is not None:
+            return node.project_key
+    for edge_id in finding.affected_edge_ids:
+        edge = runtime.graph.edges.get(edge_id)
+        if edge is None:
+            continue
+        source_node = runtime.graph.nodes.get(edge.source_node_id)
+        if source_node is not None:
+            return source_node.project_key
+    return None
 
 
 @router.get("/schedule")

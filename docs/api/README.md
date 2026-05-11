@@ -20,6 +20,7 @@ Implemented route groups:
 
 - health and readiness
 - run execution and replay
+- finding list, detail, and status triage
 - graph projection and traceability chain
 - approvals and graph commit
 - feedback, eval candidates, and improvement candidates
