@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `f93b973 Add masking policy rehearsal gate`
 - `7992fc5 Tighten production readiness pass gate`
 - `133c2ad Refresh audit after decision email rehearsal`
 - `d2e83fe Add decision email export rehearsal`
@@ -67,7 +68,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25685460654` for `7992fc5`: completed successfully
+- GitHub Actions `CI` run `25685672834` for `f93b973`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
