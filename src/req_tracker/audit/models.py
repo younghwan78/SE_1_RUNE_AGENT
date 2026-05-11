@@ -36,3 +36,13 @@ class AuditEvent(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     schema_version: str = SCHEMA_VERSION
+
+
+class AuditRetentionPolicy(BaseModel):
+    """Retention policy for local and production audit stores."""
+
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
+
+    retention_days: int = Field(default=365, ge=1)
+    max_events: int = Field(default=100_000, ge=1)
+    schema_version: str = SCHEMA_VERSION

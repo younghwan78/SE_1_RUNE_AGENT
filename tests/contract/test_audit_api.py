@@ -59,3 +59,8 @@ def test_audit_events_capture_operational_actions(client: TestClient) -> None:
     feedback_audit = client.get("/api/v1/audit/events?action=feedback_recorded")
     assert feedback_audit.status_code == 200
     assert feedback_audit.json()[0]["reason_code"] == "weak_evidence"
+
+    retention = client.get("/api/v1/audit/retention")
+    assert retention.status_code == 200
+    assert retention.json()["policy"]["retention_days"] == 365
+    assert retention.json()["total_events"] >= 3

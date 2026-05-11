@@ -29,3 +29,12 @@ def list_audit_events(
             limit=capped_limit,
         )
     ]
+
+
+@router.get("/audit/retention")
+def audit_retention_report(request: Request) -> dict[str, Any]:
+    """Return audit retention policy and current non-destructive status."""
+    require_role(request, "operator")
+    runtime = request.app.state.runtime
+    report: dict[str, Any] = runtime.audit.retention_report()
+    return report

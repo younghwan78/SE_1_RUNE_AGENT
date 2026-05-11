@@ -65,7 +65,11 @@ Enable API-key RBAC for protected debug/audit routes:
 ```powershell
 $env:AUTH_MODE="api_key"
 $env:API_KEY="change-me"
+$env:AUDIT_RETENTION_DAYS="365"
+$env:AUDIT_MAX_EVENTS="100000"
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/events `
+  -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="operator"}
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/retention `
   -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="operator"}
 ```
 
@@ -116,6 +120,7 @@ Current local implementation:
 - traceability chain, run debug workbench, and audit events panel
 - debug side-by-side panes for LLM payloads and graph delta previews
 - debug artifact store root access policy with blocked-read audit events
+- audit retention policy status API
 - periodic analysis scheduler for server operation
 
 Enable local SQLite persistence:

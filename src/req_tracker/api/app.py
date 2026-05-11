@@ -16,6 +16,7 @@ from req_tracker.api.routes.runs import router as runs_router
 from req_tracker.api.routes.ui import UI_ASSET_DIR
 from req_tracker.api.routes.ui import router as ui_router
 from req_tracker.api.state import RuntimeState
+from req_tracker.audit.models import AuditRetentionPolicy
 from req_tracker.config.settings import Settings, get_settings
 from req_tracker.graph.base import GraphBackend
 from req_tracker.graph.memory_backend import MemoryGraphBackend
@@ -52,6 +53,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         state_store=state_store,
         graph=graph,
         vector=vector,
+        audit_policy=AuditRetentionPolicy(
+            retention_days=resolved_settings.audit_retention_days,
+            max_events=resolved_settings.audit_max_events,
+        ),
     )
 
     @asynccontextmanager

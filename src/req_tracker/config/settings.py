@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     qdrant_vector_size: int = Field(default=64, ge=8, validation_alias="QDRANT_VECTOR_SIZE")
     auth_mode: str = Field(default="local", validation_alias="AUTH_MODE")
     api_key: str = Field(default="", validation_alias="API_KEY")
+    audit_retention_days: int = Field(default=365, ge=1, validation_alias="AUDIT_RETENTION_DAYS")
+    audit_max_events: int = Field(default=100_000, ge=1, validation_alias="AUDIT_MAX_EVENTS")
     model_gateway_mode: str = Field(default="dummy", validation_alias="MODEL_GATEWAY_MODE")
     model_gateway_endpoint_url: str = Field(
         default="",

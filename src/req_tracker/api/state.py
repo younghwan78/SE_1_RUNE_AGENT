@@ -5,6 +5,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from req_tracker.approvals.service import ApprovalService
+from req_tracker.audit.models import AuditRetentionPolicy
 from req_tracker.audit.service import AuditService
 from req_tracker.debug.artifacts import LocalArtifactStore
 from req_tracker.debug.traces import InMemoryTraceRepository
@@ -41,6 +42,7 @@ class RuntimeState(BaseModel):
         state_store: StateStore | None = None,
         graph: GraphBackend | None = None,
         vector: VectorBackend | None = None,
+        audit_policy: AuditRetentionPolicy | None = None,
     ) -> "RuntimeState":
         """Create a local runtime state."""
         return cls(
@@ -49,7 +51,7 @@ class RuntimeState(BaseModel):
             graph=graph or MemoryGraphBackend(),
             vector=vector or MemoryVectorBackend(),
             approvals=ApprovalService(),
-            audit=AuditService(),
+            audit=AuditService(audit_policy),
             analyses={},
             scheduler=RunScheduler(schedule_config),
             state_store=state_store,
