@@ -147,6 +147,17 @@ Run a small API load smoke after the service is up:
 uv run python ops/load/smoke_load.py --base-url http://127.0.0.1:8000 --runs 5
 ```
 
+Validate the packaged Prometheus scrape config, alert rules, and Grafana
+dashboard before handing them to the platform team:
+
+```bash
+uv run python ops/observability/validate_observability_assets.py
+```
+
+The Prometheus starter config scrapes `/api/v1/metrics` from
+`127.0.0.1:8000`. Change the target in the deployment environment, not by
+committing company-local hostnames or credentials.
+
 Run the local model-gateway fallback smoke without a real model endpoint:
 
 ```bash
@@ -270,6 +281,12 @@ its created tables:
 
 ```bash
 uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py
+```
+
+Validate observability assets:
+
+```bash
+uv run python ops/observability/validate_observability_assets.py
 ```
 
 After real staging rehearsals, run:

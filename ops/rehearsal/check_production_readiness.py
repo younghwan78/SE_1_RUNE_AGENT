@@ -51,6 +51,7 @@ LOCAL_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
     ("uv", "run", "python", "ops/source/smoke_source_adapters.py"),
     ("uv", "run", "python", "ops/model_gateway/smoke_model_gateway.py"),
     ("uv", "run", "python", "ops/helm/validate_chart.py"),
+    ("uv", "run", "python", "ops/observability/validate_observability_assets.py"),
     ("uv", "run", "python", "ops/rehearsal/validate_postgres_migration_rollbacks.py"),
     ("uv", "run", "python", "ops/rehearsal/validate_postgres_typed_mirrors.py"),
     ("uv", "run", "python", "ops/rehearsal/validate_evidence_example.py"),

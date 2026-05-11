@@ -1,0 +1,186 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "panels": [
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum by (status_code) (rate(rune_http_requests_total[5m]))",
+          "legendFormat": "{{status_code}}"
+        }
+      ],
+      "title": "HTTP Requests",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum(rate(rune_http_request_duration_ms_sum[5m])) / clamp_min(sum(rate(rune_http_requests_total[5m])), 1)",
+          "legendFormat": "avg"
+        }
+      ],
+      "title": "HTTP Average Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "sum by (validation_status) (increase(rune_llm_calls_total[30m]))",
+          "legendFormat": "{{validation_status}}"
+        }
+      ],
+      "title": "LLM Validation Results",
+      "type": "barchart"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "rune_graph_nodes",
+          "legendFormat": "nodes"
+        },
+        {
+          "expr": "rune_graph_approved_edges",
+          "legendFormat": "approved edges"
+        }
+      ],
+      "title": "Approved Graph Size",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum by (status) (rune_approval_items_total)",
+          "legendFormat": "{{status}}"
+        },
+        {
+          "expr": "sum by (action) (rune_feedback_events_total)",
+          "legendFormat": "{{action}}"
+        }
+      ],
+      "title": "Approvals and Feedback",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "rune_scheduler_runs_started_total",
+          "legendFormat": "started"
+        },
+        {
+          "expr": "rune_scheduler_lease_skips_total",
+          "legendFormat": "lease skips"
+        }
+      ],
+      "title": "Scheduler",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${DS_PROMETHEUS}",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "rune_audit_events",
+          "legendFormat": "audit events"
+        }
+      ],
+      "title": "Audit Events",
+      "type": "stat"
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": [
+    "rune-agent",
+    "mbse"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 0,
+        "label": "Prometheus",
+        "name": "DS_PROMETHEUS",
+        "query": "prometheus",
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "RUNE Agent Operations",
+  "uid": "rune-agent-ops",
+  "version": 1
+}

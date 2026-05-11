@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `405a0bb Require masked restricted model requests`
 - `d40bef7 Guard API methods in surface test`
 - `e2ed56f Guard debug API surface`
 - `91c821c Refresh audit after OpenTelemetry wiring test`
@@ -105,7 +106,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 180 passed, 3 skipped
+- `uv run pytest`: 183 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -117,6 +118,7 @@ Latest local verification:
 - `uv run python ops/source/rehearse_decision_email_export.py`: failed as expected on this local shell because `RUNE_EMAIL_EXPORT_PATH` is unset; output masks path state and lists missing config
 - `uv run python ops/model_gateway/smoke_model_gateway.py`: passed
 - `uv run python ops/ui/smoke_operator_ui.py`: passed, validating static operator UI assets, graph controls, SVG renderer hooks, and `RUNE_SCALE_150` projection modes with 150 total nodes, 120 visible overview nodes, 103 pending edges, and 9 orphan nodes
+- `uv run python ops/observability/validate_observability_assets.py`: passed, validating Prometheus scrape config, alert rules, Grafana dashboard JSON, required runtime metric references, and absence of hardcoded observability credentials
 - `uv run python ops/model_gateway/rehearse_model_gateway.py`: failed as expected on this local shell because `MODEL_GATEWAY_ENDPOINT_URL` is unset; output masks API key state and lists missing config
 - `uv run python ops/security/rehearse_trusted_proxy_auth.py`: failed as expected on this local shell because `RUNE_API_BASE_URL` and `TRUSTED_PROXY_SECRET` are unset; output masks secret state and lists missing config
 - `uv run python ops/security/rehearse_masking_policy.py`: passed, verifying representative sensitive inputs are redacted without printing raw sensitive strings or forbidden patterns
@@ -143,7 +145,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25697088983` for `d40bef7`: completed successfully
+- GitHub Actions `CI` run `25697389737` for `405a0bb`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -156,7 +158,7 @@ Latest GitHub verification:
 | Data and model policies are fixed | `docs/security/DATA_POLICY.md`, `docs/runbooks/MODEL_POLICY.md`, `config/model_profiles.json`, `config/prompt_versions.json`, `src/req_tracker/model_gateway/models.py`, `src/req_tracker/model_gateway/policy.py`, `src/req_tracker/api/routes/admin.py`, `ops/security/rehearse_masking_policy.py`, `ops/model_gateway/smoke_model_gateway.py` | Complete for local policy baseline, restricted/confidential `masking_applied` and `access_checked` enforcement, and gated activation records; company model profile approval pending |
 | Release blocker coverage | `ops/security/check_release_blockers.py`, `ops/security/rehearse_masking_policy.py`, `tests/contract/test_security_api.py`, `tests/contract/test_admin_registry_api.py`, `tests/contract/test_replay_feedback_api.py`, `tests/unit/storage/test_postgres_store.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `tests/unit/model_gateway/test_dummy_gateway.py` | Local release-blocker evidence manifest complete, including explicit migration rollback coverage validation and restricted model payload masking/access policy tests; company/staging evidence still required for real endpoints |
 | Structured request logging, trace context, and OpenTelemetry export foundation | `src/req_tracker/config/logging.py`, `src/req_tracker/api/app.py`, `src/req_tracker/observability/tracing.py`, `src/req_tracker/observability/otel.py`, `tests/contract/test_health_api.py`, `tests/unit/config/test_logging.py`, `tests/unit/observability/test_tracing.py`, `tests/unit/observability/test_otel.py` | Complete for JSON request logs with correlation id, W3C trace id, span id, user id, method, path, status, duration, `traceparent` response propagation, optional OTLP FastAPI span export, disabled/missing-endpoint safeguards, and enabled-path exporter/instrumentor wiring tests |
-| Runtime metrics and scrape surface | `src/req_tracker/observability/metrics.py`, `src/req_tracker/api/routes/health.py`, `/api/v1/metrics`, `/api/v1/metrics/summary`, `ops/rehearsal/run_full_stack_rehearsal.py`, `tests/contract/test_health_api.py`, `tests/unit/observability/test_metrics.py`, `tests/unit/ops/test_full_stack_rehearsal.py` | Complete for in-process HTTP/runtime/LLM/graph/approval/finding/feedback/audit/scheduler counters, Prometheus text exposition, and disposable full-stack metrics rehearsal; OpenTelemetry collector/Grafana deployment wiring remains a target-environment task |
+| Runtime metrics and scrape surface | `src/req_tracker/observability/metrics.py`, `src/req_tracker/api/routes/health.py`, `/api/v1/metrics`, `/api/v1/metrics/summary`, `ops/observability/prometheus.yml`, `ops/observability/rune-agent-alerts.yml`, `ops/observability/grafana-dashboard.json`, `ops/observability/validate_observability_assets.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `tests/contract/test_health_api.py`, `tests/unit/observability/test_metrics.py`, `tests/unit/ops/test_full_stack_rehearsal.py`, `tests/unit/ops/test_observability_assets.py` | Complete for in-process HTTP/runtime/LLM/graph/approval/finding/feedback/audit/scheduler counters, Prometheus text exposition, packaged Prometheus scrape/alert starter assets, Grafana dashboard JSON, asset validation gate, and disposable full-stack metrics rehearsal; company collector and dashboard import remain target-environment tasks |
 | Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, `ops/source/smoke_source_adapters.py`, `ops/source/rehearse_company_sources.py`, `ops/source/rehearse_decision_email_export.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry, network `OSError` retry, pagination, permission-warning, local HTTP smoke validation, env-driven company sandbox rehearsal entrypoint, and restricted decision/email export rehearsal entrypoint complete; Email live access and real company sandbox validation pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test, readiness API, persisted runtime restore test, `ops/security/rehearse_masking_policy.py` | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
@@ -179,7 +181,7 @@ Latest GitHub verification:
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `ops/rehearsal/validate_postgres_typed_mirrors.py`, `ops/rehearsal/validate_evidence_example.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, PostgreSQL migration rollback validation, PostgreSQL typed mirror drift validation, review-safe manual-evidence template generation, non-passable committed evidence example validation, reviewer metadata, schema-version, non-empty evidence, unique check-id, and UTC review timestamp enforcement for passed manual evidence, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
 | Migration and Helm operation tracks | packaged migrations under `src/req_tracker/storage/migrations/postgres`, `ops/migrations/README.md`, `ops/helm/rune-agent`, `ops/helm/validate_chart.py`, `tests/unit/ops/test_helm_chart.py` | Migration foundation and production-shaped Helm scaffold complete with local structural validation; target-cluster `helm lint/template` and platform-specific values remain pending until Kubernetes environment details are available |
 | Eval/security/replay test tracks | `tests/unit/evals`, `tests/contract/test_replay_feedback_api.py`, `tests/contract/test_security_api.py`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md` | Current coverage exists; dedicated folders anchored for larger end-to-end fixtures |
-| CI | `.github/workflows/ci.yml` runs ruff, mypy, pytest, masking rehearsal, release-blocker coverage, source/model gateway smokes, Helm structural validation, PostgreSQL migration rollback validation, PostgreSQL typed mirror validation, readiness evidence template smoke, readiness example safety validation, CI gate coverage validation, operator UI graph smoke, and feedback eval rehearsal | Complete for deterministic local gates in GitHub Actions with automated drift detection; disposable Docker/full-stack and company/staging gates remain runbook/readiness responsibilities |
+| CI | `.github/workflows/ci.yml` runs ruff, mypy, pytest, masking rehearsal, release-blocker coverage, source/model gateway smokes, Helm structural validation, observability asset validation, PostgreSQL migration rollback validation, PostgreSQL typed mirror validation, readiness evidence template smoke, readiness example safety validation, CI gate coverage validation, operator UI graph smoke, and feedback eval rehearsal | Complete for deterministic local gates in GitHub Actions with automated drift detection; disposable Docker/full-stack and company/staging gates remain runbook/readiness responsibilities |
 
 ## 3. Remaining Implementation Backlog
 
@@ -257,12 +259,13 @@ Latest GitHub verification:
 ## 4. Latest Local Verification
 
 2026-05-12 local verification after runtime metrics, trace-context,
-OpenTelemetry export foundation, and restricted model payload policy
-implementation:
+OpenTelemetry export foundation, restricted model payload policy, and
+observability asset implementation:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `180 passed, 3 skipped`
+- `uv run pytest`: `183 passed, 3 skipped`
+- `uv run python ops/observability/validate_observability_assets.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including
   metrics surface check with `http_total_requests=7`, `graph_nodes=14`,
   `llm_calls=1`, OpenTelemetry disabled-by-default health status, and

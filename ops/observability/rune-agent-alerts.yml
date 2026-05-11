@@ -1,0 +1,38 @@
+groups:
+  - name: rune-agent.rules
+    rules:
+      - alert: RuneAgentHttp5xxResponses
+        expr: increase(rune_http_requests_total{status_code=~"5.."}[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: RUNE API is returning 5xx responses.
+          description: Check structured logs with trace_id and correlation_id.
+
+      - alert: RuneAgentLlmValidationFailures
+        expr: increase(rune_llm_calls_total{validation_status="failed"}[15m]) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: RUNE model gateway has structured validation failures.
+          description: Inspect run LLM calls and replay diff before changing prompts or models.
+
+      - alert: RuneAgentSchedulerLeaseSkips
+        expr: increase(rune_scheduler_lease_skips_total[15m]) > 3
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: RUNE scheduler workers are skipping runs because another lease holder is active.
+          description: Verify replica count, lease name, and PostgreSQL scheduler_leases state.
+
+      - alert: RuneAgentNoGraphNodes
+        expr: rune_graph_nodes == 0
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: RUNE graph projection has no nodes.
+          description: Confirm ingestion/analyze runs are expected for this environment.
