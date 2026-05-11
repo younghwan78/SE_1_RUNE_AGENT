@@ -10,6 +10,12 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `f501294 Add operator UI graph smoke gate`
+- `78e65c6 Add release blocker coverage gate`
+- `660cb07 Gate kubernetes helm release evidence`
+- `f17edfd Add helm chart readiness validation`
+- `815d056 Add production helm scaffold`
+- `8902254 Add postgres-backed scheduler lease`
 - `4a82f90 Add operation state postgres mirrors`
 - `2574604 Refresh audit after API surface guard`
 - `54d2db6 Add production API surface guard`
@@ -101,7 +107,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25690546226` for `4a82f90`: completed successfully
+- GitHub Actions `CI` run `25692002152` for `f501294`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
