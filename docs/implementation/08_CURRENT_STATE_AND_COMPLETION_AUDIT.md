@@ -142,6 +142,7 @@ Latest GitHub verification:
 | Data and model policies are fixed | `docs/security/DATA_POLICY.md`, `docs/runbooks/MODEL_POLICY.md`, `config/model_profiles.json`, `config/prompt_versions.json`, `src/req_tracker/model_gateway/policy.py`, `src/req_tracker/api/routes/admin.py`, `ops/security/rehearse_masking_policy.py`, `ops/model_gateway/smoke_model_gateway.py` | Complete for local policy baseline and gated activation records; company model profile approval pending |
 | Release blocker coverage | `ops/security/check_release_blockers.py`, `ops/security/rehearse_masking_policy.py`, `tests/contract/test_security_api.py`, `tests/contract/test_admin_registry_api.py`, `tests/contract/test_replay_feedback_api.py`, `tests/unit/storage/test_postgres_store.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `tests/unit/model_gateway/test_dummy_gateway.py` | Local release-blocker evidence manifest complete, including explicit migration rollback coverage validation; company/staging evidence still required for real endpoints |
 | Structured request logging | `src/req_tracker/config/logging.py`, `src/req_tracker/api/app.py`, `tests/contract/test_health_api.py`, `tests/unit/config/test_logging.py` | Complete for JSON request logs with correlation id, user id, method, path, status, and duration |
+| Runtime metrics and scrape surface | `src/req_tracker/observability/metrics.py`, `src/req_tracker/api/routes/health.py`, `/api/v1/metrics`, `/api/v1/metrics/summary`, `tests/contract/test_health_api.py`, `tests/unit/observability/test_metrics.py` | Complete for in-process HTTP/runtime/LLM/graph/approval/finding/feedback/audit/scheduler counters and Prometheus text exposition; OpenTelemetry collector/Grafana deployment wiring remains a target-environment task |
 | Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, `ops/source/smoke_source_adapters.py`, `ops/source/rehearse_company_sources.py`, `ops/source/rehearse_decision_email_export.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry, network `OSError` retry, pagination, permission-warning, local HTTP smoke validation, env-driven company sandbox rehearsal entrypoint, and restricted decision/email export rehearsal entrypoint complete; Email live access and real company sandbox validation pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test, readiness API, persisted runtime restore test, `ops/security/rehearse_masking_policy.py` | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
@@ -236,12 +237,27 @@ Latest GitHub verification:
 - Run `helm lint ops/helm/rune-agent` and `helm template` with company values
   once Helm and the target Kubernetes policy are available.
 
-## 4. Completion Gate
+## 4. Latest Local Verification
+
+2026-05-12 local verification after runtime metrics implementation:
+
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `172 passed, 3 skipped`
+- `uv run python ops/security/check_release_blockers.py`: passed
+- `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed
+- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+  all local regression gates passed, while overall readiness remained failed as
+  expected because company/staging PostgreSQL, Neo4j, Qdrant, model gateway,
+  trusted proxy, artifact storage, source, backup/restore, and load-test
+  evidence variables are not configured in the local workstation environment.
+
+## 5. Completion Gate
 
 The overall production objective is not complete yet. The current repo is a
 validated local/dummy, persistence-foundation, backend-interface, source-adapter,
-debuggability, disposable backend integration, full-stack rehearsal, and
-operations-rehearsal stage. The next concrete completion gate requires
+debuggability, runtime-metrics, disposable backend integration, full-stack
+rehearsal, and operations-rehearsal stage. The next concrete completion gate requires
 company/staging PostgreSQL, Neo4j, Qdrant, JIRA/Confluence, SSO/OIDC proxy, and
 a real sandbox model endpoint so integration, replay, backup, restore, load,
 live-source, and live-provider validation can run against real organization

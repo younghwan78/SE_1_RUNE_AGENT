@@ -19,6 +19,8 @@ def test_production_plan_endpoint_surface_is_registered(client: TestClient) -> N
         "/api/v1/audit/events",
         "/api/v1/runs/ingest",
         "/api/v1/runs/analyze",
+        "/api/v1/metrics",
+        "/api/v1/metrics/summary",
         "/api/v1/approvals/{approval_id}/decision",
         "/api/v1/findings/{finding_id}/status",
         "/api/v1/feedback",

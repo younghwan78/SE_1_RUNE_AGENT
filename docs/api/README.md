@@ -18,7 +18,7 @@ contract tests before release.
 
 Implemented route groups:
 
-- health and readiness
+- health, readiness, and runtime metrics
 - run ingestion, analysis execution, and replay
 - finding list, detail, and status triage
 - project list, graph node/edge lists, graph projection, and traceability chain

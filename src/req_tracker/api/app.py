@@ -26,6 +26,7 @@ from req_tracker.config.settings import Settings, get_settings
 from req_tracker.graph.base import GraphBackend
 from req_tracker.graph.memory_backend import MemoryGraphBackend
 from req_tracker.graph.neo4j_backend import Neo4jGraphBackend
+from req_tracker.observability.metrics import InMemoryMetrics
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.storage.postgres_store import PostgreSQLStateStore
 from req_tracker.storage.sqlite_store import SQLiteStateStore
@@ -50,6 +51,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         state_store = PostgreSQLStateStore(resolved_settings.postgres_dsn)
     elif resolved_settings.state_store != "memory":
         raise ValueError(f"unsupported STATE_STORE: {resolved_settings.state_store}")
+    metrics = InMemoryMetrics()
     runtime = RuntimeState.create(
         resolved_settings.artifact_root,
         ScheduleConfig(
@@ -104,6 +106,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = resolved_settings
     app.state.runtime = runtime
+    app.state.metrics = metrics
 
     @app.middleware("http")
     async def add_correlation_id(
@@ -115,19 +118,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         request.state.correlation_id = correlation_id
         started = perf_counter()
-        response = await call_next(request)
-        response.headers["x-correlation-id"] = correlation_id
+        try:
+            response = await call_next(request)
+        except Exception:
+            duration_ms = round((perf_counter() - started) * 1000, 3)
+            _record_request_metrics(
+                metrics=metrics,
+                request=request,
+                correlation_id=correlation_id,
+                user_id=_request_user_id(request, resolved_settings),
+                status_code=500,
+                duration_ms=duration_ms,
+            )
+            raise
         duration_ms = round((perf_counter() - started) * 1000, 3)
-        REQUEST_LOGGER.info(
-            "http_request",
-            extra={
-                "correlation_id": correlation_id,
-                "user_id": _request_user_id(request, resolved_settings),
-                "method": request.method,
-                "path": request.url.path,
-                "status_code": response.status_code,
-                "duration_ms": duration_ms,
-            },
+        response.headers["x-correlation-id"] = correlation_id
+        _record_request_metrics(
+            metrics=metrics,
+            request=request,
+            correlation_id=correlation_id,
+            user_id=_request_user_id(request, resolved_settings),
+            status_code=response.status_code,
+            duration_ms=duration_ms,
         )
         return response
 
@@ -152,6 +164,34 @@ def _request_user_id(request: Request, settings: Settings) -> str:
     if settings.auth_mode == "local":
         return "local"
     return "anonymous"
+
+
+def _record_request_metrics(
+    *,
+    metrics: InMemoryMetrics,
+    request: Request,
+    correlation_id: str,
+    user_id: str,
+    status_code: int,
+    duration_ms: float,
+) -> None:
+    metrics.observe_http_request(
+        method=request.method,
+        path=request.url.path,
+        status_code=status_code,
+        duration_ms=duration_ms,
+    )
+    REQUEST_LOGGER.info(
+        "http_request",
+        extra={
+            "correlation_id": correlation_id,
+            "user_id": user_id,
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": status_code,
+            "duration_ms": duration_ms,
+        },
+    )
 
 
 def _create_graph_backend(settings: Settings) -> GraphBackend:

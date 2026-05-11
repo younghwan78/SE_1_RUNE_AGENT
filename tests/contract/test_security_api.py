@@ -48,6 +48,14 @@ def test_api_key_auth_protects_debug_and_audit_routes(tmp_path) -> None:  # type
             "/api/v1/audit/retention",
             headers={"x-rune-api-key": "secret", "x-rune-role": "operator"},
         )
+        metrics_forbidden = client.get(
+            "/api/v1/metrics/summary",
+            headers={"x-rune-api-key": "secret", "x-rune-role": "developer"},
+        )
+        metrics_allowed = client.get(
+            "/api/v1/metrics/summary",
+            headers={"x-rune-api-key": "secret", "x-rune-role": "operator"},
+        )
 
     assert missing_key.status_code == 401
     assert bad_role.status_code == 403
@@ -58,6 +66,8 @@ def test_api_key_auth_protects_debug_and_audit_routes(tmp_path) -> None:  # type
     assert archive_forbidden.status_code == 403
     assert audit_allowed.status_code == 200
     assert retention_allowed.status_code == 200
+    assert metrics_forbidden.status_code == 403
+    assert metrics_allowed.status_code == 200
 
 
 def test_local_auth_mode_keeps_existing_debug_access(tmp_path) -> None:  # type: ignore[no-untyped-def]

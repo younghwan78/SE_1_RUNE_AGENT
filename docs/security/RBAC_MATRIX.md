@@ -26,6 +26,8 @@ Current protected routes:
 | `GET /api/v1/debug/runs` | `developer` | exposes run inventory for debug navigation |
 | `GET /api/v1/debug/runs/{run_id}/summary` | `developer` | may expose model trace and artifact refs |
 | `GET /api/v1/debug/runs/{run_id}/diff-view` | `developer` | exposes side-by-side LLM and graph delta debug payloads |
+| `GET /api/v1/metrics` | `operator` | exposes operational counters for Prometheus scraping |
+| `GET /api/v1/metrics/summary` | `operator` | exposes runtime counters and scheduler state |
 | `GET /api/v1/debug/approvals/{approval_id}/lineage` | `developer` | links reviewer decisions, feedback, audit |
 | `GET /api/v1/debug/artifact` | `developer` | reads raw local debug artifacts |
 | `POST /api/v1/feedback` | `developer` | records reviewer feedback that feeds eval datasets |

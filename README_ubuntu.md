@@ -115,6 +115,14 @@ curl -s http://127.0.0.1:8000/api/v1/ready
 curl -s -H "x-rune-trusted-secret: $TRUSTED_PROXY_SECRET" \
   -H "x-rune-user: smoke.operator@example.com" \
   -H "x-rune-groups: rune-operators" \
+  http://127.0.0.1:8000/api/v1/metrics
+curl -s -H "x-rune-trusted-secret: $TRUSTED_PROXY_SECRET" \
+  -H "x-rune-user: smoke.operator@example.com" \
+  -H "x-rune-groups: rune-operators" \
+  http://127.0.0.1:8000/api/v1/metrics/summary
+curl -s -H "x-rune-trusted-secret: $TRUSTED_PROXY_SECRET" \
+  -H "x-rune-user: smoke.operator@example.com" \
+  -H "x-rune-groups: rune-operators" \
   -H "x-rune-projects: RUNE_CAM_ALPHA" \
   -X POST http://127.0.0.1:8000/api/v1/schedule/run-now
 curl -s -H "x-rune-trusted-secret: $TRUSTED_PROXY_SECRET" \

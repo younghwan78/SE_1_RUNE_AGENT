@@ -3,6 +3,10 @@
 from typing import Any
 
 from fastapi import APIRouter, Request
+from fastapi.responses import PlainTextResponse
+
+from req_tracker.api.security import require_role
+from req_tracker.observability.metrics import build_metrics_summary, render_prometheus_metrics
 
 router = APIRouter(tags=["health"])
 
@@ -41,6 +45,30 @@ def readiness(request: Request) -> dict[str, Any]:
         "checks": checks,
         "schema_version": "v1",
     }
+
+
+@router.get("/metrics/summary")
+def metrics_summary(request: Request) -> dict[str, Any]:
+    """Return operator-facing runtime metrics as JSON."""
+    require_role(request, "operator")
+    return build_metrics_summary(
+        runtime=request.app.state.runtime,
+        metrics=request.app.state.metrics,
+    )
+
+
+@router.get("/metrics", response_class=PlainTextResponse)
+def prometheus_metrics(request: Request) -> PlainTextResponse:
+    """Return a Prometheus text exposition for low-cardinality runtime metrics."""
+    require_role(request, "operator")
+    summary = build_metrics_summary(
+        runtime=request.app.state.runtime,
+        metrics=request.app.state.metrics,
+    )
+    return PlainTextResponse(
+        render_prometheus_metrics(summary),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 def _state_store_check(runtime: Any) -> dict[str, Any]:
