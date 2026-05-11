@@ -110,6 +110,14 @@ class RuntimeState(BaseModel):
         trigger_source: TriggerSource = "manual",
     ) -> AnalysisResult:
         """Run analysis and store the result."""
+        self._record_run_started(
+            run_id=run_id,
+            project_key=project_key,
+            scenario=scenario,
+            run_type="analysis",
+            triggered_by=triggered_by,
+            trigger_source=trigger_source,
+        )
         result = self.workflow().run(
             run_id=run_id,
             project_key=project_key,
@@ -148,6 +156,14 @@ class RuntimeState(BaseModel):
         trigger_source: TriggerSource = "manual",
     ) -> IngestionResult:
         """Run deterministic ingestion and store the result."""
+        self._record_run_started(
+            run_id=run_id,
+            project_key=project_key,
+            scenario=scenario,
+            run_type="ingestion",
+            triggered_by=triggered_by,
+            trigger_source=trigger_source,
+        )
         result = self.workflow().ingest(
             run_id=run_id,
             project_key=project_key,
@@ -172,6 +188,31 @@ class RuntimeState(BaseModel):
         )
         self.persist_ingestion_result(result)
         return result
+
+    def _record_run_started(
+        self,
+        *,
+        run_id: str,
+        project_key: str,
+        scenario: str,
+        run_type: str,
+        triggered_by: str,
+        trigger_source: TriggerSource,
+    ) -> None:
+        """Record the start boundary for a runtime run."""
+        self.audit.record(
+            action="run_started",
+            actor_id=triggered_by,
+            actor_role=_run_actor_role(trigger_source),
+            project_key=project_key,
+            target_type="run",
+            target_id=run_id,
+            metadata={
+                "scenario": scenario,
+                "run_type": run_type,
+                "trigger_source": trigger_source,
+            },
+        )
 
     def persist_ingestion_result(self, result: IngestionResult) -> None:
         """Persist completed ingestion outputs into the configured state store."""
@@ -466,3 +507,9 @@ class RuntimeState(BaseModel):
         for payload in self.state_store.list("graph_edges"):
             edge = TraceabilityEdge.model_validate(payload)
             self.graph.edges[edge.edge_id] = edge
+
+
+def _run_actor_role(trigger_source: TriggerSource) -> str:
+    if trigger_source in {"schedule", "system"}:
+        return "system"
+    return "developer"

@@ -51,10 +51,20 @@ def test_audit_events_capture_operational_actions(client: TestClient) -> None:
     assert audit.status_code == 200
     actions = {event["action"] for event in audit.json()}
     assert {
+        "run_started",
         "run_completed",
         "approval_decided",
         "debug_artifact_read",
     } <= actions
+    run_started = next(event for event in audit.json() if event["action"] == "run_started")
+    assert run_started["actor_id"] == "local"
+    assert run_started["actor_role"] == "developer"
+    assert run_started["target_id"] == "run_audit_1"
+    assert run_started["metadata"] == {
+        "scenario": "RUNE_CAM_ALPHA",
+        "run_type": "analysis",
+        "trigger_source": "api",
+    }
 
     feedback_audit = client.get("/api/v1/audit/events?action=feedback_recorded")
     assert feedback_audit.status_code == 200

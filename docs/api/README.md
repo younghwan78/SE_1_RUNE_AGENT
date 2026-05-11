@@ -39,6 +39,11 @@ Implemented route groups:
 - scheduler controls
 - static UI route
 
+Run execution records both `run_started` and `run_completed` audit events.
+The start event carries `scenario`, `run_type`, and `trigger_source` metadata
+so operators can distinguish API, manual, scheduled, and system-originated
+runs even when a later stage needs failure triage.
+
 Run step responses include step-level `retrieval_context_ref`,
 `validation_status`, and `validation_result` fields so debug screens can show
 the stage retrieval context and structured validation result without requiring a

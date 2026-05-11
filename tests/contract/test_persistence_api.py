@@ -172,10 +172,16 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     assert finding_detail.json()["approval_status"] == "acknowledged"
     assert audit.status_code == 200
     assert {event["action"] for event in audit.json()} >= {
+        "run_started",
         "run_completed",
         "approval_decided",
         "finding_status_changed",
     }
+    restored_run_started = next(
+        event for event in audit.json() if event["action"] == "run_started"
+    )
+    assert restored_run_started["metadata"]["run_type"] == "analysis"
+    assert restored_run_started["metadata"]["trigger_source"] == "api"
     assert activation_audit.status_code == 200
     assert activation_audit.json()[0]["action"] == "prompt_version_activated"
     assert rollback_audit.status_code == 200

@@ -34,10 +34,16 @@ def test_ingest_run_records_source_snapshots_without_graph_reasoning(
 
     findings = client.get("/api/v1/findings")
     approvals = client.get("/api/v1/approvals")
+    audit = client.get(
+        "/api/v1/audit/events?project_key=RUNE_CAM_ALPHA&action=run_started"
+    )
     assert findings.status_code == 200
     assert findings.json() == []
     assert approvals.status_code == 200
     assert approvals.json() == []
+    assert audit.status_code == 200
+    assert audit.json()[0]["target_id"] == "run_ingest_api_1"
+    assert audit.json()[0]["metadata"]["run_type"] == "ingestion"
 
 
 def test_ingest_run_idempotency_key_reuses_original_response(client: TestClient) -> None:
