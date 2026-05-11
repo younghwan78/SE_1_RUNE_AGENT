@@ -1,0 +1,33 @@
+# API Surface
+
+This directory anchors the API documentation track from
+`PRODUCTION_EXECUTION_PLAN.md`.
+
+The current source of truth for implemented routes is:
+
+- `src/req_tracker/api/app.py`
+- `src/req_tracker/api/routes/`
+- `tests/contract/`
+
+Runtime OpenAPI can be exposed in non-production environments by setting
+`ENABLE_DOCS=true` and opening `/docs` or `/openapi.json`.
+
+Production default is `ENABLE_DOCS=false`. Any externally published API
+contract must be generated from the FastAPI app and reviewed with the matching
+contract tests before release.
+
+Implemented route groups:
+
+- health and readiness
+- run execution and replay
+- graph projection and traceability chain
+- approvals and graph commit
+- feedback, eval candidates, and improvement candidates
+- debug traces and diff views
+- audit events and retention
+- scheduler controls
+- static UI route
+
+Do not document MCP tool names or company-specific source credentials here.
+JIRA, Confluence, and Email access procedures belong in `.claude/skills/` and
+company-local MCP configuration.

@@ -37,6 +37,22 @@ POC에서 그대로 가져오지 않을 것:
 | `07_GRAPH_VIEW_SCALABILITY_PLAN.md` | 100+ node graph view 확장 계획과 단계별 구현 전략 |
 | `08_CURRENT_STATE_AND_COMPLETION_AUDIT.md` | 구현 증거, 남은 backlog, completion gate 점검 |
 
+## 운영 문서 기준점
+
+계획서의 기대 repo shape와 현재 구현 위치를 연결하는 기준 문서는 다음 위치에 둔다.
+
+| 경로 | 역할 |
+| --- | --- |
+| `docs/api/README.md` | FastAPI route/OpenAPI 문서화 기준 |
+| `docs/ontology/ONTOLOGY_V1.md` | ontology v1의 사람이 읽는 기준 문서 |
+| `docs/security/RBAC_MATRIX.md` | 역할/권한 matrix |
+| `docs/runbooks/BACKUP_RESTORE.md` | backup/restore runbook |
+| `ops/migrations/README.md` | packaged PostgreSQL migration 운영 기준 |
+| `ops/helm/README.md` | Helm packaging deferred scope와 진입 조건 |
+| `tests/evals/README.md` | eval regression test 확장 위치 |
+| `tests/security/README.md` | security release-blocking test 확장 위치 |
+| `tests/replay/README.md` | replay reproducibility test 확장 위치 |
+
 ## 첫 구현 원칙
 
 - 실제 JIRA가 없어도 전체 pipeline shape가 검증되어야 한다.
