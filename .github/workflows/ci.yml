@@ -43,6 +43,9 @@ jobs:
       - name: Release blocker coverage gate
         run: uv run python ops/security/check_release_blockers.py
 
+      - name: Source boundary validation
+        run: uv run python ops/source/validate_source_boundaries.py
+
       - name: Source adapter smoke
         run: uv run python ops/source/smoke_source_adapters.py
 
