@@ -21,7 +21,7 @@ Implemented route groups:
 - health and readiness
 - run ingestion, analysis execution, and replay
 - finding list, detail, and status triage
-- graph projection and traceability chain
+- project list, graph node/edge lists, graph projection, and traceability chain
 - approvals and graph commit
 - feedback, eval candidates, and improvement candidates
 - admin model profile and prompt version activation records

@@ -68,3 +68,39 @@ def test_graph_projection_scale_modes(client: TestClient) -> None:
     assert pending_edge_payload["edges"][0]["approval_id"]
     assert pending_edge_payload["edges"][0]["source_node_name"]
     assert pending_edge_payload["edges"][0]["target_node_name"]
+
+
+def test_project_node_and_edge_list_read_apis(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/runs/analyze",
+        json={
+            "project_key": "RUNE_CAM_ALPHA",
+            "scenario": "RUNE_CAM_ALPHA",
+            "run_id": "run_read_lists",
+        },
+    )
+    assert response.status_code == 200
+
+    projects = client.get("/api/v1/projects")
+    nodes = client.get("/api/v1/graph/nodes?project_key=RUNE_CAM_ALPHA")
+    edges = client.get("/api/v1/graph/edges?project_key=RUNE_CAM_ALPHA")
+    approved_only = client.get(
+        "/api/v1/graph/edges?project_key=RUNE_CAM_ALPHA&include_pending=false"
+    )
+
+    assert projects.status_code == 200
+    assert projects.json()[0]["project_key"] == "RUNE_CAM_ALPHA"
+    assert projects.json()[0]["run_count"] == 1
+    assert projects.json()[0]["node_count"] == 10
+
+    assert nodes.status_code == 200
+    assert len(nodes.json()) == 10
+    assert nodes.json()[0]["project_key"] == "RUNE_CAM_ALPHA"
+
+    assert edges.status_code == 200
+    assert len(edges.json()) >= 1
+    assert edges.json()[0]["approval_status"] == "pending"
+    assert edges.json()[0]["approval_id"]
+
+    assert approved_only.status_code == 200
+    assert approved_only.json() == []

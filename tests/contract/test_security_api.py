@@ -328,9 +328,28 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
         )
         missing_findings_key = client.get("/api/v1/findings")
         missing_runs_key = client.get("/api/v1/runs")
+        missing_projects_key = client.get("/api/v1/projects")
         viewer_findings = client.get("/api/v1/findings", headers=viewer_headers)
         viewer_runs = client.get("/api/v1/runs", headers=viewer_headers)
+        viewer_projects = client.get("/api/v1/projects", headers=viewer_headers)
+        wrong_project_projects = client.get("/api/v1/projects", headers=wrong_project_headers)
         wrong_project_runs = client.get("/api/v1/runs", headers=wrong_project_headers)
+        viewer_nodes = client.get(
+            "/api/v1/graph/nodes?project_key=RUNE_CAM_ALPHA",
+            headers=viewer_headers,
+        )
+        wrong_project_nodes = client.get(
+            "/api/v1/graph/nodes?project_key=RUNE_CAM_ALPHA",
+            headers=wrong_project_headers,
+        )
+        viewer_edges = client.get(
+            "/api/v1/graph/edges?project_key=RUNE_CAM_ALPHA",
+            headers=viewer_headers,
+        )
+        wrong_project_edges = client.get(
+            "/api/v1/graph/edges?project_key=RUNE_CAM_ALPHA",
+            headers=wrong_project_headers,
+        )
         developer_findings = client.get("/api/v1/findings", headers=developer_headers)
         wrong_project_findings = client.get("/api/v1/findings", headers=wrong_project_headers)
         finding_id = developer_findings.json()[0]["finding_id"]
@@ -418,11 +437,20 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
     assert developer_ingest.status_code == 200
     assert missing_findings_key.status_code == 401
     assert missing_runs_key.status_code == 401
+    assert missing_projects_key.status_code == 401
     assert viewer_findings.status_code == 403
     assert viewer_runs.status_code == 200
     assert any(run["run_id"] == "run_query_auth" for run in viewer_runs.json())
+    assert viewer_projects.status_code == 200
+    assert viewer_projects.json()[0]["project_key"] == "RUNE_CAM_ALPHA"
+    assert wrong_project_projects.status_code == 200
+    assert wrong_project_projects.json() == []
     assert wrong_project_runs.status_code == 200
     assert wrong_project_runs.json() == []
+    assert viewer_nodes.status_code == 200
+    assert viewer_edges.status_code == 200
+    assert wrong_project_nodes.status_code == 403
+    assert wrong_project_edges.status_code == 403
     assert developer_findings.status_code == 200
     assert wrong_project_findings.status_code == 200
     assert wrong_project_findings.json() == []

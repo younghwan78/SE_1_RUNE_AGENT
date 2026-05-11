@@ -4,12 +4,88 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 
-from req_tracker.api.security import require_project
+from req_tracker.api.security import require_project, require_role
 from req_tracker.graph.chain import GraphChainDirection, build_traceability_chain
 from req_tracker.graph.projection import GraphEdgeFilter, GraphViewMode, build_graph_projection
 from req_tracker.ontology.models import TraceabilityEdge
 
 router = APIRouter(tags=["graph"])
+
+
+@router.get("/projects")
+def list_projects(request: Request) -> list[dict[str, Any]]:
+    """Return projects visible to the current user."""
+    user = require_role(request, "viewer")
+    runtime = request.app.state.runtime
+    project_keys = {
+        run.project_key
+        for run in runtime.traces.runs.values()
+    }
+    project_keys.update(node.project_key for node in runtime.graph.nodes.values())
+    project_keys.add(runtime.scheduler.config.project_key)
+    visible_projects = [
+        project_key
+        for project_key in sorted(project_keys)
+        if "*" in user.project_keys or project_key in user.project_keys
+    ]
+    return [
+        {
+            "project_key": project_key,
+            "run_count": sum(
+                1 for run in runtime.traces.runs.values() if run.project_key == project_key
+            ),
+            "node_count": sum(
+                1 for node in runtime.graph.nodes.values() if node.project_key == project_key
+            ),
+            "approved_edge_count": _approved_edge_count(runtime, project_key),
+        }
+        for project_key in visible_projects
+    ]
+
+
+@router.get("/graph/nodes")
+def list_graph_nodes(
+    request: Request,
+    project_key: str = "RUNE_CAM_ALPHA",
+    limit: int = 500,
+) -> list[dict[str, Any]]:
+    """Return graph nodes for a project."""
+    require_project(request, project_key)
+    runtime = request.app.state.runtime
+    capped_limit = min(max(limit, 1), 1000)
+    nodes = [
+        node
+        for node in runtime.graph.nodes.values()
+        if node.project_key == project_key
+    ]
+    nodes.sort(key=lambda node: node.node_id)
+    return [node.model_dump(mode="json") for node in nodes[:capped_limit]]
+
+
+@router.get("/graph/edges")
+def list_graph_edges(
+    request: Request,
+    project_key: str = "RUNE_CAM_ALPHA",
+    include_pending: bool = True,
+    limit: int = 500,
+) -> list[dict[str, Any]]:
+    """Return approved and optionally pending graph edges for a project."""
+    require_project(request, project_key)
+    runtime = request.app.state.runtime
+    capped_limit = min(max(limit, 1), 1000)
+    approved_edges = [
+        edge.model_dump(mode="json")
+        for edge in runtime.graph.edges.values()
+        if _edge_project_key(runtime, edge) == project_key
+    ]
+    if include_pending:
+        pending_edges, pending_approval_by_edge_id = _pending_edges(runtime, project_key)
+        for edge in pending_edges:
+            payload = edge.model_dump(mode="json")
+            payload["approval_id"] = pending_approval_by_edge_id.get(edge.edge_id)
+            approved_edges.append(payload)
+    approved_edges.sort(key=lambda edge: str(edge["edge_id"]))
+    return approved_edges[:capped_limit]
 
 
 @router.get("/graph/subgraph")
@@ -22,6 +98,22 @@ def subgraph(
     runtime = request.app.state.runtime
     result: dict[str, list[dict[str, Any]]] = runtime.graph.subgraph(project_key)
     return result
+
+
+def _approved_edge_count(runtime: Any, project_key: str) -> int:
+    return sum(
+        1
+        for edge in runtime.graph.edges.values()
+        if _edge_project_key(runtime, edge) == project_key
+    )
+
+
+def _edge_project_key(runtime: Any, edge: TraceabilityEdge) -> str | None:
+    source_node = runtime.graph.nodes.get(edge.source_node_id)
+    if source_node is None:
+        return None
+    project_key = getattr(source_node, "project_key", None)
+    return project_key if isinstance(project_key, str) else None
 
 
 @router.get("/graph/projection")
