@@ -11,7 +11,7 @@ env:
 
 jobs:
   verify:
-    name: ruff-mypy-pytest
+    name: production-gates
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,3 +36,24 @@ jobs:
 
       - name: Pytest
         run: uv run pytest
+
+      - name: Masking policy rehearsal
+        run: uv run python ops/security/rehearse_masking_policy.py
+
+      - name: Release blocker coverage gate
+        run: uv run python ops/security/check_release_blockers.py
+
+      - name: Source adapter smoke
+        run: uv run python ops/source/smoke_source_adapters.py
+
+      - name: Model gateway smoke
+        run: uv run python ops/model_gateway/smoke_model_gateway.py
+
+      - name: Helm chart scaffold validation
+        run: uv run python ops/helm/validate_chart.py
+
+      - name: Operator UI graph smoke
+        run: uv run python ops/ui/smoke_operator_ui.py
+
+      - name: Feedback eval rehearsal
+        run: uv run python ops/evals/run_feedback_eval_rehearsal.py

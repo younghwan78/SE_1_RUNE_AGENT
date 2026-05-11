@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `ac42a78 Refresh audit after UI smoke gate`
 - `f501294 Add operator UI graph smoke gate`
 - `78e65c6 Add release blocker coverage gate`
 - `660cb07 Gate kubernetes helm release evidence`
@@ -107,7 +108,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25692002152` for `f501294`: completed successfully
+- GitHub Actions `CI` run `25692092907` for `ac42a78`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -142,7 +143,7 @@ Latest GitHub verification:
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
 | Migration and Helm operation tracks | packaged migrations under `src/req_tracker/storage/migrations/postgres`, `ops/migrations/README.md`, `ops/helm/rune-agent`, `ops/helm/validate_chart.py`, `tests/unit/ops/test_helm_chart.py` | Migration foundation and production-shaped Helm scaffold complete with local structural validation; target-cluster `helm lint/template` and platform-specific values remain pending until Kubernetes environment details are available |
 | Eval/security/replay test tracks | `tests/unit/evals`, `tests/contract/test_replay_feedback_api.py`, `tests/contract/test_security_api.py`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md` | Current coverage exists; dedicated folders anchored for larger end-to-end fixtures |
-| CI | `.github/workflows/ci.yml` | Complete |
+| CI | `.github/workflows/ci.yml` runs ruff, mypy, pytest, masking rehearsal, release-blocker coverage, source/model gateway smokes, Helm structural validation, operator UI graph smoke, and feedback eval rehearsal | Complete for deterministic local gates in GitHub Actions; disposable Docker/full-stack and company/staging gates remain runbook/readiness responsibilities |
 
 ## 3. Remaining Implementation Backlog
 
