@@ -77,6 +77,21 @@ Invoke-RestMethod -Method Put http://127.0.0.1:8000/api/v1/schedule `
   -Body '{"enabled":true,"interval_seconds":3600,"project_key":"RUNE_CAM_ALPHA","scenario":"RUNE_MULTI_SOURCE","run_id_prefix":"sched"}'
 ```
 
+Configure a company-approved model gateway profile:
+
+```powershell
+$env:MODEL_GATEWAY_MODE="http_json"
+$env:MODEL_GATEWAY_ENDPOINT_URL="https://models.example.com/v1/complete"
+$env:MODEL_GATEWAY_API_KEY="<from-secret-store>"
+$env:MODEL_PROFILES_PATH="config/model_profiles.example.json"
+$env:PROMPT_VERSIONS_PATH="config/prompt_versions.example.json"
+```
+
+The built-in `HttpJsonModelProvider` posts a provider-neutral JSON envelope to
+the configured endpoint and keeps provider SDK calls outside application code.
+Model profile and prompt files are registry inputs only; do not place secrets in
+those files.
+
 Ubuntu server deployment details are in `README_ubuntu.md`.
 
 ## Current Implementation Stage
@@ -91,6 +106,7 @@ Current local implementation:
 - in-memory trace recorder
 - dummy source adapter and fixture-backed analysis workflow
 - JIRA, Confluence, and restricted decision/email export-file adapters
+- generic HTTP JSON model provider with file-backed model/prompt registry
 - in-memory graph/vector backends
 - approval queue, graph commit, feedback capture
 - audit event capture for approval, feedback, debug artifact, scheduler, and run completion

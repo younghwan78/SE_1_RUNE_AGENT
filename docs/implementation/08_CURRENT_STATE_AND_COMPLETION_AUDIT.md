@@ -34,7 +34,7 @@ Latest GitHub verification:
 | Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, export adapters, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry and permission-warning foundation complete; Email live access pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
-| Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, policy, structured validation retry, fallback trace tests | Retry/fallback foundation complete; real provider profiles pending |
+| Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests | Profile/registry/live HTTP foundation complete; live provider sandbox validation pending |
 | Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, approval lineage API, run debug UI | API foundation complete; full UX diff pending |
 | SQLite state persistence | `SQLiteStateStore`, persistence contract test | Complete |
 | PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, migration loader tests | Complete |
@@ -76,7 +76,6 @@ Latest GitHub verification:
 
 ### P3: Model Provider and Debug Workbench
 
-- Add real model provider profile support.
 - Run retry/fallback behavior against live model provider sandboxes.
 - Expand debug UI for LLM payload diff and graph delta side-by-side view.
 

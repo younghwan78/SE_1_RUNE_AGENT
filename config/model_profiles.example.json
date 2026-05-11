@@ -1,0 +1,18 @@
+[
+  {
+    "model_profile_id": "internal-json-node-v1",
+    "provider": "internal",
+    "model_name": "company-model-node-v1",
+    "endpoint_alias": "internal-json-gateway",
+    "allowed_data_classes": [
+      "public_internal"
+    ],
+    "supports_json_schema": true,
+    "supports_tool_calling": false,
+    "max_context_tokens": 8192,
+    "default_temperature": 0.0,
+    "timeout_seconds": 30,
+    "is_active": true,
+    "schema_version": "v1"
+  }
+]

@@ -562,6 +562,7 @@ Dummy 검증:
 - typed PostgreSQL core table migration, mirror upsert, read path, and rollback foundation
 - dummy model gateway and dummy source adapter
 - model gateway structured validation retry and fallback trace foundation
+- generic HTTP JSON model provider, provider factory, and file-backed model/prompt registry
 - export-file adapters for JIRA, Confluence, and restricted decision/email sources
 - JIRA REST source adapter foundation behind the shared `SourceAdapter` contract
 - Confluence REST source adapter foundation behind the shared `SourceAdapter` contract

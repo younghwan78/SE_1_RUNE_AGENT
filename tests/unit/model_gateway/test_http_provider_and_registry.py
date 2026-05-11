@@ -1,0 +1,140 @@
+"""HTTP provider and file-backed model registry tests."""
+
+from typing import Any
+
+import pytest
+
+from req_tracker.model_gateway.factory import provider_for_profile
+from req_tracker.model_gateway.http_provider import HttpJsonModelProvider
+from req_tracker.model_gateway.models import ModelProfile, ModelRequest, PromptVersion
+from req_tracker.model_gateway.providers import ModelProviderError
+from req_tracker.model_gateway.registry import ModelRegistry, ModelRegistryError
+
+
+def test_http_json_model_provider_sends_provider_neutral_payload() -> None:
+    calls: list[dict[str, Any]] = []
+
+    def transport(
+        endpoint_url: str,
+        headers: dict[str, str],
+        payload: dict[str, Any],
+        timeout_seconds: int,
+    ) -> dict[str, Any]:
+        calls.append(
+            {
+                "endpoint_url": endpoint_url,
+                "headers": headers,
+                "payload": payload,
+                "timeout_seconds": timeout_seconds,
+            }
+        )
+        return {"output": {"node_id": "CAM-REQ-001", "confidence_score": 0.91}}
+
+    provider = HttpJsonModelProvider(
+        endpoint_url="https://models.example.com/v1/complete",
+        api_key="secret",
+        transport=transport,
+    )
+
+    response = provider.complete(
+        ModelRequest(
+            model_profile_id="internal-json",
+            prompt_version_id="pv_node_v1",
+            payload={"text": "camera latency"},
+            data_classification="public_internal",
+        ),
+        _profile(),
+        _prompt(),
+    )
+
+    assert calls[0]["endpoint_url"] == "https://models.example.com/v1/complete"
+    assert calls[0]["headers"]["authorization"] == "Bearer secret"
+    assert calls[0]["headers"]["x-model-profile-id"] == "internal-json"
+    assert calls[0]["payload"]["provider"] == "internal"
+    assert calls[0]["payload"]["prompt_template"] == "Extract nodes"
+    assert calls[0]["payload"]["payload"] == {"text": "camera latency"}
+    assert calls[0]["timeout_seconds"] == 30
+    assert response.output == {"node_id": "CAM-REQ-001", "confidence_score": 0.91}
+
+
+def test_http_json_model_provider_rejects_non_object_output() -> None:
+    provider = HttpJsonModelProvider(
+        endpoint_url="https://models.example.com/v1/complete",
+        transport=lambda *_args: {"output": "not-json-object"},
+    )
+
+    with pytest.raises(ModelProviderError):
+        provider.complete(
+            ModelRequest(
+                model_profile_id="internal-json",
+                prompt_version_id="pv_node_v1",
+                payload={},
+                data_classification="public_internal",
+            ),
+            _profile(),
+            _prompt(),
+        )
+
+
+def test_model_registry_loads_profiles_and_active_prompt(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    profiles_path = tmp_path / "profiles.json"
+    prompts_path = tmp_path / "prompts.json"
+    profiles_path.write_text(f"[{_profile().model_dump_json()}]", encoding="utf-8")
+    prompts_path.write_text(f"[{_prompt().model_dump_json()}]", encoding="utf-8")
+
+    registry = ModelRegistry.from_json_files(
+        profiles_path=profiles_path,
+        prompts_path=prompts_path,
+    )
+
+    assert registry.get_profile("internal-json").model_name == "rune-internal"
+    assert registry.active_prompt_for_task("node_extraction").prompt_version_id == "pv_node_v1"
+
+
+def test_model_registry_blocks_inactive_profile() -> None:
+    registry = ModelRegistry(
+        profiles=[_profile().model_copy(update={"is_active": False})],
+        prompts=[_prompt()],
+    )
+
+    with pytest.raises(ModelRegistryError):
+        registry.get_profile("internal-json")
+
+
+def test_provider_factory_requires_endpoint_for_live_profiles() -> None:
+    with pytest.raises(ValueError):
+        provider_for_profile(_profile())
+
+    provider = provider_for_profile(
+        _profile(),
+        endpoint_url="https://models.example.com/v1/complete",
+        transport=lambda *_args: {"output": {}},
+    )
+    assert provider is not None
+
+
+def _profile() -> ModelProfile:
+    return ModelProfile(
+        model_profile_id="internal-json",
+        provider="internal",
+        model_name="rune-internal",
+        endpoint_alias="internal-gateway",
+        allowed_data_classes=["public_internal"],
+        supports_json_schema=True,
+        supports_tool_calling=False,
+        max_context_tokens=8192,
+        default_temperature=0.0,
+        timeout_seconds=30,
+    )
+
+
+def _prompt() -> PromptVersion:
+    return PromptVersion(
+        prompt_version_id="pv_node_v1",
+        task_name="node_extraction",
+        template="Extract nodes",
+        schema_version_ref="node_extraction.v1",
+        retrieval_policy_id="ret_default",
+        created_by="tester",
+        status="active",
+    )

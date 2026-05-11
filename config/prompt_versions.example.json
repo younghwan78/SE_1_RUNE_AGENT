@@ -1,0 +1,12 @@
+[
+  {
+    "prompt_version_id": "pv_node_extraction_v1",
+    "task_name": "node_extraction",
+    "template": "Extract MBSE nodes from the masked source payload. Return JSON only.",
+    "schema_version_ref": "node_extraction.v1",
+    "retrieval_policy_id": "ret_default_v1",
+    "created_by": "system",
+    "status": "active",
+    "schema_version": "v1"
+  }
+]

@@ -33,6 +33,19 @@ class Settings(BaseSettings):
     auth_mode: str = Field(default="local", validation_alias="AUTH_MODE")
     api_key: str = Field(default="", validation_alias="API_KEY")
     model_gateway_mode: str = Field(default="dummy", validation_alias="MODEL_GATEWAY_MODE")
+    model_gateway_endpoint_url: str = Field(
+        default="",
+        validation_alias="MODEL_GATEWAY_ENDPOINT_URL",
+    )
+    model_gateway_api_key: str = Field(default="", validation_alias="MODEL_GATEWAY_API_KEY")
+    model_profiles_path: Path = Field(
+        default=Path("config/model_profiles.json"),
+        validation_alias="MODEL_PROFILES_PATH",
+    )
+    prompt_versions_path: Path = Field(
+        default=Path("config/prompt_versions.json"),
+        validation_alias="PROMPT_VERSIONS_PATH",
+    )
     artifact_store: str = Field(default="local", validation_alias="ARTIFACT_STORE")
     artifact_root: Path = Field(default=Path(".local_artifacts"), validation_alias="ARTIFACT_ROOT")
     state_store: str = Field(default="memory", validation_alias="STATE_STORE")
