@@ -563,6 +563,7 @@ Dummy 검증:
 - dummy model gateway and dummy source adapter
 - model gateway structured validation retry and fallback trace foundation
 - generic HTTP JSON model provider, provider factory, and file-backed model/prompt registry
+- local HTTP model gateway smoke harness for fallback and trace validation
 - export-file adapters for JIRA, Confluence, and restricted decision/email sources
 - restricted decision/email export policy that accepts approved decision sources and skips full-mailbox artifacts
 - JIRA REST source adapter foundation behind the shared `SourceAdapter` contract
@@ -595,7 +596,7 @@ Dummy 검증:
 - production-grade typed PostgreSQL query repositories and real PostgreSQL integration tests
 - Neo4j backend and Qdrant backend
 - direct production transport implementations behind the source skill/export boundary
-- live LLM payload diff validation with sandbox model calls
+- real external/sandbox LLM payload diff validation after endpoint access is available
 - OIDC/SSO enforcement
 - React/React Flow migration decision after real graph shape validation
 - production deployment hardening and real backup/restore/load rehearsals

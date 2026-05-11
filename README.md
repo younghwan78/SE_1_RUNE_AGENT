@@ -98,6 +98,15 @@ the configured endpoint and keeps provider SDK calls outside application code.
 Model profile and prompt files are registry inputs only; do not place secrets in
 those files.
 
+Run a local model-gateway smoke without a real model endpoint:
+
+```powershell
+uv run python ops/model_gateway/smoke_model_gateway.py
+```
+
+This starts a disposable localhost JSON gateway and verifies that the production
+HTTP provider records a failed primary call and succeeds through fallback.
+
 Ubuntu server deployment details are in `README_ubuntu.md`.
 
 ## Current Implementation Stage
@@ -114,6 +123,7 @@ Current local implementation:
 - JIRA, Confluence, and restricted decision/email export-file adapters
 - restricted decision/email export policy that skips unapproved mailbox artifacts
 - generic HTTP JSON model provider with file-backed model/prompt registry
+- local model-gateway smoke harness for HTTP fallback and trace validation
 - in-memory graph/vector backends
 - approval queue, graph commit, feedback capture
 - audit event capture for approval, feedback, debug artifact, scheduler, and run completion

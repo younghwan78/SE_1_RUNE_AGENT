@@ -96,6 +96,12 @@ Run a small API load smoke after the service is up:
 uv run python ops/load/smoke_load.py --base-url http://127.0.0.1:8000 --runs 5
 ```
 
+Run the local model-gateway fallback smoke without a real model endpoint:
+
+```bash
+uv run python ops/model_gateway/smoke_model_gateway.py
+```
+
 ## 5. systemd Service
 
 Create `/etc/systemd/system/rune-agent.service`:
