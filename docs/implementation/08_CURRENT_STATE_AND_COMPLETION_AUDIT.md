@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `3e9a713 Protect approval decisions with RBAC`
 - `426a67d Add runtime readiness endpoint`
 - `a27c177 Refresh audit after runtime restore`
 - `1349a9d Restore runtime state after restart`
@@ -43,7 +44,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `426a67d`: completed successfully
+- GitHub Actions `CI` run for `3e9a713`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
