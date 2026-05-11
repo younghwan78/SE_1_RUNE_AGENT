@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `dd5aff7 Record run start audit events`
 - `c8e1020 Block stale approval decisions`
 - `ab6dde2 Trace counter evidence in reasoning output`
 - `a333a77 Add deterministic approval risk scoring`
@@ -171,7 +172,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25700664492` for `c8e1020`: completed successfully
+- GitHub Actions `CI` run `25700981509` for `dd5aff7`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
