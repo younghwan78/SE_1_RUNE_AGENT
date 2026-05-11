@@ -34,6 +34,12 @@ git -C /opt/rune-agent rev-parse HEAD > "$BACKUP_ROOT/git_commit.txt"
 sha256sum "$BACKUP_ROOT"/* > "$BACKUP_ROOT/SHA256SUMS"
 ```
 
+Verify the backup set shape and checksums before attempting restore:
+
+```bash
+uv run python ops/backup/verify_backup_set.py --backup-root "$BACKUP_ROOT"
+```
+
 ## Restore Rehearsal
 
 Run restore rehearsal into disposable databases first.

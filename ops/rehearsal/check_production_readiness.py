@@ -269,8 +269,8 @@ def _company_rehearsal_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
                 "Run docs/runbooks/BACKUP_RESTORE.md and ops/load/smoke_load.py in staging.",
             ],
             next_action=(
-                "Complete backup, restore, and load rehearsals against "
-                "company/staging services."
+                "Complete backup, restore, and load rehearsals against company/staging "
+                "services, then run ops/backup/verify_backup_set.py on the backup set."
             ),
         )
     )

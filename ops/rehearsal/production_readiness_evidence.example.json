@@ -71,6 +71,7 @@
       "status": "passed",
       "summary": "Staging backup, restore, and load smoke passed for app, graph, vector, and artifact stores.",
       "evidence": [
+        "artifact:backup-set-verify-report.json",
         "staging-ci:backup-restore:run-12351",
         "staging-ci:smoke-load:run-12352"
       ]

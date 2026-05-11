@@ -273,3 +273,9 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/schedule/run-now
 The current scheduler is process-local. For multi-worker or multi-node production, run a single scheduler instance or move scheduling to system cron/Kubernetes CronJob/queue-backed orchestration before enabling multiple API replicas.
 
 Backup and restore rehearsal steps are in `docs/runbooks/BACKUP_RESTORE.md`.
+After creating a staging backup set, verify its required files, checksums, and
+artifact archive shape:
+
+```bash
+uv run python ops/backup/verify_backup_set.py --backup-root "$BACKUP_ROOT"
+```
