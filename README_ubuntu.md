@@ -129,6 +129,12 @@ Run a production-shaped API rehearsal against those disposable backends:
 uv run python ops/rehearsal/run_full_stack_rehearsal.py
 ```
 
+Run feedback/eval/canary rehearsal:
+
+```bash
+uv run python ops/evals/run_feedback_eval_rehearsal.py
+```
+
 Use `RUNE_IT_POSTGRES_PORT`, `RUNE_IT_NEO4J_BOLT_PORT`, and
 `RUNE_IT_QDRANT_HTTP_PORT` if the default local ports conflict with existing
 services.

@@ -41,3 +41,44 @@ def test_replay_and_feedback_eval_api(client: TestClient) -> None:
     blocked = client.post(f"/api/v1/improvements/{candidate_id}/activate")
     assert blocked.status_code == 409
     assert blocked.json()["detail"]["message"] == "eval gate blocked activation"
+
+
+def test_improvement_activation_requires_review_and_canary_after_eval_passes(
+    client: TestClient,
+) -> None:
+    for index in range(2):
+        feedback = client.post(
+            "/api/v1/feedback",
+            json={
+                "feedback_id": f"fb_gate_pass_{index}",
+                "target_type": "edge",
+                "target_id": f"edge_gate_pass_{index}",
+                "action": "rejected",
+                "user_id": "reviewer",
+                "user_role": "System Architect",
+                "reason_code": "wrong_relation",
+            },
+        )
+        assert feedback.status_code == 200
+
+    improvements = client.get("/api/v1/improvements/candidates")
+    candidate_id = improvements.json()[0]["candidate_id"]
+    review_ready = client.post(f"/api/v1/improvements/{candidate_id}/activate")
+    canary = client.post(
+        f"/api/v1/improvements/{candidate_id}/activate",
+        json={"reviewer_approved": True, "canary_passed": False},
+    )
+    active = client.post(
+        f"/api/v1/improvements/{candidate_id}/activate",
+        json={"reviewer_approved": True, "canary_passed": True},
+    )
+
+    assert review_ready.status_code == 200
+    assert review_ready.json()["status"] == "review_ready"
+    assert review_ready.json()["promotion_status"] == "review_required"
+    assert canary.status_code == 200
+    assert canary.json()["status"] == "canary"
+    assert canary.json()["promotion_status"] == "canary_required"
+    assert active.status_code == 200
+    assert active.json()["status"] == "active"
+    assert active.json()["promotion_status"] == "active"

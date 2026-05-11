@@ -580,6 +580,8 @@ Dummy 검증:
 - pending approval queue and approved graph separation
 - approval approve/reject/hold/modify decision path
 - feedback summary, eval candidate, improvement candidate, eval gate block
+- controlled improvement promotion through eval, review_ready, canary, and active states
+- feedback/eval/canary rehearsal with security blocker validation
 - scalable graph projection for 100+ dummy nodes
 - traceability chain API with approved/pending edge separation
 - debug summary/artifact API
@@ -601,6 +603,7 @@ Dummy 검증:
 - company/staging PostgreSQL, Neo4j, and Qdrant rehearsal beyond disposable Docker and local full-stack validation
 - real company JIRA/Confluence sandbox rehearsal behind the source skill/export boundary
 - real external/sandbox LLM payload diff validation after endpoint access is available
+- real feedback dataset/canary calibration after users start reviewing production proposals
 - direct IdP/OIDC token validation and company group mapping rehearsal
 - React/React Flow migration decision after real graph shape validation
 - production deployment hardening and real backup/restore/load rehearsals

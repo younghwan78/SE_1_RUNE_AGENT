@@ -59,6 +59,7 @@ curl -s -X PUT "$QDRANT_URL/collections/$QDRANT_COLLECTION/snapshots/recover" \
 uv run pytest
 uv run python ops/integration/run_backend_integration.py
 uv run python ops/rehearsal/run_full_stack_rehearsal.py
+uv run python ops/evals/run_feedback_eval_rehearsal.py
 uv run python ops/load/smoke_load.py --base-url http://127.0.0.1:8000 --runs 3
 curl -s http://127.0.0.1:8000/api/v1/health
 curl -s http://127.0.0.1:8000/api/v1/audit/retention

@@ -64,6 +64,15 @@ This starts the disposable backends, launches the API with
 `STATE_STORE=postgres`, `GRAPH_BACKEND=neo4j`, and `VECTOR_BACKEND=qdrant`, then
 runs analyze, approval commit, graph projection, and audit retention checks.
 
+Run feedback/eval/canary rehearsal:
+
+```powershell
+uv run python ops/evals/run_feedback_eval_rehearsal.py
+```
+
+This validates that feedback-derived improvements pass through eval,
+review-ready, canary, and active states, while security feedback remains blocked.
+
 Run the API locally:
 
 ```powershell
@@ -171,6 +180,7 @@ Current local implementation:
 - approval queue, graph commit, feedback capture
 - audit event capture for approval, feedback, debug artifact, scheduler, and run completion
 - replay diff and eval candidate grouping
+- controlled feedback improvement promotion through eval, review, canary, and active states
 - static local operator UI
 - ontology graph view with pending/approved edge projection
 - traceability chain, run debug workbench, and audit events panel
