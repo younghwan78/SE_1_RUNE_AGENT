@@ -10,6 +10,8 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `426a67d Add runtime readiness endpoint`
+- `a27c177 Refresh audit after runtime restore`
 - `1349a9d Restore runtime state after restart`
 - `dd10388 Refresh audit after eval canary rehearsal`
 - `daff157 Add feedback eval canary rehearsal`
@@ -41,7 +43,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `1349a9d`: completed successfully
+- GitHub Actions `CI` run for `426a67d`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
