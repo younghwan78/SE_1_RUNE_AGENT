@@ -295,6 +295,8 @@ def get_replay_diff(request: Request, replay_id: str) -> dict[str, Any]:
         "source_run_id": replay.source_run_id,
         "replay_run_id": replay.replay_run_id,
         "replay_mode": replay.replay_mode,
+        "compared_model_profile_ids": replay.compared_model_profile_ids,
+        "compared_prompt_version_ids": replay.compared_prompt_version_ids,
         "diff": replay.diff.model_dump(mode="json"),
     }
 

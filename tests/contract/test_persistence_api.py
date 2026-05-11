@@ -159,6 +159,8 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     assert replay_diff.status_code == 200
     assert replay_diff.json()["source_run_id"] == "run_restore_1"
     assert replay_diff.json()["replay_run_id"] == "replay_restore_1"
+    assert replay_diff.json()["compared_model_profile_ids"] == ["dummy-local"]
+    assert replay_diff.json()["compared_prompt_version_ids"] == ["pv_edge_linking_v1"]
     runtime = second_app.state.runtime
     assert (
         runtime.registry_activations["prompt_version:pv_edge_linking_v1"]["status"]

@@ -129,6 +129,11 @@ ReplayRun
   diff_ref
 ```
 
+The local `ReplayResult` API persists `compared_model_profile_ids` and
+`compared_prompt_version_ids` even when the dummy replay uses the same model and
+prompt. This keeps the contract stable for later `new_model_*` and
+`*_new_prompt` sandbox comparisons.
+
 ## 7. Diff 종류
 
 | diff | 비교 대상 |

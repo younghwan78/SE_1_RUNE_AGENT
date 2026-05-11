@@ -44,6 +44,10 @@ Run step responses include step-level `retrieval_context_ref`,
 the stage retrieval context and structured validation result without requiring a
 separate LLM-call lookup.
 
+Replay responses include `compared_model_profile_ids` and
+`compared_prompt_version_ids` so model/prompt comparison reports keep the exact
+version set used for object-level diffs.
+
 Do not document MCP tool names or company-specific source credentials here.
 JIRA, Confluence, and Email access procedures belong in `.claude/skills/` and
 company-local MCP configuration.
