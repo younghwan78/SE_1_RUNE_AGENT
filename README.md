@@ -83,7 +83,13 @@ uv run python ops/rehearsal/check_production_readiness.py
 The checker reports required production environment variables, company/staging
 rehearsal gates, and the local regression command list without printing secret
 values. Add `--run-local-gates` to execute the local regression and rehearsal
-commands from the report.
+commands from the report. After a staging rehearsal, pass a reviewed evidence
+file to resolve manual gates:
+
+```powershell
+uv run python ops/rehearsal/check_production_readiness.py `
+  --evidence-file ops/rehearsal/production_readiness_evidence.example.json
+```
 
 Run the API locally:
 

@@ -49,6 +49,72 @@ def test_readiness_report_fails_missing_production_env() -> None:
     assert "POSTGRES_DSN=<unset>" in checks["postgres_state_store"]["evidence"]
 
 
+def test_manual_evidence_resolves_only_manual_gates() -> None:
+    checker = _load_checker_module()
+
+    report = checker.build_readiness_report(
+        {
+            "STATE_STORE": "postgres",
+            "POSTGRES_DSN": "postgresql://rune:secret@db/rune_agent",
+        },
+        manual_evidence=[
+            checker.ManualEvidence(
+                check_id="company_postgres_rehearsal",
+                status="passed",
+                summary="Staging PostgreSQL rehearsal passed.",
+                evidence=["staging-ci:postgres:run-1"],
+            ),
+            checker.ManualEvidence(
+                check_id="postgres_state_store",
+                status="failed",
+                summary="This should not override a live env check.",
+                evidence=["ignored"],
+            ),
+            checker.ManualEvidence(
+                check_id="unknown_gate",
+                status="passed",
+                summary="Unknown gate.",
+                evidence=["unknown"],
+            ),
+        ],
+    )
+
+    checks = {check["check_id"]: check for check in report["checks"]}
+    assert checks["company_postgres_rehearsal"]["status"] == "passed"
+    assert "staging-ci:postgres:run-1" in checks["company_postgres_rehearsal"]["evidence"]
+    assert checks["postgres_state_store"]["status"] == "passed"
+    assert "manual_evidence_ignored:not_manual_gate" in checks["postgres_state_store"]["evidence"]
+    assert checks["unknown_manual_evidence:unknown_gate"]["status"] == "warning"
+    assert report["manual_evidence_count"] == 3
+
+
+def test_load_manual_evidence_from_json(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text(
+        """
+        {
+          "schema_version": "v1",
+          "checks": [
+            {
+              "check_id": "local_regression_gates",
+              "status": "passed",
+              "summary": "CI passed.",
+              "evidence": ["github-actions:CI:run-1"]
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    evidence = checker.load_manual_evidence(evidence_path)
+
+    assert len(evidence) == 1
+    assert evidence[0].check_id == "local_regression_gates"
+    assert evidence[0].status == "passed"
+
+
 def _load_checker_module() -> ModuleType:
     module_path = Path("ops/rehearsal/check_production_readiness.py")
     spec = importlib.util.spec_from_file_location("check_production_readiness", module_path)

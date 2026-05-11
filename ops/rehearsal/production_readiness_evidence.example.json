@@ -1,0 +1,88 @@
+{
+  "schema_version": "v1",
+  "reviewed_by": "release.owner@example.com",
+  "reviewed_at": "2026-05-12T00:00:00Z",
+  "checks": [
+    {
+      "check_id": "company_postgres_rehearsal",
+      "status": "passed",
+      "summary": "Staging PostgreSQL integration and restart restore rehearsal passed.",
+      "evidence": [
+        "staging-ci:postgres-integration:run-12345",
+        "artifact:postgres-restart-restore-report.json"
+      ]
+    },
+    {
+      "check_id": "company_neo4j_rehearsal",
+      "status": "passed",
+      "summary": "Staging Neo4j graph commit and projection rehearsal passed.",
+      "evidence": [
+        "staging-ci:neo4j-integration:run-12346",
+        "artifact:neo4j-graph-projection-report.json"
+      ]
+    },
+    {
+      "check_id": "company_qdrant_rehearsal",
+      "status": "passed",
+      "summary": "Staging Qdrant vector upsert/search rehearsal passed.",
+      "evidence": [
+        "staging-ci:qdrant-integration:run-12347",
+        "artifact:qdrant-vector-search-report.json"
+      ]
+    },
+    {
+      "check_id": "company_model_gateway_rehearsal",
+      "status": "passed",
+      "summary": "Company model gateway retry, fallback, and trace capture passed.",
+      "evidence": [
+        "staging-ci:model-gateway-smoke:run-12348",
+        "artifact:model-gateway-trace-report.json"
+      ]
+    },
+    {
+      "check_id": "company_jira_sandbox_rehearsal",
+      "status": "passed",
+      "summary": "Sandbox JIRA incremental source sync and permission-warning path passed.",
+      "evidence": [
+        "staging-ci:jira-source-smoke:run-12349",
+        "artifact:jira-source-snapshot-report.json"
+      ]
+    },
+    {
+      "check_id": "company_confluence_sandbox_rehearsal",
+      "status": "passed",
+      "summary": "Sandbox Confluence page sync and JIRA mention mapping passed.",
+      "evidence": [
+        "staging-ci:confluence-source-smoke:run-12350",
+        "artifact:confluence-source-snapshot-report.json"
+      ]
+    },
+    {
+      "check_id": "company_email_policy_rehearsal",
+      "status": "passed",
+      "summary": "Approved decision-archive export path passed without broad mailbox ingestion.",
+      "evidence": [
+        "security-review:decision-archive-scope-approved",
+        "artifact:decision-email-export-policy-report.json"
+      ]
+    },
+    {
+      "check_id": "backup_restore_load_rehearsal",
+      "status": "passed",
+      "summary": "Staging backup, restore, and load smoke passed for app, graph, vector, and artifact stores.",
+      "evidence": [
+        "staging-ci:backup-restore:run-12351",
+        "staging-ci:smoke-load:run-12352"
+      ]
+    },
+    {
+      "check_id": "local_regression_gates",
+      "status": "passed",
+      "summary": "Release branch local regression and rehearsal gate list passed.",
+      "evidence": [
+        "github-actions:CI:run-12353",
+        "artifact:full-stack-rehearsal-report.json"
+      ]
+    }
+  ]
+}

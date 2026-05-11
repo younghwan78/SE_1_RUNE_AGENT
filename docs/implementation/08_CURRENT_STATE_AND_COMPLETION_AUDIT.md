@@ -40,13 +40,15 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src ops/rehearsal/check_production_readiness.py`: passed
-- `uv run pytest`: 94 passed, 3 skipped
+- `uv run pytest`: 96 passed, 3 skipped
 - `uv run python ops/integration/run_backend_integration.py`: 3 passed
 - `uv run python ops/source/smoke_source_adapters.py`: passed
 - `uv run python ops/model_gateway/smoke_model_gateway.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced 6 failed env checks and 9 manual-required gates without secret values
+- `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected on this local shell because production env checks are still unset; manual evidence resolved 9 manual gates
+- `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 4 passed, including manual evidence file loading and manual-gate resolution behavior
 
 Latest GitHub verification:
 
@@ -72,7 +74,7 @@ Latest GitHub verification:
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, approval/query/scheduler/debug RBAC, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
 | Scheduler | process-local `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture | Single-process complete; multi-worker orchestration pending |
-| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py` | Local/server scaffold, readiness checks, disposable full-stack rehearsal, API restart restore check, and production-readiness gate reporting complete; company/staging environment rehearsal pending |
+| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, disposable full-stack rehearsal, API restart restore check, production-readiness gate reporting, and reviewed manual-evidence input path complete; company/staging environment rehearsal pending |
 | CI | `.github/workflows/ci.yml` | Complete |
 
 ## 3. Remaining Implementation Backlog
@@ -119,6 +121,10 @@ Latest GitHub verification:
 - Run `ops/rehearsal/check_production_readiness.py --run-local-gates` on a
   staging host with production-shaped environment variables before release
   approval.
+- Record reviewed staging evidence in a secure copy of
+  `ops/rehearsal/production_readiness_evidence.example.json` and pass it to
+  `check_production_readiness.py --evidence-file`; do not commit real evidence
+  files if they contain internal CI URLs, artifact IDs, or incident references.
 - Decide React/React Flow migration after real graph shape validation.
 
 ## 4. Completion Gate

@@ -30,6 +30,16 @@ class ReadinessCheck:
     next_action: str | None = None
 
 
+@dataclass(frozen=True)
+class ManualEvidence:
+    """Reviewed evidence for one manual production gate."""
+
+    check_id: str
+    status: Literal["passed", "warning", "failed"]
+    summary: str
+    evidence: list[str]
+
+
 LOCAL_GATE_COMMANDS: tuple[tuple[str, ...], ...] = (
     ("uv", "run", "ruff", "check", "."),
     ("uv", "run", "mypy", "src"),
@@ -47,6 +57,7 @@ def build_readiness_report(
     *,
     run_local_gates: bool = False,
     command_timeout_seconds: int = 300,
+    manual_evidence: Sequence[ManualEvidence] = (),
 ) -> dict[str, Any]:
     """Build a structured production-readiness report."""
     checks = [
@@ -70,6 +81,7 @@ def build_readiness_report(
                 next_action="Run the checker with --run-local-gates before a release decision.",
             )
         )
+    checks = _apply_manual_evidence(checks, manual_evidence)
     summary = _summarize_checks(checks)
     return {
         "passed": summary["failed"] == 0 and summary["manual_required"] == 0,
@@ -77,8 +89,44 @@ def build_readiness_report(
         "checks": [asdict(check) for check in checks],
         "local_gate_commands": [" ".join(command) for command in LOCAL_GATE_COMMANDS],
         "local_gate_results": local_gate_results,
+        "manual_evidence_count": len(manual_evidence),
         "schema_version": "v1",
     }
+
+
+def load_manual_evidence(path: Path) -> list[ManualEvidence]:
+    """Load reviewed manual-gate evidence from a JSON file."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("manual evidence file must contain a JSON object")
+    checks = payload.get("checks")
+    if not isinstance(checks, list):
+        raise ValueError("manual evidence file must contain a checks array")
+    records: list[ManualEvidence] = []
+    for index, item in enumerate(checks):
+        if not isinstance(item, dict):
+            raise ValueError(f"checks[{index}] must be an object")
+        check_id = item.get("check_id")
+        status = item.get("status")
+        summary = item.get("summary")
+        evidence = item.get("evidence")
+        if not isinstance(check_id, str) or not check_id:
+            raise ValueError(f"checks[{index}].check_id must be a non-empty string")
+        if status not in {"passed", "warning", "failed"}:
+            raise ValueError(f"checks[{index}].status must be passed, warning, or failed")
+        if not isinstance(summary, str) or not summary:
+            raise ValueError(f"checks[{index}].summary must be a non-empty string")
+        if not isinstance(evidence, list) or not all(isinstance(entry, str) for entry in evidence):
+            raise ValueError(f"checks[{index}].evidence must be a string array")
+        records.append(
+            ManualEvidence(
+                check_id=check_id,
+                status=status,
+                summary=summary,
+                evidence=evidence,
+            )
+        )
+    return records
 
 
 def _environment_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
@@ -324,6 +372,59 @@ def _local_gate_summary(results: Sequence[dict[str, Any]]) -> ReadinessCheck:
     )
 
 
+def _apply_manual_evidence(
+    checks: Sequence[ReadinessCheck],
+    manual_evidence: Sequence[ManualEvidence],
+) -> list[ReadinessCheck]:
+    evidence_by_check = {record.check_id: record for record in manual_evidence}
+    updated: list[ReadinessCheck] = []
+    for check in checks:
+        evidence = evidence_by_check.get(check.check_id)
+        if evidence is None:
+            updated.append(check)
+            continue
+        if check.status != "manual_required":
+            updated.append(
+                ReadinessCheck(
+                    check_id=check.check_id,
+                    status=check.status,
+                    summary=(
+                        f"{check.summary} Manual evidence was ignored because this "
+                        "is not a manual gate."
+                    ),
+                    evidence=[
+                        *check.evidence,
+                        "manual_evidence_ignored:not_manual_gate",
+                    ],
+                    next_action=check.next_action,
+                )
+            )
+            continue
+        updated.append(
+            ReadinessCheck(
+                check_id=check.check_id,
+                status=evidence.status,
+                summary=evidence.summary,
+                evidence=[*check.evidence, *evidence.evidence],
+                next_action=None if evidence.status == "passed" else check.next_action,
+            )
+        )
+    known_ids = {check.check_id for check in checks}
+    for evidence in manual_evidence:
+        if evidence.check_id in known_ids:
+            continue
+        updated.append(
+            ReadinessCheck(
+                check_id=f"unknown_manual_evidence:{evidence.check_id}",
+                status="warning",
+                summary="Manual evidence references an unknown readiness check id.",
+                evidence=evidence.evidence,
+                next_action="Remove or rename the unknown evidence check id.",
+            )
+        )
+    return updated
+
+
 def _run_command(command: Sequence[str], *, timeout_seconds: int) -> dict[str, Any]:
     completed = subprocess.run(
         list(command),
@@ -364,11 +465,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-local-gates", action="store_true")
     parser.add_argument("--command-timeout-seconds", type=int, default=300)
+    parser.add_argument(
+        "--evidence-file",
+        type=Path,
+        default=None,
+        help="Optional reviewed manual-gate evidence JSON file.",
+    )
     args = parser.parse_args()
+    manual_evidence = load_manual_evidence(args.evidence_file) if args.evidence_file else []
     report = build_readiness_report(
         os.environ,
         run_local_gates=args.run_local_gates,
         command_timeout_seconds=args.command_timeout_seconds,
+        manual_evidence=manual_evidence,
     )
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["passed"] else 1
