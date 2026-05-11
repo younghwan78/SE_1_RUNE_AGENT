@@ -13,6 +13,7 @@ import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
+from req_tracker.audit.models import AuditEvent, AuditRetentionPolicy
 from req_tracker.debug.hash import stable_hash
 from req_tracker.storage.state_store import jsonable
 
@@ -400,6 +401,23 @@ class PostgreSQLStateStore:
             rows = conn.execute(sql, params).fetchall()
         return [_payload_from_row(row) for row in rows]
 
+    def delete(self, collection: str, entity_id: str) -> None:
+        """Delete one serialized entity and its typed mirror row if it exists."""
+        spec = TYPED_COLLECTIONS.get(collection)
+        with self._connect() as conn:
+            if spec is not None:
+                conn.execute(
+                    f"DELETE FROM {spec.table} WHERE {spec.id_column} = %s",
+                    (entity_id,),
+                )
+            conn.execute(
+                """
+                DELETE FROM state_entities
+                WHERE collection = %s AND entity_id = %s
+                """,
+                (collection, entity_id),
+            )
+
     def counts_by_collection(self) -> dict[str, int]:
         """Return stored row counts grouped by collection."""
         with self._connect() as conn:
@@ -412,6 +430,54 @@ class PostgreSQLStateStore:
                 """
             ).fetchall()
         return {str(row["collection"]): int(row["count"]) for row in rows}
+
+    def write_audit_archive(
+        self,
+        *,
+        events: builtins.list[AuditEvent],
+        policy: AuditRetentionPolicy,
+    ) -> str | None:
+        """Persist an audit archive batch into PostgreSQL and return its reference."""
+        if not events:
+            return None
+        created_at = datetime.now(UTC)
+        event_payloads = [event.model_dump(mode="json") for event in events]
+        payload = {
+            "policy": policy.model_dump(mode="json"),
+            "event_ids": [event.audit_id for event in events],
+            "events": event_payloads,
+            "created_at": created_at.isoformat(),
+            "schema_version": "v1",
+        }
+        archive_id = f"audar_{stable_hash(payload)[:16]}"
+        archive_ref = f"postgres://audit_archive_batches/{archive_id}"
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO audit_archive_batches (
+                    archive_id, archive_ref, policy_json, event_ids,
+                    archived_events, created_at, payload_json
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT(archive_id)
+                DO UPDATE SET
+                    archive_ref = excluded.archive_ref,
+                    policy_json = excluded.policy_json,
+                    event_ids = excluded.event_ids,
+                    archived_events = excluded.archived_events,
+                    payload_json = excluded.payload_json
+                """,
+                (
+                    archive_id,
+                    archive_ref,
+                    Jsonb(payload["policy"]),
+                    payload["event_ids"],
+                    len(events),
+                    created_at,
+                    Jsonb(payload),
+                ),
+            )
+        return archive_ref
 
     def _connect(self) -> Any:
         if self._connection_factory is not None:

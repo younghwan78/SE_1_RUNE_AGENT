@@ -94,6 +94,17 @@ class SQLiteStateStore:
             rows = conn.execute(sql, params).fetchall()
         return [json.loads(str(row["payload_json"])) for row in rows]
 
+    def delete(self, collection: str, entity_id: str) -> None:
+        """Delete one serialized entity if it exists."""
+        with self._connect() as conn:
+            conn.execute(
+                """
+                DELETE FROM state_entities
+                WHERE collection = ? AND entity_id = ?
+                """,
+                (collection, entity_id),
+            )
+
     def counts_by_collection(self) -> dict[str, int]:
         """Return stored row counts grouped by collection."""
         with self._connect() as conn:

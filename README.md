@@ -108,7 +108,7 @@ Current local implementation:
 - dummy/local runtime settings and FastAPI endpoints
 - local artifact store
 - optional SQLite state store for production-shaped persistence validation
-- PostgreSQL state repository with package migrations for production persistence foundation
+- PostgreSQL state repository with package migrations and audit archive batches
 - in-memory trace recorder
 - dummy source adapter and fixture-backed analysis workflow
 - JIRA, Confluence, and restricted decision/email export-file adapters
@@ -124,7 +124,7 @@ Current local implementation:
 - debug side-by-side panes for LLM payloads and graph delta previews
 - debug artifact store root access policy with blocked-read audit events
 - audit retention policy status API
-- admin-only audit archive/prune API with local JSONL archive writer
+- admin-only audit archive/prune API with local JSONL or PostgreSQL archive writer
 - API-key project-scope authorization foundation with `x-rune-projects`
 - backup/restore rehearsal runbook and smoke load runner
 - periodic analysis scheduler for server operation

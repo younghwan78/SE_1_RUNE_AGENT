@@ -584,7 +584,8 @@ Dummy 검증:
 - audit event capture/API for run completion, approval decisions, feedback, debug artifact reads, and scheduler operations
 - debug artifact store root access policy with blocked-read audit events
 - audit retention policy and non-destructive retention status API
-- admin-only audit archive/prune API with local JSONL archive writer
+- admin-only audit archive/prune API with local JSONL and PostgreSQL archive writers
+- PostgreSQL audit archive batch migration and state-store pruning delete path
 - backup/restore rehearsal runbook and API smoke load runner
 - API-key project-scope authorization foundation for graph, run, debug, audit, and scheduler routes
 - static operator UI for graph, approval, findings, replay, scheduler, node chain review, run debug, and audit events
@@ -595,6 +596,6 @@ Dummy 검증:
 - Neo4j backend and Qdrant backend
 - direct production transport implementations behind the source skill/export boundary
 - live LLM payload diff validation with sandbox model calls
-- PostgreSQL-backed audit archive/prune job and OIDC/SSO enforcement
+- OIDC/SSO enforcement
 - React/React Flow migration decision after real graph shape validation
 - production deployment hardening and real backup/restore/load rehearsals

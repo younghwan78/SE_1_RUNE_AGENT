@@ -4,6 +4,8 @@ from typing import Any
 
 from psycopg.types.json import Jsonb
 
+from req_tracker.audit.models import AuditRetentionPolicy
+from req_tracker.audit.service import AuditService
 from req_tracker.debug.models import AgentRun
 from req_tracker.storage.postgres_store import (
     PostgreSQLStateStore,
@@ -33,6 +35,7 @@ class FakePostgresConnection:
     def __init__(self) -> None:
         self.entities: dict[tuple[str, str], dict[str, Any]] = {}
         self.typed_entities: dict[tuple[str, str], dict[str, Any]] = {}
+        self.audit_archives: dict[str, dict[str, Any]] = {}
         self.migrations: set[str] = set()
         self.executed_sql: list[str] = []
 
@@ -76,6 +79,24 @@ class FakePostgresConnection:
                 "payload_json": payload_json.obj,
             }
             return FakeCursor()
+        if sql.startswith("insert into audit_archive_batches"):
+            archive_id, archive_ref, policy_json, event_ids, archived_events, *_ = _params(params)
+            assert isinstance(policy_json, Jsonb)
+            self.audit_archives[str(archive_id)] = {
+                "archive_ref": archive_ref,
+                "policy_json": policy_json.obj,
+                "event_ids": event_ids,
+                "archived_events": archived_events,
+            }
+            return FakeCursor()
+        if sql.startswith("delete from audit_events"):
+            audit_id = str(_params(params)[0])
+            self.typed_entities.pop(("audit_events", audit_id), None)
+            return FakeCursor()
+        if sql.startswith("delete from state_entities"):
+            collection, entity_id = _params(params)
+            self.entities.pop((str(collection), str(entity_id)), None)
+            return FakeCursor()
         if sql.startswith("select payload_json from agent_runs where run_id"):
             run_id = str(_params(params)[0])
             row = self.typed_entities.get(("agent_runs", run_id))
@@ -118,18 +139,20 @@ class FakePostgresConnection:
 def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     migrations = load_postgres_migrations()
 
-    assert [migration.version for migration in migrations] == ["001", "002"]
+    assert [migration.version for migration in migrations] == ["001", "002", "003"]
     assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
     assert "JSONB" in migrations[0].sql
     assert "CREATE TABLE IF NOT EXISTS agent_runs" in migrations[1].sql
     assert "CREATE TABLE IF NOT EXISTS audit_events" in migrations[1].sql
+    assert "CREATE TABLE IF NOT EXISTS audit_archive_batches" in migrations[2].sql
 
 
 def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
     rollbacks = load_postgres_rollbacks()
 
-    assert sorted(rollbacks) == ["001", "002"]
+    assert sorted(rollbacks) == ["001", "002", "003"]
     assert "DROP TABLE IF EXISTS agent_runs" in rollbacks["002"].sql
+    assert "DROP TABLE IF EXISTS audit_archive_batches" in rollbacks["003"].sql
 
 
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
@@ -150,7 +173,7 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
         payload=run,
     )
 
-    assert fake.migrations == {"001", "002"}
+    assert fake.migrations == {"001", "002", "003"}
     assert any("insert into agent_runs" in sql for sql in fake.executed_sql)
     stored = store.get("agent_runs", run.run_id)
     assert stored is not None
@@ -169,6 +192,40 @@ def test_postgres_store_rolls_back_one_applied_migration() -> None:
     assert rolled_back is True
     assert "002" not in fake.migrations
     assert any("drop table if exists agent_runs" in sql for sql in fake.executed_sql)
+
+
+def test_postgres_store_writes_audit_archive_batches_and_deletes_events() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+    service = AuditService()
+    event = service.record(
+        action="run_completed",
+        actor_id="system",
+        target_type="run",
+        target_id="run_archive_1",
+        project_key="RUNE_CAM_ALPHA",
+    )
+    store.upsert(
+        collection="audit_events",
+        entity_id=event.audit_id,
+        project_key=event.project_key,
+        payload=event,
+    )
+
+    archive_ref = store.write_audit_archive(
+        events=[event],
+        policy=AuditRetentionPolicy(retention_days=30, max_events=1),
+    )
+    store.delete("audit_events", event.audit_id)
+
+    assert archive_ref is not None
+    assert archive_ref.startswith("postgres://audit_archive_batches/")
+    assert len(fake.audit_archives) == 1
+    archive = next(iter(fake.audit_archives.values()))
+    assert archive["event_ids"] == [event.audit_id]
+    assert archive["archived_events"] == 1
+    assert ("audit_events", event.audit_id) not in fake.entities
+    assert any("delete from audit_events" in sql for sql in fake.executed_sql)
 
 
 def _params(params: object) -> tuple[Any, ...]:

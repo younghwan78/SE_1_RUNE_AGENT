@@ -3,9 +3,23 @@
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Protocol, runtime_checkable
 
 from req_tracker.audit.models import AuditEvent, AuditRetentionPolicy
 from req_tracker.debug.hash import stable_hash
+
+
+@runtime_checkable
+class AuditArchiveWriter(Protocol):
+    """Archive writer contract used by retention jobs."""
+
+    def write_archive(
+        self,
+        *,
+        events: list[AuditEvent],
+        policy: AuditRetentionPolicy,
+    ) -> str | None:
+        """Archive events and return an archive reference."""
 
 
 class LocalAuditArchiveStore:
@@ -44,3 +58,25 @@ class LocalAuditArchiveStore:
         ]
         path.write_text("\n".join(lines) + "\n", encoding="utf-8")
         return str(path.as_posix())
+
+
+class PostgresAuditArchiveStore:
+    """Write audit archive batches through PostgreSQLStateStore."""
+
+    def __init__(self, state_store: object) -> None:
+        self.state_store = state_store
+
+    def write_archive(
+        self,
+        *,
+        events: list[AuditEvent],
+        policy: AuditRetentionPolicy,
+    ) -> str | None:
+        """Archive events and return a PostgreSQL archive reference."""
+        writer = getattr(self.state_store, "write_audit_archive", None)
+        if not callable(writer):
+            raise TypeError("state_store must implement write_audit_archive")
+        result = writer(events=events, policy=policy)
+        if result is not None and not isinstance(result, str):
+            raise TypeError("write_audit_archive must return a string reference or None")
+        return result

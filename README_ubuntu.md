@@ -69,7 +69,9 @@ POSTGRES_DSN=postgresql://rune:${RUNE_POSTGRES_PASSWORD}@127.0.0.1:5432/rune_age
 
 On startup, the app applies packaged PostgreSQL migrations through
 `schema_migrations` and stores production-shaped contract payloads in
-`state_entities`.
+`state_entities`. Audit archive/prune stores archive batches in
+`audit_archive_batches` and deletes pruned audit rows from the PostgreSQL state
+tables.
 
 ## 4. Smoke Test
 

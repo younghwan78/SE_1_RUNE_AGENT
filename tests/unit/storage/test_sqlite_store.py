@@ -27,3 +27,8 @@ def test_sqlite_store_upserts_and_lists_contract_payloads(tmp_path) -> None:  # 
     assert store.counts_by_collection() == {"agent_runs": 1}
     stored_runs = store.list("agent_runs", project_key="RUNE_CAM_ALPHA")
     assert stored_runs[0]["project_key"] == "RUNE_CAM_ALPHA"
+
+    store.delete("agent_runs", run.run_id)
+
+    assert store.get("agent_runs", run.run_id) is None
+    assert store.counts_by_collection() == {}

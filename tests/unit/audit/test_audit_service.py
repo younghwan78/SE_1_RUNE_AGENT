@@ -87,6 +87,7 @@ def test_audit_service_archives_and_prunes_retention_candidates(tmp_path) -> Non
 
     assert result["archived_events"] == 1
     assert result["pruned_events"] == 1
+    assert result["pruned_audit_ids"] == [expired.audit_id]
     assert result["remaining_events"] == 1
     assert expired.audit_id not in service.events
     assert current.audit_id in service.events

@@ -30,6 +30,9 @@ class StateStore(Protocol):
     ) -> list[dict[str, Any]]:
         """List serialized entity payloads."""
 
+    def delete(self, collection: str, entity_id: str) -> None:
+        """Delete one serialized entity if it exists."""
+
     def counts_by_collection(self) -> dict[str, int]:
         """Return stored row counts grouped by collection."""
 

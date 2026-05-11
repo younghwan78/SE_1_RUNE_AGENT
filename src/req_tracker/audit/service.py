@@ -119,6 +119,7 @@ class AuditService:
             "archive_ref": archive_ref,
             "archived_events": len(events_to_archive),
             "pruned_events": len(events_to_archive),
+            "pruned_audit_ids": [event.audit_id for event in events_to_archive],
             "remaining_events": len(self.events),
             "schema_version": "v1",
         }

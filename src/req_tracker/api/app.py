@@ -16,6 +16,7 @@ from req_tracker.api.routes.runs import router as runs_router
 from req_tracker.api.routes.ui import UI_ASSET_DIR
 from req_tracker.api.routes.ui import router as ui_router
 from req_tracker.api.state import RuntimeState
+from req_tracker.audit.archive import PostgresAuditArchiveStore
 from req_tracker.audit.models import AuditRetentionPolicy
 from req_tracker.config.settings import Settings, get_settings
 from req_tracker.graph.base import GraphBackend
@@ -57,6 +58,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             retention_days=resolved_settings.audit_retention_days,
             max_events=resolved_settings.audit_max_events,
         ),
+        audit_archive_store=PostgresAuditArchiveStore(state_store)
+        if isinstance(state_store, PostgreSQLStateStore)
+        else None,
     )
 
     @asynccontextmanager

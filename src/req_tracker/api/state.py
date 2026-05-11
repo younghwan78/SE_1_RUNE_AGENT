@@ -5,7 +5,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from req_tracker.approvals.service import ApprovalService
-from req_tracker.audit.archive import LocalAuditArchiveStore
+from req_tracker.audit.archive import AuditArchiveWriter, LocalAuditArchiveStore
 from req_tracker.audit.models import AuditRetentionPolicy
 from req_tracker.audit.service import AuditService
 from req_tracker.debug.artifacts import LocalArtifactStore
@@ -31,7 +31,7 @@ class RuntimeState(BaseModel):
     vector: VectorBackend
     approvals: ApprovalService
     audit: AuditService
-    audit_archive_store: LocalAuditArchiveStore
+    audit_archive_store: AuditArchiveWriter
     analyses: dict[str, AnalysisResult]
     scheduler: RunScheduler
     state_store: StateStore | None = None
@@ -45,6 +45,7 @@ class RuntimeState(BaseModel):
         graph: GraphBackend | None = None,
         vector: VectorBackend | None = None,
         audit_policy: AuditRetentionPolicy | None = None,
+        audit_archive_store: AuditArchiveWriter | None = None,
     ) -> "RuntimeState":
         """Create a local runtime state."""
         return cls(
@@ -54,7 +55,8 @@ class RuntimeState(BaseModel):
             vector=vector or MemoryVectorBackend(),
             approvals=ApprovalService(),
             audit=AuditService(audit_policy),
-            audit_archive_store=LocalAuditArchiveStore(artifact_root / "audit_archives"),
+            audit_archive_store=audit_archive_store
+            or LocalAuditArchiveStore(artifact_root / "audit_archives"),
             analyses={},
             scheduler=RunScheduler(schedule_config),
             state_store=state_store,
@@ -190,3 +192,12 @@ class RuntimeState(BaseModel):
                 project_key=project_key,
                 payload=edge,
             )
+
+    def archive_and_prune_audit(self) -> dict[str, object]:
+        """Archive/prune audit events and mirror pruned rows into the state store."""
+        result = self.audit.archive_and_prune(archive_writer=self.audit_archive_store)
+        if self.state_store is not None:
+            for audit_id in result.get("pruned_audit_ids", []):
+                if isinstance(audit_id, str):
+                    self.state_store.delete("audit_events", audit_id)
+        return result

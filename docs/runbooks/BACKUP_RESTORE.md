@@ -8,7 +8,7 @@ environment. Do not commit real DSNs, tokens, passwords, or backup archives.
 
 Back up and restore these stores as one recovery set:
 
-- PostgreSQL app DB: runs, steps, approvals, audit, feedback, policies
+- PostgreSQL app DB: runs, steps, approvals, audit, audit archives, feedback, policies
 - artifact store: raw snapshots, stage outputs, masked payloads, debug outputs
 - Neo4j graph DB: approved traceability graph
 - Qdrant vector DB: chunk vectors and metadata
@@ -66,6 +66,7 @@ Validation criteria:
 
 - app starts with restored config
 - PostgreSQL migrations report no missing migration
+- audit archive batches are present after archive/prune rehearsal when retention selects events
 - restored artifact refs can be read only under the configured artifact root
 - graph projection returns approved graph data after restore
 - vector collection accepts query/upsert smoke tests

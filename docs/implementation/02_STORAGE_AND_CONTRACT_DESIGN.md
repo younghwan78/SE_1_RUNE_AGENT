@@ -92,6 +92,7 @@ model_profiles
 prompt_versions
 retrieval_policies
 audit_events
+audit_archive_batches
 idempotency_keys
 ```
 
@@ -422,5 +423,8 @@ mirror upsert를 제공한다. 이는 SQLite state store와 같은 `StateStore` 
 공유해서 dummy/local regression을 production persistence path에도 적용하기 위한
 단계다. `PostgreSQLStateStore.get/list`는 지원되는 collection에 대해 typed table의
 `payload_json`을 우선 조회하고, 미지원 collection은 `state_entities`로 fallback한다.
+`audit_archive_batches`는 retention archive/prune 실행 시 pruned audit event payload를
+PostgreSQL 안에 보존하고, pruned `audit_events` row는 state store delete path로
+제거한다.
 Rollback script는 version별로 package resource에 포함하며, 운영 자동 downgrade가
 아닌 명시적 operator action으로 실행한다.
