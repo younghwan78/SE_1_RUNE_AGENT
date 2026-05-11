@@ -10,6 +10,8 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `7d8bca8 Add local model gateway smoke harness`
+- `4f11a09 Refresh audit after PostgreSQL archive pruning`
 - `db72fdb Add PostgreSQL audit archive pruning`
 - `7a0e019 Refresh audit after security hardening`
 - `03c8a0a Add audit archive prune foundation`
@@ -26,7 +28,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `db72fdb`: completed successfully
+- GitHub Actions `CI` run for `7d8bca8`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
