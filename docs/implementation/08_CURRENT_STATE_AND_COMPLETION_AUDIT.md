@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `92368ca Add backup set verifier`
 - `6d5cce8 Add trusted proxy rehearsal runner`
 - `c499394 Add model gateway rehearsal runner`
 - `8b80d0f Add company source rehearsal runner`
@@ -61,7 +62,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25684690465` for `6d5cce8`: completed successfully
+- GitHub Actions `CI` run `25684952750` for `92368ca`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
