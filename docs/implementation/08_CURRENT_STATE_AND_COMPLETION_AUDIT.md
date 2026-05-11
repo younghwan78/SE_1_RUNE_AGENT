@@ -41,10 +41,11 @@ Latest confirmed commits:
 Latest local verification:
 
 - `uv run ruff check .`: passed
-- `uv run mypy src ops/rehearsal/check_production_readiness.py`: passed
-- `uv run pytest`: 96 passed, 3 skipped
+- `uv run mypy src`: passed
+- `uv run pytest`: 100 passed, 3 skipped
 - `uv run python ops/integration/run_backend_integration.py`: 3 passed
 - `uv run python ops/source/smoke_source_adapters.py`: passed
+- `uv run python ops/source/rehearse_company_sources.py`: failed as expected on this local shell because JIRA/Confluence sandbox env vars are unset; output masks tokens and lists missing config
 - `uv run python ops/model_gateway/smoke_model_gateway.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3250 ms against a 5000 ms local rehearsal threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
@@ -61,7 +62,7 @@ Latest GitHub verification:
 | Requirement | Current evidence | Status |
 | --- | --- | --- |
 | Production plan is the source of truth | `PRODUCTION_EXECUTION_PLAN.md`, `docs/implementation/03_STEP_BY_STEP_IMPLEMENTATION_PLAN.md` | Complete |
-| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, `ops/source/smoke_source_adapters.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry, pagination, permission-warning, and local HTTP smoke validation complete; restricted decision/email file path complete; Email live access and real company sandbox validation pending |
+| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, `ops/source/smoke_source_adapters.py`, `ops/source/rehearse_company_sources.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry, pagination, permission-warning, local HTTP smoke validation, and env-driven company sandbox rehearsal entrypoint complete; restricted decision/email file path complete; Email live access and real company sandbox validation pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test, readiness API, persisted runtime restore test | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests, `ops/model_gateway/smoke_model_gateway.py` | Profile/registry/live-shaped HTTP foundation complete; real external provider sandbox validation pending |
@@ -99,6 +100,9 @@ Latest GitHub verification:
 ### P2: JIRA Production Connector
 
 - Run JIRA connector against a real company sandbox JIRA project.
+- Use `ops/source/rehearse_company_sources.py --source jira` for the first
+  sandbox proof, and attach its masked JSON output to the production readiness
+  evidence file.
 - Keep MCP/REST/export selection inside Claude Code source skills and local
   config, not in core Python workflow code.
 - Map source permission results to project authorization policy after real

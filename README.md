@@ -178,6 +178,22 @@ This starts a disposable localhost source server and validates HTTP pagination,
 normalized artifacts, links, and permission-denied warnings through the real
 REST adapters.
 
+Run source rehearsals against company-approved sandbox systems after setting
+source environment variables:
+
+```powershell
+$env:JIRA_BASE_URL="https://jira.example.com"
+$env:JIRA_TOKEN="<from-secret-store>"
+$env:JIRA_PROJECT_KEY="CAM"
+$env:CONFLUENCE_BASE_URL="https://confluence.example.com"
+$env:CONFLUENCE_TOKEN="<from-secret-store>"
+$env:CONFLUENCE_SPACE_KEY="CAM"
+uv run python ops/source/rehearse_company_sources.py --source all
+```
+
+The rehearsal prints artifact counts, warnings, and shape checks only; token
+values are masked.
+
 Ubuntu server deployment details are in `README_ubuntu.md`.
 
 ## Current Implementation Stage

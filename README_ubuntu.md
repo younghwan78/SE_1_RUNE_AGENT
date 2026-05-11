@@ -130,6 +130,21 @@ Run local source-adapter smoke without company systems:
 uv run python ops/source/smoke_source_adapters.py
 ```
 
+Run source rehearsals against company-approved sandbox systems:
+
+```bash
+export JIRA_BASE_URL=https://jira.example.com
+export JIRA_TOKEN=<from-secret-store>
+export JIRA_PROJECT_KEY=CAM
+export CONFLUENCE_BASE_URL=https://confluence.example.com
+export CONFLUENCE_TOKEN=<from-secret-store>
+export CONFLUENCE_SPACE_KEY=CAM
+uv run python ops/source/rehearse_company_sources.py --source all
+```
+
+The rehearsal output masks tokens and reports only artifact shape summaries,
+warnings, and counts.
+
 Run disposable backend integration tests on a development server with Docker:
 
 ```bash

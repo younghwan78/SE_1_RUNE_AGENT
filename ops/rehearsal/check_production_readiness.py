@@ -221,14 +221,19 @@ def _company_rehearsal_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
             env,
             check_id="company_jira_sandbox_rehearsal",
             keys=("RUNE_JIRA_MCP_URL", "JIRA_BASE_URL"),
-            next_action="Run the JIRA source skill and adapter smoke against a sandbox project.",
+            next_action=(
+                "Run the JIRA source skill and "
+                "ops/source/rehearse_company_sources.py --source jira against a sandbox project."
+            ),
         ),
         _external_rehearsal_check(
             env,
             check_id="company_confluence_sandbox_rehearsal",
             keys=("RUNE_CONFLUENCE_MCP_URL", "CONFLUENCE_BASE_URL"),
             next_action=(
-                "Run the Confluence source skill and adapter smoke against a sandbox space."
+                "Run the Confluence source skill and "
+                "ops/source/rehearse_company_sources.py --source confluence "
+                "against a sandbox space."
             ),
         ),
     ]
