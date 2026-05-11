@@ -100,11 +100,21 @@ REQUIRED_COVERAGE: tuple[ReleaseBlockerCoverage, ...] = (
             ),
             EvidenceFile(
                 path="tests/contract/test_replay_feedback_api.py",
-                snippets=("eval gate blocked activation", "review_required", "canary_required"),
+                snippets=(
+                    "eval gate blocked activation",
+                    "review_required",
+                    "canary_required",
+                    "improvement_rolled_back",
+                ),
             ),
             EvidenceFile(
                 path="tests/unit/ops/test_feedback_eval_rehearsal.py",
-                snippets=("security_gate_status", "blocked", "security_failures"),
+                snippets=(
+                    "rollback_status",
+                    "security_gate_status",
+                    "blocked",
+                    "security_failures",
+                ),
             ),
         ),
     ),

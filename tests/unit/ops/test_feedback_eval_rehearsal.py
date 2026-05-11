@@ -15,6 +15,8 @@ def test_feedback_eval_rehearsal_exercises_review_canary_and_security_blocker() 
     assert result["review_status"] == "review_ready"
     assert result["canary_status"] == "canary"
     assert result["active_status"] == "active"
+    assert result["rollback_status"] == "rolled_back"
+    assert result["restored_version_id"] == "local_active"
     assert result["security_gate_status"] == "blocked"
     assert any("security_failures" in blocker for blocker in result["security_blockers"])
 

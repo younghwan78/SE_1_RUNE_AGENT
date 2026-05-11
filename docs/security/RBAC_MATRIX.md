@@ -36,6 +36,7 @@ Current protected routes:
 | `GET /api/v1/eval/gate` | `developer` | runs local eval gate over feedback-derived datasets |
 | `GET /api/v1/improvements/candidates` | `developer` | exposes controlled improvement candidates |
 | `POST /api/v1/improvements/{candidate_id}/activate` | `admin` | promotes improvement candidates through review/canary/active states |
+| `POST /api/v1/improvements/{candidate_id}/rollback` | `admin` | rolls back a canary or active improvement after regression |
 | `GET /api/v1/audit/events` | `operator` | exposes operational audit history |
 
 Trusted proxy mode:

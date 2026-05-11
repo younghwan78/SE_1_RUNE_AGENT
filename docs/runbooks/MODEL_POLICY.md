@@ -64,6 +64,11 @@ Promotion path:
 Any prompt/model/rule/retrieval/scoring change that fails security eval or
 regression thresholds must remain blocked or be rolled back.
 
+Local controlled-improvement rollback is exposed through
+`POST /api/v1/improvements/{candidate_id}/rollback`. It only accepts candidates
+that have reached `canary` or `active`, records `improvement_rolled_back` audit
+evidence, and references the previous version through `restored_version_id`.
+
 ## Model Change Checklist
 
 Before changing an active model profile or prompt:

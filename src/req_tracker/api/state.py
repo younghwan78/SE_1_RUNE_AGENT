@@ -48,6 +48,7 @@ class RuntimeState(BaseModel):
     replays: dict[str, ReplayResult]
     idempotency_results: dict[str, dict[str, Any]]
     registry_activations: dict[str, dict[str, Any]]
+    improvement_decisions: dict[str, dict[str, Any]]
     scheduler: RunScheduler
     state_store: StateStore | None = None
 
@@ -79,6 +80,7 @@ class RuntimeState(BaseModel):
             replays={},
             idempotency_results={},
             registry_activations={},
+            improvement_decisions={},
             scheduler=RunScheduler(
                 schedule_config,
                 lease_manager=scheduler_lease_manager,
@@ -385,6 +387,23 @@ class RuntimeState(BaseModel):
             payload=activation,
         )
 
+    def record_improvement_decision(
+        self,
+        *,
+        candidate_id: str,
+        decision: dict[str, Any],
+    ) -> None:
+        """Record a controlled improvement promotion or rollback decision."""
+        self.improvement_decisions[candidate_id] = decision
+        if self.state_store is None:
+            return
+        self.state_store.upsert(
+            collection="improvement_decisions",
+            entity_id=candidate_id,
+            project_key=None,
+            payload=decision,
+        )
+
     def archive_and_prune_audit(self) -> dict[str, object]:
         """Archive/prune audit events and mirror pruned rows into the state store."""
         result = self.audit.archive_and_prune(archive_writer=self.audit_archive_store)
@@ -421,6 +440,10 @@ class RuntimeState(BaseModel):
             activation_id = payload.get("activation_id")
             if isinstance(activation_id, str):
                 self.registry_activations[activation_id] = payload
+        for payload in self.state_store.list("improvement_decisions"):
+            candidate_id = payload.get("candidate_id")
+            if isinstance(candidate_id, str):
+                self.improvement_decisions[candidate_id] = payload
         for payload in self.state_store.list("approval_items"):
             approval = ApprovalItem.model_validate(payload)
             self.approvals.items[approval.approval_id] = approval

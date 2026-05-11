@@ -34,6 +34,7 @@ def test_production_plan_endpoint_surface_is_registered(client: TestClient) -> N
         ("POST", "/api/v1/approvals/{approval_id}/decision"),
         ("POST", "/api/v1/findings/{finding_id}/status"),
         ("POST", "/api/v1/feedback"),
+        ("POST", "/api/v1/improvements/{candidate_id}/rollback"),
         ("POST", "/api/v1/admin/prompt-versions/{prompt_version_id}/activate"),
         ("POST", "/api/v1/admin/model-profiles/{model_profile_id}/activate"),
     }

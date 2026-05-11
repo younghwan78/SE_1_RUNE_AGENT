@@ -45,6 +45,15 @@ def run_feedback_eval_rehearsal() -> dict[str, Any]:
             json={"reviewer_approved": True, "canary_passed": True},
         )
         active.raise_for_status()
+        rollback = client.post(
+            f"/api/v1/improvements/{candidate_id}/rollback",
+            json={
+                "rolled_back_by": "admin@example.com",
+                "reason_code": "canary_regression",
+                "comment": "local rehearsal rollback after canary regression",
+            },
+        )
+        rollback.raise_for_status()
         security_feedback = client.post(
             "/api/v1/feedback",
             json={
@@ -63,12 +72,14 @@ def run_feedback_eval_rehearsal() -> dict[str, Any]:
 
     gate_payload = gate.json()
     active_payload = active.json()
+    rollback_payload = rollback.json()
     security_gate_payload = security_gate.json()
     passed = (
         gate_payload["status"] == "passed"
         and review_ready.json()["status"] == "review_ready"
         and canary.json()["status"] == "canary"
         and active_payload["status"] == "active"
+        and rollback_payload["status"] == "rolled_back"
         and security_gate_payload["status"] == "blocked"
     )
     return {
@@ -78,6 +89,8 @@ def run_feedback_eval_rehearsal() -> dict[str, Any]:
         "review_status": review_ready.json()["status"],
         "canary_status": canary.json()["status"],
         "active_status": active_payload["status"],
+        "rollback_status": rollback_payload["status"],
+        "restored_version_id": rollback_payload["restored_version_id"],
         "security_gate_status": security_gate_payload["status"],
         "security_blockers": security_gate_payload["blockers"],
         "schema_version": "v1",

@@ -249,6 +249,16 @@ def test_api_key_auth_protects_feedback_eval_and_improvement_activation(tmp_path
             headers=admin_headers,
             json={"reviewer_approved": True, "canary_passed": True},
         )
+        developer_rollback = client.post(
+            f"/api/v1/improvements/{candidate_id}/rollback",
+            headers=developer_headers,
+            json={"reason_code": "canary_regression"},
+        )
+        admin_rollback = client.post(
+            f"/api/v1/improvements/{candidate_id}/rollback",
+            headers=admin_headers,
+            json={"reason_code": "canary_regression"},
+        )
         developer_model_activation = client.post(
             "/api/v1/admin/model-profiles/dummy-local/activate",
             headers=developer_headers,
@@ -277,6 +287,8 @@ def test_api_key_auth_protects_feedback_eval_and_improvement_activation(tmp_path
     assert improvements.status_code == 200
     assert developer_activation.status_code == 403
     assert admin_activation.status_code == 200
+    assert developer_rollback.status_code == 403
+    assert admin_rollback.status_code == 200
     assert developer_model_activation.status_code == 403
     assert admin_model_activation.status_code == 200
 

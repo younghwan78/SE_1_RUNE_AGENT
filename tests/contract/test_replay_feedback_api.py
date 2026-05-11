@@ -112,6 +112,7 @@ def test_improvement_activation_requires_review_and_canary_after_eval_passes(
         f"/api/v1/improvements/{candidate_id}/activate",
         json={"reviewer_approved": True, "canary_passed": True},
     )
+    backwards = client.post(f"/api/v1/improvements/{candidate_id}/activate")
 
     assert review_ready.status_code == 200
     assert review_ready.json()["status"] == "review_ready"
@@ -122,6 +123,90 @@ def test_improvement_activation_requires_review_and_canary_after_eval_passes(
     assert active.status_code == 200
     assert active.json()["status"] == "active"
     assert active.json()["promotion_status"] == "active"
+    assert backwards.status_code == 409
+    assert backwards.json()["detail"]["message"] == "improvement promotion cannot move backwards"
+
+
+def test_active_improvement_can_be_rolled_back_and_audited(
+    client: TestClient,
+) -> None:
+    for index in range(2):
+        feedback = client.post(
+            "/api/v1/feedback",
+            json={
+                "feedback_id": f"fb_improvement_rollback_{index}",
+                "target_type": "edge",
+                "target_id": f"edge_improvement_rollback_{index}",
+                "action": "rejected",
+                "user_id": "reviewer",
+                "user_role": "System Architect",
+                "reason_code": "wrong_relation",
+            },
+        )
+        assert feedback.status_code == 200
+
+    improvements = client.get("/api/v1/improvements/candidates")
+    candidate_id = improvements.json()[0]["candidate_id"]
+    active = client.post(
+        f"/api/v1/improvements/{candidate_id}/activate",
+        json={"reviewer_approved": True, "canary_passed": True},
+    )
+    rollback = client.post(
+        f"/api/v1/improvements/{candidate_id}/rollback",
+        json={
+            "rolled_back_by": "admin@example.com",
+            "reason_code": "canary_regression",
+            "comment": "reject rate increased during local rehearsal",
+        },
+        headers={"Idempotency-Key": "idem-improvement-rollback-1"},
+    )
+    retry = client.post(
+        f"/api/v1/improvements/{candidate_id}/rollback",
+        json={
+            "rolled_back_by": "admin@example.com",
+            "reason_code": "canary_regression",
+            "comment": "reject rate increased during local rehearsal",
+        },
+        headers={"Idempotency-Key": "idem-improvement-rollback-1"},
+    )
+    after = client.get("/api/v1/improvements/candidates")
+    audit = client.get("/api/v1/audit/events?action=improvement_rolled_back")
+
+    assert active.status_code == 200
+    assert rollback.status_code == 200
+    assert rollback.json()["status"] == "rolled_back"
+    assert rollback.json()["rollback_status"] == "rolled_back"
+    assert rollback.json()["previous_status"] == "active"
+    assert rollback.json()["restored_version_id"] == "local_active"
+    assert retry.status_code == 200
+    assert retry.json() == rollback.json()
+    assert after.json()[0]["status"] == "rolled_back"
+    assert audit.status_code == 200
+    assert audit.json()[0]["action"] == "improvement_rolled_back"
+
+
+def test_draft_improvement_cannot_be_rolled_back(client: TestClient) -> None:
+    for index in range(2):
+        feedback = client.post(
+            "/api/v1/feedback",
+            json={
+                "feedback_id": f"fb_improvement_draft_rollback_{index}",
+                "target_type": "edge",
+                "target_id": f"edge_improvement_draft_rollback_{index}",
+                "action": "rejected",
+                "user_id": "reviewer",
+                "user_role": "System Architect",
+                "reason_code": "wrong_relation",
+            },
+        )
+        assert feedback.status_code == 200
+
+    improvements = client.get("/api/v1/improvements/candidates")
+    candidate_id = improvements.json()[0]["candidate_id"]
+    rollback = client.post(f"/api/v1/improvements/{candidate_id}/rollback")
+
+    assert rollback.status_code == 409
+    assert rollback.json()["detail"]["message"] == "improvement is not rollbackable"
 
 
 def test_improvement_activation_idempotency_key_reuses_eval_response(

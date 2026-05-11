@@ -225,7 +225,7 @@ uv run python ops/rehearsal/run_full_stack_rehearsal.py
 The full-stack rehearsal includes readiness, analysis, approval commit, graph
 projection, audit retention, API restart restore, and a small smoke-load pass.
 
-Run feedback/eval/canary rehearsal:
+Run feedback/eval/canary/rollback rehearsal:
 
 ```bash
 uv run python ops/evals/run_feedback_eval_rehearsal.py

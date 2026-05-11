@@ -88,6 +88,29 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
             },
         )
         assert activation.status_code == 200
+        for index in range(2):
+            feedback = client.post(
+                "/api/v1/feedback",
+                json={
+                    "feedback_id": f"fb_restore_improvement_{index}",
+                    "target_type": "edge",
+                    "target_id": f"edge_restore_improvement_{index}",
+                    "action": "rejected",
+                    "user_id": "reviewer",
+                    "user_role": "System Architect",
+                    "reason_code": "wrong_relation",
+                },
+            )
+            assert feedback.status_code == 200
+        improvements = client.get("/api/v1/improvements/candidates")
+        improvement_id = improvements.json()[0]["candidate_id"]
+        improvement = client.post(
+            f"/api/v1/improvements/{improvement_id}/activate",
+            json={"reviewer_approved": True, "canary_passed": True},
+        )
+        assert improvement.status_code == 200
+        rollback = client.post(f"/api/v1/improvements/{improvement_id}/rollback")
+        assert rollback.status_code == 200
         replay = client.post(
             "/api/v1/runs/run_restore_1/replay",
             json={"replay_run_id": "replay_restore_1", "scenario": "RUNE_CAM_ALPHA"},
@@ -111,6 +134,8 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
         approvals = client.get("/api/v1/approvals")
         audit = client.get("/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
         activation_audit = client.get("/api/v1/audit/events?action=prompt_version_activated")
+        rollback_audit = client.get("/api/v1/audit/events?action=improvement_rolled_back")
+        restored_improvements = client.get("/api/v1/improvements/candidates")
         llm_calls = client.get("/api/v1/runs/run_restore_1/llm-calls")
         replay_diff = client.get("/api/v1/replays/replay_restore_1/diff")
         findings = client.get("/api/v1/findings")
@@ -144,6 +169,19 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     }
     assert activation_audit.status_code == 200
     assert activation_audit.json()[0]["action"] == "prompt_version_activated"
+    assert rollback_audit.status_code == 200
+    assert rollback_audit.json()[0]["action"] == "improvement_rolled_back"
+    assert restored_improvements.status_code == 200
+    restored_improvement = next(
+        item
+        for item in restored_improvements.json()
+        if item["candidate_id"] == improvement_id
+    )
+    assert restored_improvement["status"] == "rolled_back"
+    assert (
+        second_app.state.runtime.improvement_decisions[improvement_id]["status"]
+        == "rolled_back"
+    )
 
 
 def test_sqlite_state_store_restores_analyze_idempotency_after_restart(tmp_path) -> None:  # type: ignore[no-untyped-def]
