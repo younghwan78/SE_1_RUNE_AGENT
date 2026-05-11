@@ -243,6 +243,12 @@ approval records. Validate that the committed example file is still non-passable
 uv run python ops/rehearsal/validate_evidence_example.py
 ```
 
+Validate that PostgreSQL typed mirror specs still match packaged migration DDL:
+
+```bash
+uv run python ops/rehearsal/validate_postgres_typed_mirrors.py
+```
+
 After real staging rehearsals, run:
 
 ```bash
