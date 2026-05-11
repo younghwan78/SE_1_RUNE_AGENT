@@ -1,0 +1,87 @@
+replicaCount: 1
+
+image:
+  repository: rune-agent
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: true
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: rune-agent.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+artifactVolume:
+  enabled: true
+  existingClaim: ""
+  size: 20Gi
+  storageClassName: ""
+
+existingSecret:
+  name: rune-agent-secrets
+  keys:
+    postgresDsn: POSTGRES_DSN
+    neo4jPassword: NEO4J_PASSWORD
+    qdrantApiKey: QDRANT_API_KEY
+    modelGatewayApiKey: MODEL_GATEWAY_API_KEY
+    trustedProxySecret: TRUSTED_PROXY_SECRET
+
+env:
+  REQ_TRACKER_ENV: production
+  DATASOURCE_MODE: jira
+  STATE_STORE: postgres
+  GRAPH_BACKEND: neo4j
+  NEO4J_URI: bolt://neo4j:7687
+  NEO4J_USERNAME: neo4j
+  NEO4J_DATABASE: neo4j
+  VECTOR_BACKEND: qdrant
+  QDRANT_URL: http://qdrant:6333
+  QDRANT_COLLECTION: rune_chunks
+  QDRANT_VECTOR_SIZE: "64"
+  MODEL_GATEWAY_MODE: http_json
+  MODEL_GATEWAY_ENDPOINT_URL: ""
+  ARTIFACT_STORE: local
+  ARTIFACT_ROOT: /var/lib/rune-agent/artifacts
+  AUTH_MODE: trusted_proxy
+  TRUSTED_DEFAULT_ROLE: viewer
+  TRUSTED_GROUP_ROLE_MAP: '{"rune-viewers":"viewer","rune-developers":"developer","rune-operators":"operator","rune-admins":"admin"}'
+  LOG_LEVEL: INFO
+  ENABLE_DOCS: "false"
+  SCHEDULER_ENABLED: "true"
+  SCHEDULER_INTERVAL_SECONDS: "3600"
+  SCHEDULER_PROJECT_KEY: RUNE_CAM_ALPHA
+  SCHEDULER_SCENARIO: RUNE_MULTI_SOURCE
+  SCHEDULER_LEASE_NAME: rune-periodic-analysis
+  SCHEDULER_LEASE_TTL_SECONDS: "300"
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

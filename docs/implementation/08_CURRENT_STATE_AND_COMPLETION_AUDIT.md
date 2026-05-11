@@ -72,7 +72,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 138 passed, 3 skipped
+- `uv run pytest`: 141 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -87,12 +87,14 @@ Latest local verification:
 - `uv run python ops/security/rehearse_trusted_proxy_auth.py`: failed as expected on this local shell because `RUNE_API_BASE_URL` and `TRUSTED_PROXY_SECRET` are unset; output masks secret state and lists missing config
 - `uv run python ops/security/rehearse_masking_policy.py`: passed, verifying representative sensitive inputs are redacted without printing raw sensitive strings or forbidden patterns
 - `uv run pytest tests/unit/ops/test_backup_verify.py`: passed, validating backup-set required files, SHA256 mismatch detection, artifact tar, Qdrant JSON, Neo4j dump marker, and git commit marker checks
-- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3234 ms against a 5000 ms local rehearsal threshold)
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3088 ms against a 5000 ms local rehearsal threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected on this local shell because production env checks are still unset; manual evidence resolved example manual gates
 - `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 6 passed, including manual evidence file loading, complete env/evidence pass behavior, and unknown evidence warning blocking
+- `uv run pytest tests/unit/ops/test_helm_chart.py`: 3 passed, validating chart artifact presence, production environment mapping, secret references, and no hardcoded secret/MCP transport names
+- `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment
 
 Latest GitHub verification:
 
@@ -128,7 +130,7 @@ Latest GitHub verification:
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
 | Scheduler | `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture, PostgreSQL `scheduler_leases` table, lease acquire/release tests, Ubuntu multi-replica note | Periodic run path complete for single-process and PostgreSQL lease-backed multi-worker deployments; external orchestration/Kubernetes CronJob remains an optional platform decision |
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
-| Migration and Helm operation tracks | packaged migrations under `src/req_tracker/storage/migrations/postgres`, `ops/migrations/README.md`, `ops/helm/README.md` | Migration foundation complete; Helm packaging intentionally deferred until platform details are known |
+| Migration and Helm operation tracks | packaged migrations under `src/req_tracker/storage/migrations/postgres`, `ops/migrations/README.md`, `ops/helm/rune-agent`, `tests/unit/ops/test_helm_chart.py` | Migration foundation and production-shaped Helm scaffold complete; target-cluster `helm lint/template` and platform-specific values remain pending until Kubernetes environment details are available |
 | Eval/security/replay test tracks | `tests/unit/evals`, `tests/contract/test_replay_feedback_api.py`, `tests/contract/test_security_api.py`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md` | Current coverage exists; dedicated folders anchored for larger end-to-end fixtures |
 | CI | `.github/workflows/ci.yml` | Complete |
 
@@ -199,6 +201,8 @@ Latest GitHub verification:
   API replicas on one PostgreSQL-backed service, decide whether to keep the
   in-app PostgreSQL scheduler lease or move periodic execution to CronJob or a
   queue worker.
+- Run `helm lint ops/helm/rune-agent` and `helm template` with company values
+  once Helm and the target Kubernetes policy are available.
 
 ## 4. Completion Gate
 

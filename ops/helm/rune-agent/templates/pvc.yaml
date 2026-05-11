@@ -1,0 +1,17 @@
+{{- if and .Values.artifactVolume.enabled (not .Values.artifactVolume.existingClaim) -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "rune-agent.fullname" . }}-artifacts
+  labels:
+    {{- include "rune-agent.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.artifactVolume.size | quote }}
+  {{- if .Values.artifactVolume.storageClassName }}
+  storageClassName: {{ .Values.artifactVolume.storageClassName | quote }}
+  {{- end }}
+{{- end }}
