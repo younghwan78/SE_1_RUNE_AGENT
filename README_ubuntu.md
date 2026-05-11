@@ -123,6 +123,12 @@ Run disposable backend integration tests on a development server with Docker:
 uv run python ops/integration/run_backend_integration.py
 ```
 
+Run a production-shaped API rehearsal against those disposable backends:
+
+```bash
+uv run python ops/rehearsal/run_full_stack_rehearsal.py
+```
+
 Use `RUNE_IT_POSTGRES_PORT`, `RUNE_IT_NEO4J_BOLT_PORT`, and
 `RUNE_IT_QDRANT_HTTP_PORT` if the default local ports conflict with existing
 services.

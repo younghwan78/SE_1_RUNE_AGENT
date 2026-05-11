@@ -28,9 +28,10 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 84 passed, 3 skipped
+- `uv run pytest`: 85 passed, 3 skipped
 - `uv run python ops/integration/run_backend_integration.py`: 3 passed
 - `uv run python ops/source/smoke_source_adapters.py`: passed
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed
 
 Latest GitHub verification:
 
@@ -56,7 +57,7 @@ Latest GitHub verification:
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
 | Scheduler | process-local `RunScheduler`, API/UI/runbook | Single-process complete; multi-worker orchestration pending |
-| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py` | Local/server scaffold and rehearsal assets complete; real environment rehearsal pending |
+| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py` | Local/server scaffold and disposable full-stack rehearsal complete; company/staging environment rehearsal pending |
 | CI | `.github/workflows/ci.yml` | Complete |
 
 ## 3. Remaining Implementation Backlog
@@ -96,8 +97,8 @@ Latest GitHub verification:
 
 - Rehearse trusted-proxy auth behind a real company SSO/OIDC reverse proxy and
   replace it with direct IdP token validation only if required.
-- Run backup/restore and load rehearsals against disposable production-like
-  PostgreSQL, Neo4j, Qdrant, and artifact store environments.
+- Run backup/restore and load rehearsals against company/staging PostgreSQL,
+  Neo4j, Qdrant, and artifact store environments.
 - Decide React/React Flow migration after real graph shape validation.
 
 ## 4. Completion Gate

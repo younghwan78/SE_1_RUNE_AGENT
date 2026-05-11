@@ -54,6 +54,16 @@ stack down. Override host ports with `RUNE_IT_POSTGRES_PORT`,
 `RUNE_IT_NEO4J_BOLT_PORT`, and `RUNE_IT_QDRANT_HTTP_PORT` when local ports are
 already in use.
 
+Run a production-shaped full-stack rehearsal:
+
+```powershell
+uv run python ops/rehearsal/run_full_stack_rehearsal.py
+```
+
+This starts the disposable backends, launches the API with
+`STATE_STORE=postgres`, `GRAPH_BACKEND=neo4j`, and `VECTOR_BACKEND=qdrant`, then
+runs analyze, approval commit, graph projection, and audit retention checks.
+
 Run the API locally:
 
 ```powershell
@@ -172,6 +182,7 @@ Current local implementation:
 - trusted SSO/OIDC proxy header auth foundation with group-to-role mapping
 - backup/restore rehearsal runbook and smoke load runner
 - Docker Compose backend integration runner for PostgreSQL, Neo4j, and Qdrant
+- full-stack API rehearsal against PostgreSQL, Neo4j, and Qdrant
 - periodic analysis scheduler for server operation
 
 Enable local SQLite persistence:

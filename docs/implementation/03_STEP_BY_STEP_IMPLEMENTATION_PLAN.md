@@ -576,6 +576,7 @@ Dummy 검증:
 - Neo4j graph backend foundation with env-gated integration test
 - Qdrant vector backend foundation with env-gated integration test
 - Docker Compose backend integration runner for disposable PostgreSQL, Neo4j, and Qdrant validation
+- full-stack API rehearsal against disposable PostgreSQL, Neo4j, and Qdrant with approval commit and graph/audit checks
 - pending approval queue and approved graph separation
 - approval approve/reject/hold/modify decision path
 - feedback summary, eval candidate, improvement candidate, eval gate block
@@ -597,7 +598,7 @@ Dummy 검증:
 아직 production 전환 전 남은 축:
 
 - production-grade typed PostgreSQL query repositories beyond the current core mirrors
-- company/staging PostgreSQL, Neo4j, and Qdrant rehearsal beyond disposable Docker validation
+- company/staging PostgreSQL, Neo4j, and Qdrant rehearsal beyond disposable Docker and local full-stack validation
 - real company JIRA/Confluence sandbox rehearsal behind the source skill/export boundary
 - real external/sandbox LLM payload diff validation after endpoint access is available
 - direct IdP/OIDC token validation and company group mapping rehearsal
