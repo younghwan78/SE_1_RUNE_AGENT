@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `db72fdb Add PostgreSQL audit archive pruning`
 - `7a0e019 Refresh audit after security hardening`
 - `03c8a0a Add audit archive prune foundation`
 - `a887e7b Add API key project authorization foundation`
@@ -25,7 +26,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `03c8a0a`: completed successfully
+- GitHub Actions `CI` run for `db72fdb`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
