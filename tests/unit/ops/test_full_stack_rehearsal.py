@@ -53,6 +53,31 @@ def test_load_smoke_summary_uses_smoke_runner(monkeypatch: Any) -> None:
     assert summary["passed"] is True
 
 
+def test_metrics_surface_requires_json_and_prometheus_counters() -> None:
+    rehearsal = _load_rehearsal_module()
+
+    metrics_summary = {
+        "schema_version": "v1",
+        "http": {"total_requests": 4},
+        "runtime": {
+            "runs": {"total": 1},
+            "llm_calls": {"total": 1},
+            "graph": {"nodes": 3},
+        },
+    }
+    prometheus_text = "\n".join(
+        [
+            "rune_http_requests_total 4",
+            "rune_agent_runs_total 1",
+            "rune_llm_calls_total 1",
+            "rune_graph_nodes 3",
+        ]
+    )
+
+    assert rehearsal.metrics_surface_passed(metrics_summary, prometheus_text) is True
+    assert rehearsal.metrics_surface_passed(metrics_summary, "rune_http_requests_total 4") is False
+
+
 def _load_rehearsal_module() -> ModuleType:
     module_path = Path("ops/rehearsal/run_full_stack_rehearsal.py")
     spec = importlib.util.spec_from_file_location("run_full_stack_rehearsal", module_path)

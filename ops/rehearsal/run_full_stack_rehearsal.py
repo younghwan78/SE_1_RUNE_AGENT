@@ -2,7 +2,7 @@
 
 The rehearsal starts disposable PostgreSQL, Neo4j, and Qdrant services, launches
 the FastAPI app against those backends, runs a dummy analysis, approves one
-graph delta, and checks health, graph projection, and audit retention APIs.
+graph delta, and checks health, graph projection, metrics, and audit retention APIs.
 """
 
 import argparse
@@ -127,6 +127,9 @@ def run_full_stack_rehearsal(
             get_json(f"{api_base_url}/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA")
         )
         audit_retention = require_object(get_json(f"{api_base_url}/api/v1/audit/retention"))
+        metrics_summary = require_object(get_json(f"{api_base_url}/api/v1/metrics/summary"))
+        prometheus_metrics = get_text(f"{api_base_url}/api/v1/metrics")
+        metrics_ok = metrics_surface_passed(metrics_summary, prometheus_metrics)
         stop_api_server(server)
         server = start_api_server(env, api_port)
         wait_for_health(api_base_url, timeout_seconds=timeout_seconds)
@@ -159,6 +162,7 @@ def run_full_stack_rehearsal(
             and decision["status"] == "approved"
             and projection["counts"]["visible_approved_edges"] >= 1
             and audit_retention["total_events"] >= 2
+            and metrics_ok
             and restart_restored
             and load_smoke["passed"]
         )
@@ -172,6 +176,15 @@ def run_full_stack_rehearsal(
             "approved_status": decision["status"],
             "graph_counts": projection["counts"],
             "audit_total_events": audit_retention["total_events"],
+            "metrics": {
+                "passed": metrics_ok,
+                "http_total_requests": metrics_summary["http"]["total_requests"],
+                "graph_nodes": metrics_summary["runtime"]["graph"]["nodes"],
+                "llm_calls": metrics_summary["runtime"]["llm_calls"]["total"],
+                "scheduler_runs_started": metrics_summary["runtime"]["scheduler"][
+                    "runs_started"
+                ],
+            },
             "restart_restored": restart_restored,
             "load_smoke": load_smoke,
             "schema_version": "v1",
@@ -237,6 +250,21 @@ def run_load_smoke(*, api_base_url: str, runs: int, max_p95_ms: float) -> dict[s
     }
 
 
+def metrics_surface_passed(metrics_summary: dict[str, Any], prometheus_text: str) -> bool:
+    """Return whether metrics endpoints expose the expected rehearsal counters."""
+    return (
+        metrics_summary.get("schema_version") == "v1"
+        and metrics_summary.get("http", {}).get("total_requests", 0) > 0
+        and metrics_summary.get("runtime", {}).get("runs", {}).get("total", 0) >= 1
+        and metrics_summary.get("runtime", {}).get("llm_calls", {}).get("total", 0) >= 1
+        and metrics_summary.get("runtime", {}).get("graph", {}).get("nodes", 0) >= 1
+        and "rune_http_requests_total" in prometheus_text
+        and "rune_agent_runs_total" in prometheus_text
+        and "rune_llm_calls_total" in prometheus_text
+        and "rune_graph_nodes" in prometheus_text
+    )
+
+
 def wait_for_health(base_url: str, *, timeout_seconds: int) -> dict[str, Any]:
     """Wait until the API health endpoint responds."""
     deadline = time.monotonic() + timeout_seconds
@@ -266,6 +294,16 @@ def get_json(url: str) -> dict[str, Any] | list[Any]:
     if not isinstance(loaded, dict | list):
         raise RuntimeError("response must be a JSON object or array")
     return loaded
+
+
+def get_text(url: str) -> str:
+    """GET text from the rehearsal API."""
+    req = request.Request(url, headers={"accept": "text/plain"}, method="GET")
+    try:
+        with request.urlopen(req, timeout=30) as response:
+            return response.read().decode("utf-8")
+    except error.HTTPError as exc:
+        raise RuntimeError(f"GET failed with HTTP {exc.code}: {url}") from exc
 
 
 def post_json(url: str, payload: dict[str, Any]) -> dict[str, Any]:
