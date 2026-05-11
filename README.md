@@ -130,7 +130,9 @@ uv run uvicorn req_tracker.api.app:app --host 127.0.0.1 --port 8000
 JIRA and Confluence source access remain behind `.claude/skills/rune-source-*`.
 The application provides `JiraRestSourceAdapter` and `ConfluenceRestSourceAdapter`
 for company-approved REST transport, while MCP tool names and credentials stay
-outside core code.
+outside core code. These REST adapters normalize rate-limit, retry, permission
+denial, and partial-failure warnings into the shared `SourceFetchResult`
+contract.
 
 Enable PostgreSQL persistence:
 

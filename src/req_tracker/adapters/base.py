@@ -58,6 +58,42 @@ class SourceFetchResult(AdapterModel):
     partial_failure: bool = False
 
 
+class SourceAdapterRequestError(Exception):
+    """Transport-level source request failure normalized for adapter retry policy."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | None = None,
+        retry_after_seconds: float | None = None,
+        code: str = "request_error",
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.retry_after_seconds = retry_after_seconds
+        self.code = code
+
+    @property
+    def status_label(self) -> str:
+        """Compact status/code label for warnings."""
+        return str(self.status_code) if self.status_code is not None else self.code
+
+    @property
+    def is_permission_denied(self) -> bool:
+        """Whether the source denied access to the requested scope."""
+        return self.status_code in {401, 403}
+
+    @property
+    def is_retryable(self) -> bool:
+        """Whether the request should be retried by source adapters."""
+        if self.status_code in {408, 409, 425, 429}:
+            return True
+        if self.status_code is not None and 500 <= self.status_code <= 599:
+            return True
+        return self.code in {"network_error", "timeout"}
+
+
 class SourceAdapter(Protocol):
     """Source adapter protocol."""
 
@@ -69,4 +105,3 @@ class SourceAdapter(Protocol):
         cursor: SyncCursor | None = None,
     ) -> SourceFetchResult:
         """Fetch source artifacts incrementally."""
-

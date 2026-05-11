@@ -4,9 +4,16 @@ import json
 import re
 from collections.abc import Callable
 from typing import Any
-from urllib import parse, request
+from urllib import error, parse, request
 
-from req_tracker.adapters.base import RawSourceArtifact, SourceFetchResult, SourceScope, SyncCursor
+from req_tracker.adapters.base import (
+    RawSourceArtifact,
+    SourceAdapterRequestError,
+    SourceFetchResult,
+    SourceScope,
+    SyncCursor,
+)
+from req_tracker.adapters.retry import RetrySleep, parse_retry_after, request_with_retry
 from req_tracker.debug.hash import stable_hash
 
 ConfluenceTransport = Callable[[str, str, dict[str, str], None], dict[str, Any]]
@@ -25,6 +32,8 @@ class ConfluenceRestSourceAdapter:
         space_key: str,
         cql: str | None = None,
         transport: ConfluenceTransport | None = None,
+        max_retries: int = 2,
+        retry_sleep: RetrySleep | None = None,
     ) -> None:
         if not base_url:
             raise ValueError("confluence base_url is required")
@@ -37,6 +46,8 @@ class ConfluenceRestSourceAdapter:
         self.space_key = space_key
         self.cql = cql
         self._transport = transport or _urllib_transport
+        self._max_retries = max_retries
+        self._retry_sleep = retry_sleep
 
     def fetch_incremental(
         self,
@@ -54,22 +65,34 @@ class ConfluenceRestSourceAdapter:
                 "expand": "body.storage,version,history,ancestors,metadata.labels",
             }
         )
-        response = self._transport(
-            "GET",
-            f"{self.base_url}/wiki/rest/api/content/search?{query}",
-            {"authorization": f"Bearer {self.token}", "accept": "application/json"},
-            None,
+        response, request_warnings = request_with_retry(
+            source_type="confluence",
+            max_retries=self._max_retries,
+            retry_sleep=self._retry_sleep,
+            request_call=lambda: self._transport(
+                "GET",
+                f"{self.base_url}/wiki/rest/api/content/search?{query}",
+                {"authorization": f"Bearer {self.token}", "accept": "application/json"},
+                None,
+            ),
         )
+        if response is None:
+            return SourceFetchResult(
+                artifacts=[],
+                next_cursor=None,
+                source_warnings=request_warnings,
+                partial_failure=True,
+            )
         results = response.get("results", [])
         if not isinstance(results, list):
             return SourceFetchResult(
                 artifacts=[],
                 next_cursor=None,
-                source_warnings=["confluence_response_results_not_list"],
+                source_warnings=[*request_warnings, "confluence_response_results_not_list"],
                 partial_failure=True,
             )
         artifacts: list[RawSourceArtifact] = []
-        warnings: list[str] = []
+        warnings: list[str] = list(request_warnings)
         for page in results:
             try:
                 artifacts.append(_page_to_artifact(page, self.base_url, scope.project_key))
@@ -170,8 +193,20 @@ def _urllib_transport(
     _payload: None,
 ) -> dict[str, Any]:
     req = request.Request(url, headers=headers, method=method)
-    with request.urlopen(req, timeout=30) as response:
-        loaded = json.loads(response.read().decode("utf-8"))
+    try:
+        with request.urlopen(req, timeout=30) as response:
+            loaded = json.loads(response.read().decode("utf-8"))
+    except error.HTTPError as exc:
+        raise SourceAdapterRequestError(
+            f"confluence http request failed: {exc.code}",
+            status_code=exc.code,
+            retry_after_seconds=parse_retry_after(exc.headers.get("Retry-After")),
+        ) from exc
+    except error.URLError as exc:
+        raise SourceAdapterRequestError(
+            f"confluence network request failed: {exc.reason}",
+            code="network_error",
+        ) from exc
     if not isinstance(loaded, dict):
         raise ValueError("confluence response must be an object")
     return loaded

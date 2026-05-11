@@ -8,9 +8,16 @@ the application only sees the stable SourceAdapter contract.
 import json
 from collections.abc import Callable
 from typing import Any
-from urllib import request
+from urllib import error, request
 
-from req_tracker.adapters.base import RawSourceArtifact, SourceFetchResult, SourceScope, SyncCursor
+from req_tracker.adapters.base import (
+    RawSourceArtifact,
+    SourceAdapterRequestError,
+    SourceFetchResult,
+    SourceScope,
+    SyncCursor,
+)
+from req_tracker.adapters.retry import RetrySleep, parse_retry_after, request_with_retry
 from req_tracker.debug.hash import stable_hash
 
 JiraTransport = Callable[[str, str, dict[str, str], dict[str, Any]], dict[str, Any]]
@@ -28,6 +35,8 @@ class JiraRestSourceAdapter:
         token: str,
         jql: str | None = None,
         transport: JiraTransport | None = None,
+        max_retries: int = 2,
+        retry_sleep: RetrySleep | None = None,
     ) -> None:
         if not base_url:
             raise ValueError("jira base_url is required")
@@ -37,6 +46,8 @@ class JiraRestSourceAdapter:
         self.token = token
         self.jql = jql
         self._transport = transport or _urllib_transport
+        self._max_retries = max_retries
+        self._retry_sleep = retry_sleep
 
     def fetch_incremental(
         self,
@@ -72,22 +83,34 @@ class JiraRestSourceAdapter:
             "accept": "application/json",
             "content-type": "application/json",
         }
-        response = self._transport(
-            "POST",
-            f"{self.base_url}/rest/api/3/search",
-            headers,
-            payload,
+        response, request_warnings = request_with_retry(
+            source_type="jira",
+            max_retries=self._max_retries,
+            retry_sleep=self._retry_sleep,
+            request_call=lambda: self._transport(
+                "POST",
+                f"{self.base_url}/rest/api/3/search",
+                headers,
+                payload,
+            ),
         )
+        if response is None:
+            return SourceFetchResult(
+                artifacts=[],
+                next_cursor=None,
+                source_warnings=request_warnings,
+                partial_failure=True,
+            )
         issues = response.get("issues", [])
         if not isinstance(issues, list):
             return SourceFetchResult(
                 artifacts=[],
                 next_cursor=None,
-                source_warnings=["jira_response_issues_not_list"],
+                source_warnings=[*request_warnings, "jira_response_issues_not_list"],
                 partial_failure=True,
             )
         artifacts: list[RawSourceArtifact] = []
-        warnings: list[str] = []
+        warnings: list[str] = list(request_warnings)
         for issue in issues:
             try:
                 artifacts.append(_issue_to_artifact(issue, self.base_url, scope.project_key))
@@ -203,8 +226,20 @@ def _urllib_transport(
 ) -> dict[str, Any]:
     data = json.dumps(payload).encode("utf-8")
     req = request.Request(url, data=data, headers=headers, method=method)
-    with request.urlopen(req, timeout=30) as response:
-        loaded = json.loads(response.read().decode("utf-8"))
+    try:
+        with request.urlopen(req, timeout=30) as response:
+            loaded = json.loads(response.read().decode("utf-8"))
+    except error.HTTPError as exc:
+        raise SourceAdapterRequestError(
+            f"jira http request failed: {exc.code}",
+            status_code=exc.code,
+            retry_after_seconds=parse_retry_after(exc.headers.get("Retry-After")),
+        ) from exc
+    except error.URLError as exc:
+        raise SourceAdapterRequestError(
+            f"jira network request failed: {exc.reason}",
+            code="network_error",
+        ) from exc
     if not isinstance(loaded, dict):
         raise ValueError("jira response must be an object")
     return loaded

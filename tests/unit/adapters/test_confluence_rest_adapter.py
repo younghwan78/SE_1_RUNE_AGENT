@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from req_tracker.adapters.base import SourceScope
+from req_tracker.adapters.base import SourceAdapterRequestError, SourceScope
 from req_tracker.adapters.confluence_rest import ConfluenceRestSourceAdapter
 
 
@@ -57,6 +57,65 @@ def test_confluence_rest_adapter_reports_malformed_page_warning() -> None:
     assert result.artifacts == []
     assert result.partial_failure is True
     assert result.source_warnings[0].startswith("confluence_page_skipped:broken")
+
+
+def test_confluence_rest_adapter_retries_transient_server_error() -> None:
+    calls = 0
+
+    def transport(
+        _method: str,
+        _url: str,
+        _headers: dict[str, str],
+        _payload: None,
+    ) -> dict[str, Any]:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise SourceAdapterRequestError("temporary failure", status_code=503)
+        return {"size": 1, "totalSize": 1, "results": [_page("123", "Camera Architecture")]}
+
+    adapter = ConfluenceRestSourceAdapter(
+        base_url="https://confluence.example.com",
+        token="token",
+        space_key="CAM",
+        transport=transport,
+        max_retries=1,
+    )
+
+    result = adapter.fetch_incremental(SourceScope(project_key="RUNE_CAM_ALPHA"))
+
+    assert calls == 2
+    assert result.partial_failure is True
+    assert result.source_warnings == ["confluence_request_retry:503:attempt_1"]
+    assert result.artifacts[0].external_id == "123"
+
+
+def test_confluence_rest_adapter_reports_permission_denied_without_retry() -> None:
+    calls = 0
+
+    def transport(
+        _method: str,
+        _url: str,
+        _headers: dict[str, str],
+        _payload: None,
+    ) -> dict[str, Any]:
+        nonlocal calls
+        calls += 1
+        raise SourceAdapterRequestError("unauthorized", status_code=401)
+
+    adapter = ConfluenceRestSourceAdapter(
+        base_url="https://confluence.example.com",
+        token="token",
+        space_key="CAM",
+        transport=transport,
+    )
+
+    result = adapter.fetch_incremental(SourceScope(project_key="RUNE_CAM_ALPHA"))
+
+    assert calls == 1
+    assert result.artifacts == []
+    assert result.partial_failure is True
+    assert result.source_warnings == ["confluence_permission_denied:401"]
 
 
 def _page(page_id: str, title: str) -> dict[str, Any]:

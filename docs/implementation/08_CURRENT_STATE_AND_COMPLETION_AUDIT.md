@@ -10,28 +10,28 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `0174d2b Add Confluence REST source adapter foundation`
+- `9ec511f Add API key RBAC foundation`
+- `5ec1b0c Add debug approval lineage API`
+- `5a6b3e5 Add model gateway retry and fallback traces`
 - `98df703 Add JIRA REST source adapter foundation`
-- `6ce6b99 Add Qdrant vector backend foundation`
-- `c85727d Add Neo4j graph backend foundation`
-- `d02c026 Guard unsupported production backends`
-- `d1f781c Add PostgreSQL typed read and rollback support`
 
 Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 53 passed, 3 skipped
+- `uv run pytest`: 65 passed, 3 skipped
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `98df703`: completed successfully
+- GitHub Actions `CI` run for `0174d2b`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
 | Requirement | Current evidence | Status |
 | --- | --- | --- |
 | Production plan is the source of truth | `PRODUCTION_EXECUTION_PLAN.md`, `docs/implementation/03_STEP_BY_STEP_IMPLEMENTATION_PLAN.md` | Complete |
-| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, export adapters, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST foundation complete; Email live access pending |
+| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, export adapters, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry and permission-warning foundation complete; Email live access pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, policy, structured validation retry, fallback trace tests | Retry/fallback foundation complete; real provider profiles pending |
@@ -70,8 +70,9 @@ Latest GitHub verification:
 - Run JIRA connector against a disposable or sandbox JIRA project.
 - Keep MCP/REST/export selection inside Claude Code source skills and local
   config, not in core Python workflow code.
-- Add sync cursor, rate limit, retry, permission mapping, and partial failure
-  reporting.
+- Map source permission results to project authorization policy after real
+  company identity rules are available.
+- Extend the same live-source validation path to Confluence sandbox access.
 
 ### P3: Model Provider and Debug Workbench
 

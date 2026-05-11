@@ -565,6 +565,7 @@ Dummy 검증:
 - export-file adapters for JIRA, Confluence, and restricted decision/email sources
 - JIRA REST source adapter foundation behind the shared `SourceAdapter` contract
 - Confluence REST source adapter foundation behind the shared `SourceAdapter` contract
+- JIRA/Confluence REST retry, rate-limit, permission-denied, and warning handling foundation
 - ingestion normalization, masking, chunking, evidence span path
 - deterministic node extraction, source-link edge candidate generation, findings rules
 - graph/vector backend protocols for production backend replacement
