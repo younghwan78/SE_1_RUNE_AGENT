@@ -1,0 +1,47 @@
+[
+  {
+    "prompt_version_id": "pv_node_extraction_v1",
+    "task_name": "node_extraction",
+    "template": "Extract MBSE ontology nodes from the masked source payload and return only schema-valid JSON.",
+    "schema_version_ref": "ontology.v1.node_extraction",
+    "retrieval_policy_id": "ret_dummy_v1",
+    "created_by": "system",
+    "status": "active"
+  },
+  {
+    "prompt_version_id": "pv_edge_linking_v1",
+    "task_name": "edge_linking",
+    "template": "Propose MBSE traceability edges from approved source evidence and return only schema-valid JSON.",
+    "schema_version_ref": "ontology.v1.edge_linking",
+    "retrieval_policy_id": "ret_dummy_v1",
+    "created_by": "system",
+    "status": "active"
+  },
+  {
+    "prompt_version_id": "pv_finding_reasoning_v1",
+    "task_name": "finding_reasoning",
+    "template": "Explain traceability findings using provided evidence and return only schema-valid JSON.",
+    "schema_version_ref": "ontology.v1.finding_reasoning",
+    "retrieval_policy_id": "ret_dummy_v1",
+    "created_by": "system",
+    "status": "active"
+  },
+  {
+    "prompt_version_id": "pv_impact_analysis_v1",
+    "task_name": "impact_analysis",
+    "template": "Analyze change impact candidates from graph context and return only schema-valid JSON.",
+    "schema_version_ref": "ontology.v1.impact_analysis",
+    "retrieval_policy_id": "ret_dummy_v1",
+    "created_by": "system",
+    "status": "active"
+  },
+  {
+    "prompt_version_id": "pv_answer_generation_v1",
+    "task_name": "answer_generation",
+    "template": "Answer with cited evidence from the supplied graph and source context. Do not invent unsupported facts.",
+    "schema_version_ref": "ontology.v1.answer_generation",
+    "retrieval_policy_id": "ret_dummy_v1",
+    "created_by": "system",
+    "status": "active"
+  }
+]

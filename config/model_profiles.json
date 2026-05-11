@@ -1,0 +1,20 @@
+[
+  {
+    "model_profile_id": "dummy-local",
+    "provider": "dummy",
+    "model_name": "deterministic-dummy",
+    "endpoint_alias": "local-fixture",
+    "allowed_data_classes": [
+      "public_internal",
+      "restricted",
+      "confidential",
+      "no_external_llm"
+    ],
+    "supports_json_schema": true,
+    "supports_tool_calling": false,
+    "max_context_tokens": 8192,
+    "default_temperature": 0.0,
+    "timeout_seconds": 30,
+    "is_active": true
+  }
+]

@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `22d7343 Add structured request logging`
 - `5a66365 Anchor production repo shape docs`
 - `93d96f0 Refresh audit after masking rehearsal`
 - `f93b973 Add masking policy rehearsal gate`
@@ -52,7 +53,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 115 passed, 3 skipped
+- `uv run pytest`: 116 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -86,7 +87,7 @@ Latest GitHub verification:
 | Expected repository shape is anchored | `src/req_tracker/*`, `.claude/skills/rune-source-*`, `docs/api/README.md`, `docs/ontology/ONTOLOGY_V1.md`, `ops/migrations/README.md`, `ops/helm/README.md`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md` | Complete for implemented and deferred tracks |
 | Ontology v1 is documented and executable | `docs/ontology/ONTOLOGY_V1.md`, `src/req_tracker/ontology/models.py`, `tests/contract/test_models.py` | Complete |
 | API documentation path exists | `docs/api/README.md`, `src/req_tracker/api/routes/*`, `tests/contract/*`, optional `/openapi.json` with `ENABLE_DOCS=true` | Complete |
-| Data and model policies are fixed | `docs/security/DATA_POLICY.md`, `docs/runbooks/MODEL_POLICY.md`, `src/req_tracker/model_gateway/policy.py`, `ops/security/rehearse_masking_policy.py`, `ops/model_gateway/smoke_model_gateway.py` | Complete for local policy baseline; company model profile approval pending |
+| Data and model policies are fixed | `docs/security/DATA_POLICY.md`, `docs/runbooks/MODEL_POLICY.md`, `config/model_profiles.json`, `config/prompt_versions.json`, `src/req_tracker/model_gateway/policy.py`, `ops/security/rehearse_masking_policy.py`, `ops/model_gateway/smoke_model_gateway.py` | Complete for local policy baseline; company model profile approval pending |
 | Structured request logging | `src/req_tracker/config/logging.py`, `src/req_tracker/api/app.py`, `tests/contract/test_health_api.py`, `tests/unit/config/test_logging.py` | Complete for JSON request logs with correlation id, user id, method, path, status, and duration |
 | Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, `ops/source/smoke_source_adapters.py`, `ops/source/rehearse_company_sources.py`, `ops/source/rehearse_decision_email_export.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry, pagination, permission-warning, local HTTP smoke validation, env-driven company sandbox rehearsal entrypoint, and restricted decision/email export rehearsal entrypoint complete; Email live access and real company sandbox validation pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test, readiness API, persisted runtime restore test, `ops/security/rehearse_masking_policy.py` | Complete |

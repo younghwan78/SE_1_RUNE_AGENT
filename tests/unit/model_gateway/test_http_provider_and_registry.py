@@ -1,9 +1,11 @@
 """HTTP provider and file-backed model registry tests."""
 
+from pathlib import Path
 from typing import Any
 
 import pytest
 
+from req_tracker.config.settings import Settings
 from req_tracker.model_gateway.factory import provider_for_profile
 from req_tracker.model_gateway.http_provider import HttpJsonModelProvider
 from req_tracker.model_gateway.models import ModelProfile, ModelRequest, PromptVersion
@@ -89,6 +91,25 @@ def test_model_registry_loads_profiles_and_active_prompt(tmp_path) -> None:  # t
 
     assert registry.get_profile("internal-json").model_name == "rune-internal"
     assert registry.active_prompt_for_task("node_extraction").prompt_version_id == "pv_node_v1"
+
+
+def test_default_model_registry_files_load() -> None:
+    settings = Settings()
+
+    registry = ModelRegistry.from_json_files(
+        profiles_path=Path(settings.model_profiles_path),
+        prompts_path=Path(settings.prompt_versions_path),
+    )
+
+    assert registry.get_profile("dummy-local").provider == "dummy"
+    assert (
+        registry.active_prompt_for_task("node_extraction").prompt_version_id
+        == "pv_node_extraction_v1"
+    )
+    assert (
+        registry.active_prompt_for_task("edge_linking").prompt_version_id
+        == "pv_edge_linking_v1"
+    )
 
 
 def test_model_registry_blocks_inactive_profile() -> None:

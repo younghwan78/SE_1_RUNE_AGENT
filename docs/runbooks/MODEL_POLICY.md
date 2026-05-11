@@ -33,6 +33,16 @@ Each `ModelProfile` must define:
 - timeout
 - active state
 
+The repo ships a safe local registry baseline:
+
+- `config/model_profiles.json`
+- `config/prompt_versions.json`
+
+These files are suitable for dummy/local validation only. Company model
+profiles must be supplied through reviewed deployment configuration and secret
+management; do not commit real endpoint aliases that reveal internal topology
+or any credential material.
+
 `ModelPolicy` blocks calls when the request data classification is not listed in
 the active model profile's `allowed_data_classes`.
 
