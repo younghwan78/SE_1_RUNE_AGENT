@@ -10,21 +10,21 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `03c8a0a Add audit archive prune foundation`
+- `a887e7b Add API key project authorization foundation`
+- `ea62ffd Restrict decision email export scope`
+- `10ba461 Refresh audit after operations assets`
 - `204983f Add operations backup and load rehearsal assets`
-- `d760f79 Add audit retention status policy`
-- `a4b6d0c Add debug artifact access policy`
-- `941fc96 Add debug diff workbench view`
-- `58a459e Add HTTP model provider registry foundation`
 
 Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 74 passed, 3 skipped
+- `uv run pytest`: 77 passed, 3 skipped
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `204983f`: completed successfully
+- GitHub Actions `CI` run for `03c8a0a`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
