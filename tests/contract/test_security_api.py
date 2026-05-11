@@ -239,6 +239,26 @@ def test_api_key_auth_protects_feedback_eval_and_improvement_activation(tmp_path
             headers=admin_headers,
             json={"reviewer_approved": True, "canary_passed": True},
         )
+        developer_model_activation = client.post(
+            "/api/v1/admin/model-profiles/dummy-local/activate",
+            headers=developer_headers,
+            json={
+                "activated_by": "developer@example.com",
+                "eval_passed": True,
+                "reviewer_approved": True,
+                "canary_passed": True,
+            },
+        )
+        admin_model_activation = client.post(
+            "/api/v1/admin/model-profiles/dummy-local/activate",
+            headers=admin_headers,
+            json={
+                "activated_by": "admin@example.com",
+                "eval_passed": True,
+                "reviewer_approved": True,
+                "canary_passed": True,
+            },
+        )
 
     assert viewer_feedback.status_code == 403
     assert all(response.status_code == 200 for response in developer_feedback)
@@ -247,6 +267,8 @@ def test_api_key_auth_protects_feedback_eval_and_improvement_activation(tmp_path
     assert improvements.status_code == 200
     assert developer_activation.status_code == 403
     assert admin_activation.status_code == 200
+    assert developer_model_activation.status_code == 403
+    assert admin_model_activation.status_code == 200
 
 
 def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) -> None:  # type: ignore[no-untyped-def]

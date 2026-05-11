@@ -10,6 +10,8 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `f96910e Add gated registry activation APIs`
+- `3fe398c Add deterministic ingest run API`
 - `21ab111 Add finding detail and status APIs`
 - `da832cb Cover remaining command idempotency`
 - `c6901da Extend command API idempotency`
@@ -66,7 +68,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 129 passed, 3 skipped
+- `uv run pytest`: 132 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -81,7 +83,7 @@ Latest local verification:
 - `uv run python ops/security/rehearse_trusted_proxy_auth.py`: failed as expected on this local shell because `RUNE_API_BASE_URL` and `TRUSTED_PROXY_SECRET` are unset; output masks secret state and lists missing config
 - `uv run python ops/security/rehearse_masking_policy.py`: passed, verifying representative sensitive inputs are redacted without printing raw sensitive strings or forbidden patterns
 - `uv run pytest tests/unit/ops/test_backup_verify.py`: passed, validating backup-set required files, SHA256 mismatch detection, artifact tar, Qdrant JSON, Neo4j dump marker, and git commit marker checks
-- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3082 ms against a 5000 ms local rehearsal threshold)
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3320 ms against a 5000 ms local rehearsal threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
@@ -90,7 +92,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25689152754` for `21ab111`: completed successfully
+- GitHub Actions `CI` run `25689451702` for `3fe398c`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -99,15 +101,15 @@ Latest GitHub verification:
 | Production plan is the source of truth | `PRODUCTION_EXECUTION_PLAN.md`, `docs/implementation/03_STEP_BY_STEP_IMPLEMENTATION_PLAN.md` | Complete |
 | Expected repository shape is anchored | `src/req_tracker/*`, `.claude/skills/rune-source-*`, `docs/api/README.md`, `docs/ontology/ONTOLOGY_V1.md`, `ops/migrations/README.md`, `ops/helm/README.md`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md` | Complete for implemented and deferred tracks |
 | Ontology v1 is documented and executable | `docs/ontology/ONTOLOGY_V1.md`, `src/req_tracker/ontology/models.py`, `tests/contract/test_models.py` | Complete |
-| API documentation path exists | `docs/api/README.md`, `src/req_tracker/api/routes/*`, `tests/contract/*`, `/api/v1/runs/ingest`, `/api/v1/runs/analyze`, `/api/v1/runs`, `/api/v1/findings/{finding_id}`, `/api/v1/findings/{finding_id}/status`, optional `/openapi.json` with `ENABLE_DOCS=true` | Complete |
-| Data and model policies are fixed | `docs/security/DATA_POLICY.md`, `docs/runbooks/MODEL_POLICY.md`, `config/model_profiles.json`, `config/prompt_versions.json`, `src/req_tracker/model_gateway/policy.py`, `ops/security/rehearse_masking_policy.py`, `ops/model_gateway/smoke_model_gateway.py` | Complete for local policy baseline; company model profile approval pending |
+| API documentation path exists | `docs/api/README.md`, `src/req_tracker/api/routes/*`, `tests/contract/*`, `/api/v1/runs/ingest`, `/api/v1/runs/analyze`, `/api/v1/runs`, `/api/v1/findings/{finding_id}`, `/api/v1/findings/{finding_id}/status`, `/api/v1/admin/model-profiles/{id}/activate`, `/api/v1/admin/prompt-versions/{id}/activate`, optional `/openapi.json` with `ENABLE_DOCS=true` | Complete |
+| Data and model policies are fixed | `docs/security/DATA_POLICY.md`, `docs/runbooks/MODEL_POLICY.md`, `config/model_profiles.json`, `config/prompt_versions.json`, `src/req_tracker/model_gateway/policy.py`, `src/req_tracker/api/routes/admin.py`, `ops/security/rehearse_masking_policy.py`, `ops/model_gateway/smoke_model_gateway.py` | Complete for local policy baseline and gated activation records; company model profile approval pending |
 | Structured request logging | `src/req_tracker/config/logging.py`, `src/req_tracker/api/app.py`, `tests/contract/test_health_api.py`, `tests/unit/config/test_logging.py` | Complete for JSON request logs with correlation id, user id, method, path, status, and duration |
 | Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, `request_with_retry`, `ops/source/smoke_source_adapters.py`, `ops/source/rehearse_company_sources.py`, `ops/source/rehearse_decision_email_export.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; JIRA/Confluence REST retry, network `OSError` retry, pagination, permission-warning, local HTTP smoke validation, env-driven company sandbox rehearsal entrypoint, and restricted decision/email export rehearsal entrypoint complete; Email live access and real company sandbox validation pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test, readiness API, persisted runtime restore test, `ops/security/rehearse_masking_policy.py` | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Source snapshot lineage | `AgentRun.input_snapshot_ids`, normalized `SourceArtifact.artifact_id`, `LocalAnalysisWorkflow` metadata update, run API and integration tests | Complete for local/source-artifact snapshot lineage |
 | Run trigger lineage | `AgentRun.triggered_by`, `AgentRun.trigger_source`, API analyze path, schedule run-now path, periodic scheduler path, replay path, contract tests | Complete for local API/manual/schedule/replay trigger attribution |
-| Command idempotency | `POST /api/v1/runs/ingest`, `POST /api/v1/runs/analyze`, `POST /api/v1/runs/{run_id}/replay`, `PUT /api/v1/schedule`, `POST /api/v1/schedule/run-now`, `POST /api/v1/approvals/{approval_id}/decision`, `POST /api/v1/findings/{finding_id}/status`, `POST /api/v1/feedback`, `POST /api/v1/improvements/{candidate_id}/activate`, and `POST /api/v1/audit/retention/archive-prune` `Idempotency-Key`/`X-Idempotency-Key`, persisted `idempotency_results`, API conflict tests, SQLite restart restore test, graph commit idempotency keys | Complete for implemented local command APIs plus graph commit paths |
+| Command idempotency | `POST /api/v1/runs/ingest`, `POST /api/v1/runs/analyze`, `POST /api/v1/runs/{run_id}/replay`, `PUT /api/v1/schedule`, `POST /api/v1/schedule/run-now`, `POST /api/v1/approvals/{approval_id}/decision`, `POST /api/v1/findings/{finding_id}/status`, `POST /api/v1/feedback`, `POST /api/v1/improvements/{candidate_id}/activate`, `POST /api/v1/admin/model-profiles/{id}/activate`, `POST /api/v1/admin/prompt-versions/{id}/activate`, and `POST /api/v1/audit/retention/archive-prune` `Idempotency-Key`/`X-Idempotency-Key`, persisted `idempotency_results`, API conflict tests, SQLite restart restore test, graph commit idempotency keys | Complete for implemented local command APIs plus graph commit paths |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests, `ops/model_gateway/smoke_model_gateway.py`, `ops/model_gateway/rehearse_model_gateway.py` | Profile/registry/live-shaped HTTP foundation and env-driven company sandbox rehearsal entrypoint complete; real external provider sandbox validation pending |
 | LLM-assisted workflow trace | `LocalAnalysisWorkflow` `llm_assisted_reasoning` stage, `ModelGatewayClient`, `LLMCallTrace`, SQLite restore of `llm_call_traces`, `/api/v1/runs/{run_id}/llm-calls`, debug diff LLM panes | Dummy model-gateway integration complete; live model quality validation pending |
 | Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, `/api/v1/runs/{run_id}/llm-calls`, `/api/v1/runs/{run_id}/artifacts`, `/api/v1/runs/{run_id}/graph-delta`, `/api/v1/replays/{replay_id}/diff`, restart-safe `replay_results`, approval lineage API, run diff-view API, run debug UI, LLM/graph delta side-by-side panes | Local debug workbench foundation complete; live LLM payload validation pending |

@@ -47,6 +47,7 @@ class RuntimeState(BaseModel):
     findings: dict[str, Finding]
     replays: dict[str, ReplayResult]
     idempotency_results: dict[str, dict[str, Any]]
+    registry_activations: dict[str, dict[str, Any]]
     scheduler: RunScheduler
     state_store: StateStore | None = None
 
@@ -76,6 +77,7 @@ class RuntimeState(BaseModel):
             findings={},
             replays={},
             idempotency_results={},
+            registry_activations={},
             scheduler=RunScheduler(schedule_config),
             state_store=state_store,
         )
@@ -362,6 +364,23 @@ class RuntimeState(BaseModel):
             payload=record,
         )
 
+    def record_registry_activation(
+        self,
+        *,
+        activation_id: str,
+        activation: dict[str, Any],
+    ) -> None:
+        """Record a reviewed model/prompt registry activation decision."""
+        self.registry_activations[activation_id] = activation
+        if self.state_store is None:
+            return
+        self.state_store.upsert(
+            collection="registry_activations",
+            entity_id=activation_id,
+            project_key=None,
+            payload=activation,
+        )
+
     def archive_and_prune_audit(self) -> dict[str, object]:
         """Archive/prune audit events and mirror pruned rows into the state store."""
         result = self.audit.archive_and_prune(archive_writer=self.audit_archive_store)
@@ -394,6 +413,10 @@ class RuntimeState(BaseModel):
             record_id = payload.get("record_id")
             if isinstance(record_id, str):
                 self.idempotency_results[record_id] = payload
+        for payload in self.state_store.list("registry_activations"):
+            activation_id = payload.get("activation_id")
+            if isinstance(activation_id, str):
+                self.registry_activations[activation_id] = payload
         for payload in self.state_store.list("approval_items"):
             approval = ApprovalItem.model_validate(payload)
             self.approvals.items[approval.approval_id] = approval

@@ -13,6 +13,8 @@ AuditAction = Literal[
     "approval_decided",
     "feedback_recorded",
     "finding_status_changed",
+    "model_profile_activated",
+    "prompt_version_activated",
     "debug_artifact_read",
     "schedule_configured",
     "schedule_run_now",

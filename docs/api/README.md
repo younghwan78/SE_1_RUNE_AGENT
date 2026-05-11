@@ -24,6 +24,7 @@ Implemented route groups:
 - graph projection and traceability chain
 - approvals and graph commit
 - feedback, eval candidates, and improvement candidates
+- admin model profile and prompt version activation records
 - debug traces and diff views
 - audit events and retention
 - scheduler controls

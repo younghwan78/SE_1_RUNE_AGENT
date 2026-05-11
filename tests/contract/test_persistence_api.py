@@ -78,6 +78,16 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
             json={"status": "acknowledged", "updated_by": "reviewer"},
         )
         assert finding_status.status_code == 200
+        activation = client.post(
+            "/api/v1/admin/prompt-versions/pv_edge_linking_v1/activate",
+            json={
+                "activated_by": "admin@example.com",
+                "eval_passed": True,
+                "reviewer_approved": True,
+                "canary_passed": True,
+            },
+        )
+        assert activation.status_code == 200
         replay = client.post(
             "/api/v1/runs/run_restore_1/replay",
             json={"replay_run_id": "replay_restore_1", "scenario": "RUNE_CAM_ALPHA"},
@@ -100,6 +110,7 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
         graph = client.get("/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA")
         approvals = client.get("/api/v1/approvals")
         audit = client.get("/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
+        activation_audit = client.get("/api/v1/audit/events?action=prompt_version_activated")
         llm_calls = client.get("/api/v1/runs/run_restore_1/llm-calls")
         replay_diff = client.get("/api/v1/replays/replay_restore_1/diff")
         findings = client.get("/api/v1/findings")
@@ -116,6 +127,11 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     assert replay_diff.status_code == 200
     assert replay_diff.json()["source_run_id"] == "run_restore_1"
     assert replay_diff.json()["replay_run_id"] == "replay_restore_1"
+    runtime = second_app.state.runtime
+    assert (
+        runtime.registry_activations["prompt_version:pv_edge_linking_v1"]["status"]
+        == "active"
+    )
     assert findings.status_code == 200
     assert findings.json()
     assert finding_detail.status_code == 200
@@ -126,6 +142,8 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
         "approval_decided",
         "finding_status_changed",
     }
+    assert activation_audit.status_code == 200
+    assert activation_audit.json()[0]["action"] == "prompt_version_activated"
 
 
 def test_sqlite_state_store_restores_analyze_idempotency_after_restart(tmp_path) -> None:  # type: ignore[no-untyped-def]
