@@ -15,6 +15,8 @@ def test_index_serves_operator_ui(client: TestClient) -> None:
     assert "Orphans" in response.text
     assert "Neighborhood" in response.text
     assert "Scheduler" in response.text
+    assert "LLM Payload Diff" in response.text
+    assert "Graph Delta Preview" in response.text
     assert "/ui/app.js" in response.text
 
 
@@ -26,4 +28,6 @@ def test_static_assets_served(client: TestClient) -> None:
     assert "zoomOntology" in response.text
     assert "pointermove" in response.text
     assert "renderOntologyDetail(node)" in response.text
+    assert "renderDebugDiffView" in response.text
+    assert "/diff-view" in response.text
     assert "data-graph-mode" in response.text

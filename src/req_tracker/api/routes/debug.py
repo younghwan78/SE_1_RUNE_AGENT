@@ -49,6 +49,77 @@ def debug_run_summary(request: Request, run_id: str) -> dict[str, Any]:
     }
 
 
+@router.get("/debug/runs/{run_id}/diff-view")
+def debug_run_diff_view(request: Request, run_id: str) -> dict[str, Any]:
+    """Return side-by-side debug data for LLM calls and graph deltas."""
+    require_role(request, "developer")
+    runtime = request.app.state.runtime
+    run = runtime.traces.runs.get(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="run not found")
+    llm_calls = [
+        call for call in runtime.traces.llm_calls.values() if call.run_id == run_id
+    ]
+    graph_deltas = [
+        delta for delta in runtime.approvals.deltas.values() if delta.created_from_run_id == run_id
+    ]
+    approved_edges = [
+        edge.model_dump(mode="json")
+        for edge in runtime.graph.edges.values()
+        if edge.source_node_id in runtime.graph.nodes
+        and runtime.graph.nodes[edge.source_node_id].project_key == run.project_key
+    ]
+    return {
+        "run_id": run_id,
+        "llm_payload_pairs": [
+            {
+                "llm_call_id": call.llm_call_id,
+                "model_profile_id": call.model_profile_id,
+                "prompt_version_id": call.prompt_version_id,
+                "validation_status": call.validation_status,
+                "left": {
+                    "label": "masked_payload",
+                    "artifact_ref": call.masked_payload_ref,
+                    "payload": _read_optional_artifact(runtime, call.masked_payload_ref),
+                },
+                "right": {
+                    "label": "raw_response",
+                    "artifact_ref": call.raw_response_ref,
+                    "payload": _read_optional_artifact(runtime, call.raw_response_ref),
+                },
+                "parsed": {
+                    "label": "parsed_output",
+                    "artifact_ref": call.parsed_output_ref,
+                    "payload": _read_optional_artifact(runtime, call.parsed_output_ref),
+                },
+            }
+            for call in llm_calls
+        ],
+        "graph_delta_previews": [
+            {
+                "delta_id": delta.delta_id,
+                "left": {
+                    "label": "approved_graph_edges",
+                    "count": len(approved_edges),
+                    "edges": approved_edges,
+                },
+                "right": {
+                    "label": "proposed_delta_operations",
+                    "count": len(delta.operations),
+                    "operations": [
+                        operation.model_dump(mode="json") for operation in delta.operations
+                    ],
+                },
+            }
+            for delta in graph_deltas
+        ],
+        "counts": {
+            "llm_payload_pairs": len(llm_calls),
+            "graph_delta_previews": len(graph_deltas),
+        },
+    }
+
+
 @router.get("/debug/approvals/{approval_id}/lineage")
 def debug_approval_lineage(request: Request, approval_id: str) -> dict[str, Any]:
     """Return approval creation, graph delta, step, feedback, and audit lineage."""
@@ -112,6 +183,15 @@ def read_debug_artifact(
     )
     runtime.persist_approval_state()
     return artifact
+
+
+def _read_optional_artifact(runtime: Any, artifact_ref: str | None) -> Any:
+    if artifact_ref is None:
+        return None
+    try:
+        return runtime.artifact_store.read_json(artifact_ref)
+    except FileNotFoundError:
+        return None
 
 
 def _project_key_from_ref(runtime: Any, artifact_ref: str) -> str | None:

@@ -496,10 +496,14 @@ const renderDebugSummary = async () => {
     text("debug-label", "no run");
     text("debug-counts", "0 artifacts");
     el("debug-detail").textContent = "[]";
+    renderDebugDiffView(null);
     list.append(emptyRow("Run an analysis to inspect debug traces"));
     return;
   }
-  const summary = await api(`/debug/runs/${state.currentRunId}/summary`);
+  const [summary, diffView] = await Promise.all([
+    api(`/debug/runs/${state.currentRunId}/summary`),
+    api(`/debug/runs/${state.currentRunId}/diff-view`),
+  ]);
   text("debug-label", state.currentRunId);
   text(
     "debug-counts",
@@ -537,6 +541,51 @@ const renderDebugSummary = async () => {
     null,
     2,
   );
+  renderDebugDiffView(diffView);
+};
+
+const setJsonPane = (id, value) => {
+  el(id).textContent = JSON.stringify(value, null, 2);
+};
+
+const renderDebugDiffView = (diffView) => {
+  if (!diffView) {
+    text("llm-diff-count", "0 calls");
+    text("graph-delta-count", "0 deltas");
+    setJsonPane("llm-diff-left", []);
+    setJsonPane("llm-diff-right", []);
+    setJsonPane("graph-delta-left", []);
+    setJsonPane("graph-delta-right", []);
+    return;
+  }
+  text("llm-diff-count", `${diffView.counts.llm_payload_pairs} calls`);
+  text("graph-delta-count", `${diffView.counts.graph_delta_previews} deltas`);
+  const llmPair = diffView.llm_payload_pairs[0];
+  if (llmPair) {
+    setJsonPane("llm-diff-left", {
+      label: llmPair.left.label,
+      artifact_ref: llmPair.left.artifact_ref,
+      payload: llmPair.left.payload,
+    });
+    setJsonPane("llm-diff-right", {
+      label: llmPair.right.label,
+      artifact_ref: llmPair.right.artifact_ref,
+      validation_status: llmPair.validation_status,
+      payload: llmPair.right.payload,
+      parsed: llmPair.parsed,
+    });
+  } else {
+    setJsonPane("llm-diff-left", []);
+    setJsonPane("llm-diff-right", []);
+  }
+  const delta = diffView.graph_delta_previews[0];
+  if (delta) {
+    setJsonPane("graph-delta-left", delta.left);
+    setJsonPane("graph-delta-right", delta.right);
+  } else {
+    setJsonPane("graph-delta-left", []);
+    setJsonPane("graph-delta-right", []);
+  }
 };
 
 const renderAuditEvents = (events) => {

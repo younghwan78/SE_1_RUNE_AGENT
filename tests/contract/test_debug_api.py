@@ -33,10 +33,22 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
     assert artifact.status_code == 200
     assert artifact.json()
 
+    diff_view = client.get("/api/v1/debug/runs/run_debug_1/diff-view")
+    assert diff_view.status_code == 200
+    diff_payload = diff_view.json()
+    assert diff_payload["run_id"] == "run_debug_1"
+    assert diff_payload["counts"]["graph_delta_previews"] >= 1
+    assert diff_payload["graph_delta_previews"][0]["left"]["label"] == "approved_graph_edges"
+    assert diff_payload["graph_delta_previews"][0]["right"]["operations"]
+    assert "llm_payload_pairs" in diff_payload
+
 
 def test_debug_run_summary_requires_existing_run(client: TestClient) -> None:
     response = client.get("/api/v1/debug/runs/missing/summary")
     assert response.status_code == 404
+
+    diff_view = client.get("/api/v1/debug/runs/missing/diff-view")
+    assert diff_view.status_code == 404
 
 
 def test_debug_approval_lineage_links_run_step_delta_feedback_and_audit(

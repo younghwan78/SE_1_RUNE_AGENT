@@ -20,6 +20,10 @@ def test_api_key_auth_protects_debug_and_audit_routes(tmp_path) -> None:  # type
             "/api/v1/debug/runs/missing/summary",
             headers={"x-rune-api-key": "secret", "x-rune-role": "viewer"},
         )
+        diff_bad_role = client.get(
+            "/api/v1/debug/runs/missing/diff-view",
+            headers={"x-rune-api-key": "secret", "x-rune-role": "viewer"},
+        )
         allowed = client.get(
             "/api/v1/debug/runs/missing/summary",
             headers={"x-rune-api-key": "secret", "x-rune-role": "developer"},
@@ -35,6 +39,7 @@ def test_api_key_auth_protects_debug_and_audit_routes(tmp_path) -> None:  # type
 
     assert missing_key.status_code == 401
     assert bad_role.status_code == 403
+    assert diff_bad_role.status_code == 403
     assert allowed.status_code == 404
     assert audit_forbidden.status_code == 403
     assert audit_allowed.status_code == 200

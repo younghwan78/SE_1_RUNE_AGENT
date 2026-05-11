@@ -114,6 +114,7 @@ Current local implementation:
 - static local operator UI
 - ontology graph view with pending/approved edge projection
 - traceability chain, run debug workbench, and audit events panel
+- debug side-by-side panes for LLM payloads and graph delta previews
 - periodic analysis scheduler for server operation
 
 Enable local SQLite persistence:

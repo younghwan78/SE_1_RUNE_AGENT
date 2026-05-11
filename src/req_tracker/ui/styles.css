@@ -489,6 +489,16 @@ button:disabled {
   color: var(--accent-2);
 }
 
+.diff-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-height: 300px;
+}
+
+.diff-grid pre:first-child {
+  border-right: 1px solid var(--line);
+}
+
 pre {
   min-height: 246px;
   max-height: 360px;
@@ -504,6 +514,7 @@ pre {
   .metrics,
   .grid.two,
   .grid.three,
+  .diff-grid,
   .graph-area,
   .ontology-layout {
     grid-template-columns: 1fr 1fr;
@@ -523,6 +534,7 @@ pre {
   .metrics,
   .grid.two,
   .grid.three,
+  .diff-grid,
   .graph-area,
   .ontology-layout,
   .schedule-form {

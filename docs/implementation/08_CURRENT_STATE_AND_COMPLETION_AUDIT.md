@@ -35,7 +35,7 @@ Latest GitHub verification:
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests | Profile/registry/live HTTP foundation complete; live provider sandbox validation pending |
-| Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, approval lineage API, run debug UI | API foundation complete; full UX diff pending |
+| Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, approval lineage API, run diff-view API, run debug UI, LLM/graph delta side-by-side panes | Local debug workbench foundation complete; live LLM payload validation pending |
 | SQLite state persistence | `SQLiteStateStore`, persistence contract test | Complete |
 | PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, migration loader tests | Complete |
 | Typed PostgreSQL core table foundation | `002_core_state_tables.sql`, typed mirror upsert/read dispatch, rollback scripts, unit tests, optional `POSTGRES_TEST_DSN` integration test | Foundation complete; production DB environment validation pending |
@@ -77,7 +77,8 @@ Latest GitHub verification:
 ### P3: Model Provider and Debug Workbench
 
 - Run retry/fallback behavior against live model provider sandboxes.
-- Expand debug UI for LLM payload diff and graph delta side-by-side view.
+- Validate LLM payload diff panes with real sandbox model calls once a model
+  endpoint is available.
 
 ### P4: Security and Operations
 
