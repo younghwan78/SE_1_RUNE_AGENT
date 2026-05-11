@@ -10,7 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
-- `69a49c5 Add production API surface guard`
+- `54d2db6 Add production API surface guard`
 - `f64d17e Add project graph list read APIs`
 - `e9f5340 Add gated registry activation APIs`
 - `3fe398c Add deterministic ingest run API`
@@ -94,7 +94,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25689772869` for `e9f5340`: completed successfully
+- GitHub Actions `CI` run `25690162983` for `54d2db6`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
