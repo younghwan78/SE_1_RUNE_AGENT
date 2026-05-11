@@ -36,7 +36,9 @@ def test_production_plan_endpoint_surface_is_registered(client: TestClient) -> N
         ("POST", "/api/v1/feedback"),
         ("POST", "/api/v1/improvements/{candidate_id}/rollback"),
         ("POST", "/api/v1/admin/prompt-versions/{prompt_version_id}/activate"),
+        ("POST", "/api/v1/admin/prompt-versions/{prompt_version_id}/rollback"),
         ("POST", "/api/v1/admin/model-profiles/{model_profile_id}/activate"),
+        ("POST", "/api/v1/admin/model-profiles/{model_profile_id}/rollback"),
     }
     expected_paths = {path for _, path in expected_route_methods}
     route_methods = {

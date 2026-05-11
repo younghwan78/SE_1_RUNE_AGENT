@@ -37,6 +37,8 @@ Current protected routes:
 | `GET /api/v1/improvements/candidates` | `developer` | exposes controlled improvement candidates |
 | `POST /api/v1/improvements/{candidate_id}/activate` | `admin` | promotes improvement candidates through review/canary/active states |
 | `POST /api/v1/improvements/{candidate_id}/rollback` | `admin` | rolls back a canary or active improvement after regression |
+| `POST /api/v1/admin/model-profiles/{model_profile_id}/rollback` | `admin` | rolls back a recorded model profile activation decision |
+| `POST /api/v1/admin/prompt-versions/{prompt_version_id}/rollback` | `admin` | rolls back a recorded prompt version activation decision |
 | `GET /api/v1/audit/events` | `operator` | exposes operational audit history |
 
 Trusted proxy mode:

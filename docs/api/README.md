@@ -33,7 +33,7 @@ Implemented route groups:
 - project list, graph node/edge lists, graph projection, and traceability chain
 - approvals and graph commit
 - feedback, eval candidates, improvement candidates, and improvement rollback
-- admin model profile and prompt version activation records
+- admin model profile and prompt version activation/rollback records
 - debug traces and diff views
 - audit events and retention
 - scheduler controls

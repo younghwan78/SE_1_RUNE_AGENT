@@ -47,6 +47,56 @@ def test_admin_can_record_model_profile_activation_idempotently(
     assert audit.json()[0]["actor_id"] == "admin@example.com"
 
 
+def test_admin_can_rollback_model_profile_activation_idempotently(
+    client: TestClient,
+) -> None:
+    payload = _activation_payload()
+    activation = client.post(
+        "/api/v1/admin/model-profiles/dummy-local/activate",
+        json=payload,
+    )
+    first = client.post(
+        "/api/v1/admin/model-profiles/dummy-local/rollback",
+        json={
+            "rolled_back_by": "admin@example.com",
+            "reason_code": "canary_regression",
+            "comment": "canary reject rate crossed threshold",
+        },
+        headers={"Idempotency-Key": "idem-model-rollback-1"},
+    )
+    second = client.post(
+        "/api/v1/admin/model-profiles/dummy-local/rollback",
+        json={
+            "rolled_back_by": "admin@example.com",
+            "reason_code": "canary_regression",
+            "comment": "canary reject rate crossed threshold",
+        },
+        headers={"Idempotency-Key": "idem-model-rollback-1"},
+    )
+    repeated_without_key = client.post(
+        "/api/v1/admin/model-profiles/dummy-local/rollback",
+        json={"rolled_back_by": "admin@example.com"},
+    )
+
+    assert activation.status_code == 200
+    assert first.status_code == 200
+    assert first.json()["status"] == "rolled_back"
+    assert first.json()["previous_status"] == "active"
+    assert first.json()["rollback_status"] == "rolled_back"
+    assert first.json()["restored_item_ref"] == "registry://model_profile/dummy-local"
+    assert second.status_code == 200
+    assert second.json() == first.json()
+    assert repeated_without_key.status_code == 409
+    assert (
+        repeated_without_key.json()["detail"]["message"]
+        == "registry activation is not rollbackable"
+    )
+
+    audit = client.get("/api/v1/audit/events?action=model_profile_rolled_back")
+    assert audit.status_code == 200
+    assert len(audit.json()) == 1
+
+
 def test_admin_can_record_prompt_version_activation_idempotently(
     client: TestClient,
 ) -> None:
@@ -73,6 +123,34 @@ def test_admin_can_record_prompt_version_activation_idempotently(
     assert len(audit.json()) == 1
 
 
+def test_admin_can_rollback_prompt_version_activation(
+    client: TestClient,
+) -> None:
+    payload = _activation_payload()
+    activation = client.post(
+        "/api/v1/admin/prompt-versions/pv_edge_linking_v1/activate",
+        json=payload,
+    )
+    rollback = client.post(
+        "/api/v1/admin/prompt-versions/pv_edge_linking_v1/rollback",
+        json={
+            "rolled_back_by": "admin@example.com",
+            "reason_code": "canary_regression",
+        },
+    )
+
+    assert activation.status_code == 200
+    assert rollback.status_code == 200
+    assert rollback.json()["status"] == "rolled_back"
+    assert rollback.json()["restored_item_ref"] == (
+        "registry://prompt_version/pv_edge_linking_v1"
+    )
+
+    audit = client.get("/api/v1/audit/events?action=prompt_version_rolled_back")
+    assert audit.status_code == 200
+    assert len(audit.json()) == 1
+
+
 def test_admin_activation_requires_eval_review_and_canary_gates(
     client: TestClient,
 ) -> None:
@@ -84,6 +162,14 @@ def test_admin_activation_requires_eval_review_and_canary_gates(
         "/api/v1/admin/model-profiles/missing-profile/activate",
         json=_activation_payload(),
     )
+    missing_rollback = client.post(
+        "/api/v1/admin/model-profiles/missing-profile/rollback",
+        json={"rolled_back_by": "admin@example.com"},
+    )
+    rollback_without_activation = client.post(
+        "/api/v1/admin/model-profiles/dummy-local/rollback",
+        json={"rolled_back_by": "admin@example.com"},
+    )
 
     assert blocked.status_code == 409
     assert blocked.json()["detail"]["message"] == "activation gates are not satisfied"
@@ -92,3 +178,5 @@ def test_admin_activation_requires_eval_review_and_canary_gates(
         "canary_passed",
     ]
     assert missing.status_code == 404
+    assert missing_rollback.status_code == 404
+    assert rollback_without_activation.status_code == 404

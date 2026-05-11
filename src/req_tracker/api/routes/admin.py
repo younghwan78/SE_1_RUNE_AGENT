@@ -29,6 +29,14 @@ class RegistryActivationRequest(BaseModel):
     comment: str | None = None
 
 
+class RegistryRollbackRequest(BaseModel):
+    """Request to rollback a recorded model/prompt activation decision."""
+
+    rolled_back_by: str = "local"
+    reason_code: str = "canary_regression"
+    comment: str | None = None
+
+
 @router.post("/admin/model-profiles/{model_profile_id}/activate")
 def activate_model_profile(
     request: Request,
@@ -89,6 +97,34 @@ def activate_model_profile(
         response=activation,
     )
     return activation
+
+
+@router.post("/admin/model-profiles/{model_profile_id}/rollback")
+def rollback_model_profile(
+    request: Request,
+    model_profile_id: str,
+    payload: RegistryRollbackRequest | None = None,
+) -> dict[str, Any]:
+    """Record rollback of a previously activated model profile decision."""
+    user = require_role(request, "admin")
+    runtime = request.app.state.runtime
+    rollback = payload or RegistryRollbackRequest()
+    registry = _registry(request)
+    try:
+        profile = registry.get_profile(model_profile_id)
+    except ModelRegistryError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return _rollback_registry_activation(
+        request=request,
+        runtime=runtime,
+        user_id=user.user_id,
+        user_role=user.role,
+        activation_type="model_profile",
+        item_id=model_profile_id,
+        item=profile,
+        payload=rollback,
+        command="admin.model_profile.rollback",
+    )
 
 
 @router.post("/admin/prompt-versions/{prompt_version_id}/activate")
@@ -159,6 +195,34 @@ def activate_prompt_version(
     return activation
 
 
+@router.post("/admin/prompt-versions/{prompt_version_id}/rollback")
+def rollback_prompt_version(
+    request: Request,
+    prompt_version_id: str,
+    payload: RegistryRollbackRequest | None = None,
+) -> dict[str, Any]:
+    """Record rollback of a previously activated prompt version decision."""
+    user = require_role(request, "admin")
+    runtime = request.app.state.runtime
+    rollback = payload or RegistryRollbackRequest()
+    registry = _registry(request)
+    try:
+        prompt = registry.get_prompt(prompt_version_id)
+    except ModelRegistryError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return _rollback_registry_activation(
+        request=request,
+        runtime=runtime,
+        user_id=user.user_id,
+        user_role=user.role,
+        activation_type="prompt_version",
+        item_id=prompt_version_id,
+        item=prompt,
+        payload=rollback,
+        command="admin.prompt_version.rollback",
+    )
+
+
 def _registry(request: Request) -> ModelRegistry:
     settings = request.app.state.settings
     return ModelRegistry.from_json_files(
@@ -204,3 +268,87 @@ def _activation_record(
         "comment": payload.comment,
         "item": item.model_dump(mode="json"),
     }
+
+
+def _rollback_registry_activation(
+    *,
+    request: Request,
+    runtime: Any,
+    user_id: str,
+    user_role: str,
+    activation_type: Literal["model_profile", "prompt_version"],
+    item_id: str,
+    item: ModelProfile | PromptVersion,
+    payload: RegistryRollbackRequest,
+    command: str,
+) -> dict[str, Any]:
+    activation_id = f"{activation_type}:{item_id}"
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command=command,
+        payload={
+            "item_id": item_id,
+            "rollback": explicit_model_payload(payload),
+        },
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
+    current = runtime.registry_activations.get(activation_id)
+    if current is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"activation record not found: {activation_id}",
+        )
+    if current.get("status") != "active":
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "registry activation is not rollbackable",
+                "current_status": current.get("status"),
+                "rollbackable_statuses": ["active"],
+            },
+        )
+    actor_id = payload.rolled_back_by or user_id
+    rolled_back = {
+        **current,
+        "status": "rolled_back",
+        "previous_status": current.get("status"),
+        "rollback_status": "rolled_back",
+        "rolled_back_by": actor_id,
+        "rollback_reason_code": payload.reason_code,
+        "rollback_comment": payload.comment,
+        "restored_item_ref": f"registry://{activation_type}/{item_id}",
+        "item": item.model_dump(mode="json"),
+    }
+    runtime.record_registry_activation(
+        activation_id=activation_id,
+        activation=rolled_back,
+    )
+    action = (
+        "model_profile_rolled_back"
+        if activation_type == "model_profile"
+        else "prompt_version_rolled_back"
+    )
+    runtime.audit.record(
+        action=action,
+        actor_id=actor_id,
+        actor_role=user_role,
+        target_type=activation_type,
+        target_id=item_id,
+        reason_code=payload.reason_code,
+        metadata={
+            "activation_id": activation_id,
+            "previous_status": current.get("status"),
+            "comment": payload.comment,
+        },
+    )
+    runtime.persist_approval_state()
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command=command,
+        project_key=None,
+        response=rolled_back,
+    )
+    return rolled_back

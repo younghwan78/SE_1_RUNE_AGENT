@@ -96,6 +96,8 @@ REQUIRED_COVERAGE: tuple[ReleaseBlockerCoverage, ...] = (
                     "eval_passed",
                     "reviewer_approved",
                     "canary_passed",
+                    "model_profile_rolled_back",
+                    "prompt_version_rolled_back",
                 ),
             ),
             EvidenceFile(

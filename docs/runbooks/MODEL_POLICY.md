@@ -68,6 +68,11 @@ Local controlled-improvement rollback is exposed through
 `POST /api/v1/improvements/{candidate_id}/rollback`. It only accepts candidates
 that have reached `canary` or `active`, records `improvement_rolled_back` audit
 evidence, and references the previous version through `restored_version_id`.
+Recorded registry activation decisions can be rolled back with
+`POST /api/v1/admin/model-profiles/{id}/rollback` and
+`POST /api/v1/admin/prompt-versions/{id}/rollback`; these endpoints do not
+rewrite committed registry files, but they do leave idempotent rollback and
+audit evidence for release review.
 
 ## Model Change Checklist
 
