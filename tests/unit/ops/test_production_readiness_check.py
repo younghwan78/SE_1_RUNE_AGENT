@@ -196,6 +196,22 @@ def test_manual_evidence_template_includes_helm_gate_when_kubernetes_selected() 
     assert "kubernetes_helm_rehearsal" in check_ids
 
 
+def test_example_evidence_file_is_not_passable_without_real_review() -> None:
+    checker = _load_checker_module()
+    evidence = checker.load_manual_evidence(
+        Path("ops/rehearsal/production_readiness_evidence.example.json")
+    )
+
+    assert evidence
+    assert {record.status for record in evidence} == {"failed"}
+    report = checker.build_readiness_report(
+        _complete_production_env(),
+        manual_evidence=evidence,
+    )
+    assert report["passed"] is False
+    assert report["summary"]["failed"] > 0
+
+
 def test_readiness_report_passes_with_complete_env_and_reviewed_evidence() -> None:
     checker = _load_checker_module()
 

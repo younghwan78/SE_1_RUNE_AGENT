@@ -1,107 +1,86 @@
 {
   "schema_version": "v1",
-  "reviewed_by": "release.owner@example.com",
-  "reviewed_at": "2026-05-12T00:00:00Z",
+  "reviewed_by": "TODO: release owner email or approval record",
+  "reviewed_at": "TODO: ISO-8601 UTC timestamp",
   "checks": [
     {
       "check_id": "company_postgres_rehearsal",
-      "status": "passed",
-      "summary": "Staging PostgreSQL integration and restart restore rehearsal passed.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Run PostgreSQL integration or full-stack rehearsal against company/staging PostgreSQL.",
       "evidence": [
-        "staging-ci:postgres-integration:run-12345",
-        "artifact:postgres-restart-restore-report.json"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     },
     {
       "check_id": "company_neo4j_rehearsal",
-      "status": "passed",
-      "summary": "Staging Neo4j graph commit and projection rehearsal passed.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Run Neo4j integration or full-stack rehearsal against company/staging Neo4j.",
       "evidence": [
-        "staging-ci:neo4j-integration:run-12346",
-        "artifact:neo4j-graph-projection-report.json"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     },
     {
       "check_id": "company_qdrant_rehearsal",
-      "status": "passed",
-      "summary": "Staging Qdrant vector upsert/search rehearsal passed.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Run Qdrant integration or full-stack rehearsal against company/staging Qdrant.",
       "evidence": [
-        "staging-ci:qdrant-integration:run-12347",
-        "artifact:qdrant-vector-search-report.json"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     },
     {
       "check_id": "company_model_gateway_rehearsal",
-      "status": "passed",
-      "summary": "Company model gateway retry, fallback, and trace capture passed.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Run ops/model_gateway/rehearse_model_gateway.py against the company-approved model provider sandbox.",
       "evidence": [
-        "staging-ci:model-gateway-smoke:run-12348",
-        "artifact:model-gateway-trace-report.json"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     },
     {
       "check_id": "company_jira_sandbox_rehearsal",
-      "status": "passed",
-      "summary": "Sandbox JIRA incremental source sync and permission-warning path passed.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Run the JIRA source skill and ops/source/rehearse_company_sources.py --source jira against a sandbox project.",
       "evidence": [
-        "staging-ci:jira-source-smoke:run-12349",
-        "artifact:jira-source-snapshot-report.json"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     },
     {
       "check_id": "company_confluence_sandbox_rehearsal",
-      "status": "passed",
-      "summary": "Sandbox Confluence page sync and JIRA mention mapping passed.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Run the Confluence source skill and ops/source/rehearse_company_sources.py --source confluence against a sandbox space.",
       "evidence": [
-        "staging-ci:confluence-source-smoke:run-12350",
-        "artifact:confluence-source-snapshot-report.json"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     },
     {
       "check_id": "company_email_policy_rehearsal",
-      "status": "passed",
-      "summary": "Approved decision-archive export path passed without broad mailbox ingestion.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Run ops/source/rehearse_decision_email_export.py against an approved decision archive or restricted Email export path.",
       "evidence": [
-        "security-review:decision-archive-scope-approved",
-        "artifact:decision-email-export-rehearsal-report.json",
-        "artifact:decision-email-export-policy-report.json"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     },
     {
       "check_id": "backup_restore_load_rehearsal",
-      "status": "passed",
-      "summary": "Staging backup, restore, and load smoke passed for app, graph, vector, and artifact stores.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Complete backup, restore, and load rehearsals against company/staging services, then run ops/backup/verify_backup_set.py on the backup set.",
       "evidence": [
-        "artifact:backup-set-verify-report.json",
-        "staging-ci:backup-restore:run-12351",
-        "staging-ci:smoke-load:run-12352"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     },
     {
       "check_id": "trusted_proxy_rbac_rehearsal",
-      "status": "passed",
-      "summary": "Trusted proxy RBAC and project-scope rehearsal passed in staging.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Run ops/security/rehearse_trusted_proxy_auth.py against the company/staging trusted proxy boundary.",
       "evidence": [
-        "staging-ci:trusted-proxy-rbac:run-12353",
-        "artifact:trusted-proxy-rbac-report.json"
-      ]
-    },
-    {
-      "check_id": "kubernetes_helm_rehearsal",
-      "status": "passed",
-      "summary": "Kubernetes Helm lint and rendered manifest review passed for company values.",
-      "evidence": [
-        "staging-ci:helm-lint-template:run-12354",
-        "artifact:helm-template-rune-agent-redacted.yaml"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     },
     {
       "check_id": "local_regression_gates",
-      "status": "passed",
-      "summary": "Release branch local regression and rehearsal gate list passed.",
+      "status": "failed",
+      "summary": "TODO: replace after completing and reviewing this gate. Required action: Run the checker with --run-local-gates before a release decision.",
       "evidence": [
-        "github-actions:CI:run-12355",
-        "artifact:full-stack-rehearsal-report.json"
+        "TODO: attach reviewed CI run id, artifact reference, or approval record"
       ]
     }
   ]
