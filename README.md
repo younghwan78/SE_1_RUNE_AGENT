@@ -68,7 +68,7 @@ $env:API_KEY="change-me"
 $env:AUDIT_RETENTION_DAYS="365"
 $env:AUDIT_MAX_EVENTS="100000"
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/events `
-  -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="operator"}
+  -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="operator";"x-rune-projects"="RUNE_CAM_ALPHA"}
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/retention `
   -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="operator"}
 ```
@@ -122,6 +122,7 @@ Current local implementation:
 - debug side-by-side panes for LLM payloads and graph delta previews
 - debug artifact store root access policy with blocked-read audit events
 - audit retention policy status API
+- API-key project-scope authorization foundation with `x-rune-projects`
 - backup/restore rehearsal runbook and smoke load runner
 - periodic analysis scheduler for server operation
 

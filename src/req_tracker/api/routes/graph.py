@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 
+from req_tracker.api.security import require_project
 from req_tracker.graph.chain import GraphChainDirection, build_traceability_chain
 from req_tracker.graph.projection import GraphEdgeFilter, GraphViewMode, build_graph_projection
 from req_tracker.ontology.models import TraceabilityEdge
@@ -17,6 +18,7 @@ def subgraph(
     project_key: str = "RUNE_CAM_ALPHA",
 ) -> dict[str, list[dict[str, Any]]]:
     """Return approved local graph subgraph."""
+    require_project(request, project_key)
     runtime = request.app.state.runtime
     result: dict[str, list[dict[str, Any]]] = runtime.graph.subgraph(project_key)
     return result
@@ -34,6 +36,7 @@ def graph_projection(
     edge_filter: GraphEdgeFilter = "all",
 ) -> dict[str, Any]:
     """Return approved nodes plus approved and pending edge projection."""
+    require_project(request, project_key)
     runtime = request.app.state.runtime
     nodes = [node for node in runtime.graph.nodes.values() if node.project_key == project_key]
     approved_edges = [
@@ -77,6 +80,7 @@ def traceability_chain(
 ) -> dict[str, Any]:
     """Return a hop-limited traceability chain around a node."""
     runtime = request.app.state.runtime
+    require_project(request, project_key)
     nodes = [node for node in runtime.graph.nodes.values() if node.project_key == project_key]
     if node_id not in {node.node_id for node in nodes}:
         raise HTTPException(status_code=404, detail="node not found")

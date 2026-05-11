@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
-from req_tracker.api.security import require_role
+from req_tracker.api.security import require_project, require_role
 from req_tracker.debug.artifacts import ArtifactAccessError
 
 router = APIRouter(tags=["debug"])
@@ -26,6 +26,7 @@ def debug_run_summary(request: Request, run_id: str) -> dict[str, Any]:
     run = runtime.traces.runs.get(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="run not found")
+    require_project(request, run.project_key, "developer")
     steps = runtime.traces.list_steps(run_id)
     llm_calls = [
         call for call in runtime.traces.llm_calls.values() if call.run_id == run_id
@@ -58,6 +59,7 @@ def debug_run_diff_view(request: Request, run_id: str) -> dict[str, Any]:
     run = runtime.traces.runs.get(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="run not found")
+    require_project(request, run.project_key, "developer")
     llm_calls = [
         call for call in runtime.traces.llm_calls.values() if call.run_id == run_id
     ]
@@ -130,6 +132,8 @@ def debug_approval_lineage(request: Request, approval_id: str) -> dict[str, Any]
     if approval is None:
         raise HTTPException(status_code=404, detail="approval not found")
     run = runtime.traces.runs.get(approval.created_from_run_id)
+    if run is not None:
+        require_project(request, run.project_key, "developer")
     step = runtime.traces.steps.get(approval.created_from_step_id)
     delta = (
         runtime.approvals.deltas.get(approval.graph_delta_ref)
@@ -169,6 +173,8 @@ def read_debug_artifact(
     """Read a local JSON debug artifact by artifact ref."""
     require_role(request, "developer")
     runtime = request.app.state.runtime
+    project_key = _project_key_from_ref(runtime, artifact_ref)
+    require_project(request, project_key, "developer")
     try:
         artifact = runtime.artifact_store.read_json(artifact_ref)
     except ArtifactAccessError as exc:
@@ -191,7 +197,7 @@ def read_debug_artifact(
         action="debug_artifact_read",
         actor_id="local_debugger",
         actor_role="developer",
-        project_key=_project_key_from_ref(runtime, artifact_ref),
+        project_key=project_key,
         target_type="debug_artifact",
         target_id=artifact_ref,
         metadata={"artifact_ref": artifact_ref},

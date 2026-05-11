@@ -61,3 +61,50 @@ def test_local_auth_mode_keeps_existing_debug_access(tmp_path) -> None:  # type:
         response = client.get("/api/v1/audit/events")
 
     assert response.status_code == 200
+
+
+def test_api_key_auth_enforces_project_scope(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    app = create_app(
+        Settings(
+            artifact_root=tmp_path / "artifacts",
+            auth_mode="api_key",
+            api_key="secret",
+        )
+    )
+    allowed_headers = {
+        "x-rune-api-key": "secret",
+        "x-rune-role": "developer",
+        "x-rune-projects": "RUNE_CAM_ALPHA",
+    }
+    denied_headers = {
+        "x-rune-api-key": "secret",
+        "x-rune-role": "developer",
+        "x-rune-projects": "OTHER_PROJECT",
+    }
+    with TestClient(app) as client:
+        run = client.post(
+            "/api/v1/runs/analyze",
+            headers=allowed_headers,
+            json={
+                "project_key": "RUNE_CAM_ALPHA",
+                "scenario": "RUNE_CAM_ALPHA",
+                "run_id": "run_project_auth",
+            },
+        )
+        graph_denied = client.get(
+            "/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA",
+            headers=denied_headers,
+        )
+        debug_denied = client.get(
+            "/api/v1/debug/runs/run_project_auth/summary",
+            headers=denied_headers,
+        )
+        audit_denied = client.get(
+            "/api/v1/audit/events?project_key=RUNE_CAM_ALPHA",
+            headers={**denied_headers, "x-rune-role": "operator"},
+        )
+
+    assert run.status_code == 200
+    assert graph_denied.status_code == 403
+    assert debug_denied.status_code == 403
+    assert audit_denied.status_code == 403

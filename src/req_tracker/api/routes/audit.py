@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, Request
 
-from req_tracker.api.security import require_role
+from req_tracker.api.security import require_project, require_role
 from req_tracker.audit.models import AuditAction
 
 router = APIRouter(tags=["audit"])
@@ -19,6 +19,7 @@ def list_audit_events(
 ) -> list[dict[str, Any]]:
     """List audit events."""
     require_role(request, "operator")
+    require_project(request, project_key, "operator")
     runtime = request.app.state.runtime
     capped_limit = min(max(limit, 1), 500)
     return [

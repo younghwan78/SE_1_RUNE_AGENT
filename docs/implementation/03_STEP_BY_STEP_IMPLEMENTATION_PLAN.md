@@ -585,6 +585,7 @@ Dummy 검증:
 - debug artifact store root access policy with blocked-read audit events
 - audit retention policy and non-destructive retention status API
 - backup/restore rehearsal runbook and API smoke load runner
+- API-key project-scope authorization foundation for graph, run, debug, audit, and scheduler routes
 - static operator UI for graph, approval, findings, replay, scheduler, node chain review, run debug, and audit events
 
 아직 production 전환 전 남은 축:
@@ -593,6 +594,6 @@ Dummy 검증:
 - Neo4j backend and Qdrant backend
 - direct production transport implementations behind the source skill/export boundary
 - live LLM payload diff validation with sandbox model calls
-- typed production audit event archive/prune job and RBAC/SSO enforcement
+- typed production audit event archive/prune job and OIDC/SSO enforcement
 - React/React Flow migration decision after real graph shape validation
 - production deployment hardening and real backup/restore/load rehearsals

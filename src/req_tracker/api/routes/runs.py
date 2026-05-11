@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from req_tracker.api.security import require_project
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings
 from req_tracker.debug.replay import ReplayService
@@ -32,6 +33,7 @@ class ReplayRunRequest(BaseModel):
 @router.post("/runs/analyze")
 def analyze(request: Request, payload: AnalyzeRunRequest) -> dict[str, Any]:
     """Run dummy/local analysis."""
+    require_project(request, payload.project_key)
     runtime = request.app.state.runtime
     settings = request.app.state.settings
     run_id = payload.run_id or settings.new_id("run")
@@ -60,6 +62,7 @@ def get_run(request: Request, run_id: str) -> dict[str, Any]:
     run = runtime.traces.runs.get(run_id)
     if run is None:
         raise HTTPException(status_code=404, detail="run not found")
+    require_project(request, run.project_key)
     result: dict[str, Any] = run.model_dump(mode="json")
     return result
 
@@ -68,8 +71,10 @@ def get_run(request: Request, run_id: str) -> dict[str, Any]:
 def get_steps(request: Request, run_id: str) -> list[dict[str, Any]]:
     """Return run step traces."""
     runtime = request.app.state.runtime
-    if run_id not in runtime.traces.runs:
+    run = runtime.traces.runs.get(run_id)
+    if run is None:
         raise HTTPException(status_code=404, detail="run not found")
+    require_project(request, run.project_key)
     return [step.model_dump(mode="json") for step in runtime.traces.list_steps(run_id)]
 
 
@@ -77,8 +82,10 @@ def get_steps(request: Request, run_id: str) -> list[dict[str, Any]]:
 def get_graph_delta(request: Request, run_id: str) -> list[dict[str, Any]]:
     """Return approval graph deltas created by a run."""
     runtime = request.app.state.runtime
-    if run_id not in runtime.traces.runs:
+    run = runtime.traces.runs.get(run_id)
+    if run is None:
         raise HTTPException(status_code=404, detail="run not found")
+    require_project(request, run.project_key)
     return [
         delta.model_dump(mode="json")
         for delta in runtime.approvals.deltas.values()
@@ -94,6 +101,7 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
     if run_id not in runtime.analyses:
         raise HTTPException(status_code=404, detail="run not found")
     source = runtime.analyses[run_id]
+    require_project(request, source.run.project_key)
     replay_run_id = payload.replay_run_id or settings.new_id("replay")
     result = ReplayService(runtime.workflow(), runtime.analyses).replay(
         source_run_id=run_id,
@@ -111,6 +119,7 @@ def list_findings(request: Request) -> list[dict[str, Any]]:
     runtime = request.app.state.runtime
     findings: list[dict[str, Any]] = []
     for result in runtime.analyses.values():
+        require_project(request, result.run.project_key)
         findings.extend(finding.model_dump(mode="json") for finding in result.findings)
     return findings
 
@@ -126,6 +135,7 @@ def get_schedule(request: Request) -> dict[str, Any]:
 @router.put("/schedule")
 async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[str, Any]:
     """Configure periodic analysis runs."""
+    require_project(request, payload.project_key, "operator")
     runtime: RuntimeState = request.app.state.runtime
     settings: Settings = request.app.state.settings
     status = await runtime.scheduler.configure(
@@ -155,6 +165,7 @@ async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[
 async def run_schedule_now(request: Request) -> dict[str, Any]:
     """Run one scheduled analysis immediately."""
     runtime: RuntimeState = request.app.state.runtime
+    require_project(request, runtime.scheduler.config.project_key, "operator")
     settings: Settings = request.app.state.settings
     result = await runtime.scheduler.run_now(
         runner=lambda run_id, project_key, scenario: runtime.run_analysis(

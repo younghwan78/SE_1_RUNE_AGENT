@@ -18,6 +18,7 @@ class UserContext:
 
     user_id: str
     role: str
+    project_keys: tuple[str, ...] = ("*",)
 
 
 def current_user(
@@ -28,8 +29,14 @@ def current_user(
     api_key = request.headers.get("x-rune-api-key")
     user_id = request.headers.get("x-rune-user")
     role_header = request.headers.get("x-rune-role")
+    project_header = request.headers.get("x-rune-projects")
+    project_keys = _parse_project_keys(project_header)
     if settings.auth_mode == "local":
-        return UserContext(user_id=user_id or "local", role=role_header or "admin")
+        return UserContext(
+            user_id=user_id or "local",
+            role=role_header or "admin",
+            project_keys=project_keys,
+        )
     if settings.auth_mode != "api_key":
         raise HTTPException(status_code=500, detail=f"unsupported AUTH_MODE: {settings.auth_mode}")
     if not settings.api_key:
@@ -39,7 +46,11 @@ def current_user(
     role = role_header or "viewer"
     if role not in ROLE_ORDER:
         raise HTTPException(status_code=403, detail="unknown role")
-    return UserContext(user_id=user_id or "api_key_user", role=role)
+    return UserContext(
+        user_id=user_id or "api_key_user",
+        role=role,
+        project_keys=project_keys,
+    )
 
 
 def require_role(request: Request, minimum_role: str) -> UserContext:
@@ -48,3 +59,28 @@ def require_role(request: Request, minimum_role: str) -> UserContext:
     if ROLE_ORDER[user.role] < ROLE_ORDER[minimum_role]:
         raise HTTPException(status_code=403, detail="insufficient role")
     return user
+
+
+def require_project(
+    request: Request,
+    project_key: str | None,
+    minimum_role: str = "viewer",
+) -> UserContext:
+    """Require role and project-level access for a project-scoped operation."""
+    user = require_role(request, minimum_role)
+    if project_key is None:
+        return user
+    if "*" not in user.project_keys and project_key not in user.project_keys:
+        raise HTTPException(status_code=403, detail="project access denied")
+    return user
+
+
+def _parse_project_keys(project_header: str | None) -> tuple[str, ...]:
+    if not project_header:
+        return ("*",)
+    project_keys = tuple(
+        item.strip()
+        for item in project_header.split(",")
+        if item.strip()
+    )
+    return project_keys or ("*",)
