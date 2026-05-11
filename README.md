@@ -110,6 +110,7 @@ Current local implementation:
 - in-memory trace recorder
 - dummy source adapter and fixture-backed analysis workflow
 - JIRA, Confluence, and restricted decision/email export-file adapters
+- restricted decision/email export policy that skips unapproved mailbox artifacts
 - generic HTTP JSON model provider with file-backed model/prompt registry
 - in-memory graph/vector backends
 - approval queue, graph commit, feedback capture

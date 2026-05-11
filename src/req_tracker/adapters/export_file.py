@@ -40,15 +40,10 @@ class ExportFileSourceAdapter:
             for artifact in self._load()
             if artifact.project_key == scope.project_key
         ]
-        offset = cursor.offset if cursor else 0
-        page = artifacts[offset : offset + scope.limit]
-        next_offset = offset + len(page)
-        next_cursor = None
-        if next_offset < len(artifacts):
-            next_cursor = SyncCursor(offset=next_offset, content_hash=stable_hash(page))
-        return SourceFetchResult(
-            artifacts=page,
-            next_cursor=next_cursor,
+        return _page_fetch_result(
+            artifacts=artifacts,
+            cursor=cursor,
+            limit=scope.limit,
             source_warnings=[] if self.export_path.exists() else ["export_file_missing"],
             partial_failure=not self.export_path.exists(),
         )
@@ -70,6 +65,28 @@ class ExportFileSourceAdapter:
         return [RawSourceArtifact.model_validate(item) for item in payload]
 
 
+def _page_fetch_result(
+    *,
+    artifacts: list[RawSourceArtifact],
+    cursor: SyncCursor | None,
+    limit: int,
+    source_warnings: list[str],
+    partial_failure: bool,
+) -> SourceFetchResult:
+    offset = cursor.offset if cursor else 0
+    page = artifacts[offset : offset + limit]
+    next_offset = offset + len(page)
+    next_cursor = None
+    if next_offset < len(artifacts):
+        next_cursor = SyncCursor(offset=next_offset, content_hash=stable_hash(page))
+    return SourceFetchResult(
+        artifacts=page,
+        next_cursor=next_cursor,
+        source_warnings=source_warnings,
+        partial_failure=partial_failure,
+    )
+
+
 class JiraExportSourceAdapter(ExportFileSourceAdapter):
     """JIRA export adapter."""
 
@@ -89,6 +106,45 @@ class DecisionEmailExportSourceAdapter(ExportFileSourceAdapter):
 
     def __init__(self, export_path: Path | str) -> None:
         super().__init__(source_type="decision_archive", export_path=export_path)
+
+    def fetch_incremental(
+        self,
+        scope: SourceScope,
+        cursor: SyncCursor | None = None,
+    ) -> SourceFetchResult:
+        """Fetch only approved decision-source artifacts from restricted email exports."""
+        artifacts: list[RawSourceArtifact] = []
+        warnings: list[str] = [] if self.export_path.exists() else ["export_file_missing"]
+        for artifact in self._load():
+            if artifact.project_key != scope.project_key:
+                continue
+            if _is_allowed_decision_artifact(artifact):
+                artifacts.append(artifact)
+                continue
+            warnings.append(f"decision_email_artifact_skipped:{artifact.external_id}")
+        return _page_fetch_result(
+            artifacts=artifacts,
+            cursor=cursor,
+            limit=scope.limit,
+            source_warnings=warnings,
+            partial_failure=bool(warnings),
+        )
+
+
+def _is_allowed_decision_artifact(artifact: RawSourceArtifact) -> bool:
+    if artifact.source_type == "decision_archive":
+        return _artifact_is_decision(artifact)
+    if artifact.source_type != "email":
+        return False
+    return bool(artifact.metadata.get("decision_source_approved")) and _artifact_is_decision(
+        artifact
+    )
+
+
+def _artifact_is_decision(artifact: RawSourceArtifact) -> bool:
+    labels = {label.lower() for label in artifact.labels}
+    mbse_type = str(artifact.metadata.get("mbse_type", "")).lower()
+    return mbse_type == "decision" or bool(labels & {"decision", "decision_archive"})
 
 
 def _infer_format(path: Path) -> ExportFormat:

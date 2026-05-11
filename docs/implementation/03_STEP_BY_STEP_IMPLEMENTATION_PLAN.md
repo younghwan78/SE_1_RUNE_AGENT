@@ -564,6 +564,7 @@ Dummy 검증:
 - model gateway structured validation retry and fallback trace foundation
 - generic HTTP JSON model provider, provider factory, and file-backed model/prompt registry
 - export-file adapters for JIRA, Confluence, and restricted decision/email sources
+- restricted decision/email export policy that accepts approved decision sources and skips full-mailbox artifacts
 - JIRA REST source adapter foundation behind the shared `SourceAdapter` contract
 - Confluence REST source adapter foundation behind the shared `SourceAdapter` contract
 - JIRA/Confluence REST retry, rate-limit, permission-denied, and warning handling foundation

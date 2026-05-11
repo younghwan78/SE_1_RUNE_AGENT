@@ -14,6 +14,8 @@ def _artifact(
     external_id: str,
     source_type: str,
     project_key: str = "RUNE_CAM_ALPHA",
+    labels: list[str] | None = None,
+    metadata: dict[str, object] | None = None,
 ) -> dict[str, object]:
     return {
         "external_id": external_id,
@@ -24,9 +26,9 @@ def _artifact(
         "body_text": f"{external_id} shall be traceable.",
         "created_at": "2026-01-01T00:00:00Z",
         "updated_at": "2026-01-01T00:00:00Z",
-        "labels": ["export"],
+        "labels": labels or ["export"],
         "links": [],
-        "metadata": {"mbse_type": "Requirement"},
+        "metadata": metadata or {"mbse_type": "Requirement"},
         "access_scope": ["RUNE_CAM_ALPHA"],
         "data_classification": "public_internal",
     }
@@ -66,7 +68,15 @@ def test_confluence_and_decision_export_adapters_read_jsonl(tmp_path) -> None:  
         encoding="utf-8",
     )
     decision_path.write_text(
-        json.dumps(_artifact("DEC-1", "decision_archive")) + "\n",
+        json.dumps(
+            _artifact(
+                "DEC-1",
+                "decision_archive",
+                labels=["decision_archive"],
+                metadata={"mbse_type": "Decision"},
+            )
+        )
+        + "\n",
         encoding="utf-8",
     )
 
@@ -79,6 +89,55 @@ def test_confluence_and_decision_export_adapters_read_jsonl(tmp_path) -> None:  
 
     assert confluence.artifacts[0].source_type == "confluence"
     assert decision.artifacts[0].source_type == "decision_archive"
+
+
+def test_decision_email_export_adapter_allows_only_approved_decision_scope(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    export_path = tmp_path / "decision_email.jsonl"
+    export_path.write_text(
+        "\n".join(
+            [
+                json.dumps(
+                    _artifact(
+                        "MAIL-DEC-1",
+                        "email",
+                        labels=["decision"],
+                        metadata={
+                            "mbse_type": "Decision",
+                            "decision_source_approved": True,
+                        },
+                    )
+                ),
+                json.dumps(
+                    _artifact(
+                        "MAIL-FULL-1",
+                        "email",
+                        labels=["mailbox"],
+                        metadata={"mbse_type": "Decision"},
+                    )
+                ),
+                json.dumps(
+                    _artifact(
+                        "CONF-LEAK-1",
+                        "confluence",
+                        labels=["decision"],
+                        metadata={"mbse_type": "Decision"},
+                    )
+                ),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = DecisionEmailExportSourceAdapter(export_path).fetch_incremental(
+        SourceScope(project_key="RUNE_CAM_ALPHA")
+    )
+
+    assert [artifact.external_id for artifact in result.artifacts] == ["MAIL-DEC-1"]
+    assert result.partial_failure is True
+    assert result.source_warnings == [
+        "decision_email_artifact_skipped:MAIL-FULL-1",
+        "decision_email_artifact_skipped:CONF-LEAK-1",
+    ]
 
 
 def test_missing_export_file_reports_partial_failure(tmp_path) -> None:  # type: ignore[no-untyped-def]
