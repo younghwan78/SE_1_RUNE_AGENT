@@ -17,6 +17,12 @@ def test_replay_and_feedback_eval_api(client: TestClient) -> None:
     assert diff["node_diff"]["added"] == []
     assert diff["edge_diff"]["removed"] == []
 
+    stored_diff = client.get("/api/v1/replays/replay_rf_1/diff")
+    assert stored_diff.status_code == 200
+    assert stored_diff.json()["source_run_id"] == "run_rf_1"
+    assert stored_diff.json()["replay_run_id"] == "replay_rf_1"
+    assert stored_diff.json()["diff"]["node_diff"]["added"] == []
+
     feedback = client.post(
         "/api/v1/feedback",
         json={

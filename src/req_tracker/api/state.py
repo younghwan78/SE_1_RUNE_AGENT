@@ -11,6 +11,7 @@ from req_tracker.audit.models import AuditEvent, AuditRetentionPolicy
 from req_tracker.audit.service import AuditService
 from req_tracker.debug.artifacts import LocalArtifactStore
 from req_tracker.debug.models import AgentRun, AgentStepTrace
+from req_tracker.debug.replay import ReplayResult
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.feedback.models import FeedbackEvent
 from req_tracker.graph.base import GraphBackend
@@ -37,6 +38,7 @@ class RuntimeState(BaseModel):
     audit: AuditService
     audit_archive_store: AuditArchiveWriter
     analyses: dict[str, AnalysisResult]
+    replays: dict[str, ReplayResult]
     scheduler: RunScheduler
     state_store: StateStore | None = None
 
@@ -62,6 +64,7 @@ class RuntimeState(BaseModel):
             audit_archive_store=audit_archive_store
             or LocalAuditArchiveStore(artifact_root / "audit_archives"),
             analyses={},
+            replays={},
             scheduler=RunScheduler(schedule_config),
             state_store=state_store,
         )

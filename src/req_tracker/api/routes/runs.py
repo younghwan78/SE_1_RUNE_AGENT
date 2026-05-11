@@ -78,6 +78,43 @@ def get_steps(request: Request, run_id: str) -> list[dict[str, Any]]:
     return [step.model_dump(mode="json") for step in runtime.traces.list_steps(run_id)]
 
 
+@router.get("/runs/{run_id}/llm-calls")
+def get_llm_calls(request: Request, run_id: str) -> list[dict[str, Any]]:
+    """Return model gateway call traces for a run."""
+    runtime = request.app.state.runtime
+    run = runtime.traces.runs.get(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="run not found")
+    require_project(request, run.project_key, "developer")
+    return [
+        call.model_dump(mode="json")
+        for call in runtime.traces.llm_calls.values()
+        if call.run_id == run_id
+    ]
+
+
+@router.get("/runs/{run_id}/artifacts")
+def get_run_artifacts(request: Request, run_id: str) -> list[dict[str, Any]]:
+    """Return stage artifact references produced by a run."""
+    runtime = request.app.state.runtime
+    run = runtime.traces.runs.get(run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="run not found")
+    require_project(request, run.project_key, "developer")
+    return [
+        {
+            "run_id": step.run_id,
+            "step_id": step.step_id,
+            "stage_name": step.stage_name,
+            "artifact_ref": step.output_ref,
+            "output_hash": step.output_hash,
+            "schema_version": step.schema_version,
+        }
+        for step in runtime.traces.list_steps(run_id)
+        if step.output_ref is not None
+    ]
+
+
 @router.get("/runs/{run_id}/graph-delta")
 def get_graph_delta(request: Request, run_id: str) -> list[dict[str, Any]]:
     """Return approval graph deltas created by a run."""
@@ -110,7 +147,27 @@ def replay_run(request: Request, run_id: str, payload: ReplayRunRequest) -> dict
         scenario=payload.scenario,
         replay_mode=payload.replay_mode,
     )
+    runtime.replays[replay_run_id] = result
     return result.model_dump(mode="json")
+
+
+@router.get("/replays/{replay_id}/diff")
+def get_replay_diff(request: Request, replay_id: str) -> dict[str, Any]:
+    """Return a previously generated replay diff."""
+    runtime = request.app.state.runtime
+    replay = runtime.replays.get(replay_id)
+    if replay is None:
+        raise HTTPException(status_code=404, detail="replay not found")
+    source_run = runtime.traces.runs.get(replay.source_run_id)
+    if source_run is None:
+        raise HTTPException(status_code=404, detail="source run not found")
+    require_project(request, source_run.project_key, "developer")
+    return {
+        "source_run_id": replay.source_run_id,
+        "replay_run_id": replay.replay_run_id,
+        "replay_mode": replay.replay_mode,
+        "diff": replay.diff.model_dump(mode="json"),
+    }
 
 
 @router.get("/findings")

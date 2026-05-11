@@ -28,6 +28,18 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
     assert payload["counts"]["artifact_refs"] >= 2
     assert payload["graph_deltas"]
 
+    llm_calls = client.get("/api/v1/runs/run_debug_1/llm-calls")
+    assert llm_calls.status_code == 200
+    assert llm_calls.json() == []
+
+    artifacts = client.get("/api/v1/runs/run_debug_1/artifacts")
+    assert artifacts.status_code == 200
+    artifact_payload = artifacts.json()
+    assert artifact_payload
+    assert artifact_payload[0]["run_id"] == "run_debug_1"
+    assert artifact_payload[0]["artifact_ref"]
+    assert artifact_payload[0]["output_hash"]
+
     artifact_ref = payload["artifact_refs"][0]
     artifact = client.get(f"/api/v1/debug/artifact?artifact_ref={quote(artifact_ref)}")
     assert artifact.status_code == 200
