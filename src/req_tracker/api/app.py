@@ -17,6 +17,9 @@ from req_tracker.api.routes.ui import UI_ASSET_DIR
 from req_tracker.api.routes.ui import router as ui_router
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings, get_settings
+from req_tracker.graph.base import GraphBackend
+from req_tracker.graph.memory_backend import MemoryGraphBackend
+from req_tracker.graph.neo4j_backend import Neo4jGraphBackend
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.storage.postgres_store import PostgreSQLStateStore
 from req_tracker.storage.sqlite_store import SQLiteStateStore
@@ -26,10 +29,9 @@ from req_tracker.storage.state_store import StateStore
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Create the API application."""
     resolved_settings = settings or get_settings()
-    if resolved_settings.graph_backend != "memory":
-        raise ValueError(f"unsupported GRAPH_BACKEND: {resolved_settings.graph_backend}")
     if resolved_settings.vector_backend != "memory":
         raise ValueError(f"unsupported VECTOR_BACKEND: {resolved_settings.vector_backend}")
+    graph = _create_graph_backend(resolved_settings)
     state_store: StateStore | None = None
     if resolved_settings.state_store == "sqlite":
         state_store = SQLiteStateStore(resolved_settings.sqlite_state_path)
@@ -46,6 +48,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             scenario=resolved_settings.scheduler_scenario,
         ),
         state_store=state_store,
+        graph=graph,
     )
 
     @asynccontextmanager
@@ -62,6 +65,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
         yield
         await runtime.scheduler.stop()
+        close_graph = getattr(runtime.graph, "close", None)
+        if callable(close_graph):
+            close_graph()
 
     app = FastAPI(
         title="SE 1 RUNE Agent API",
@@ -95,6 +101,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(ui_router)
     app.mount("/ui", StaticFiles(directory=UI_ASSET_DIR), name="ui")
     return app
+
+
+def _create_graph_backend(settings: Settings) -> GraphBackend:
+    if settings.graph_backend == "memory":
+        return MemoryGraphBackend()
+    if settings.graph_backend == "neo4j":
+        if not settings.neo4j_uri or not settings.neo4j_password:
+            raise ValueError("NEO4J_URI and NEO4J_PASSWORD are required for GRAPH_BACKEND=neo4j")
+        return Neo4jGraphBackend(
+            uri=settings.neo4j_uri,
+            username=settings.neo4j_username,
+            password=settings.neo4j_password,
+            database=settings.neo4j_database,
+        )
+    raise ValueError(f"unsupported GRAPH_BACKEND: {settings.graph_backend}")
 
 
 app = create_app()

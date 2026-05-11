@@ -24,6 +24,16 @@ $env:POSTGRES_TEST_DSN="postgresql://rune:rune@127.0.0.1:5432/rune_agent_test"
 uv run pytest tests/integration/test_postgres_state_store.py
 ```
 
+Optional real Neo4j integration tests are skipped unless `NEO4J_TEST_URI` and
+`NEO4J_TEST_PASSWORD` point to a disposable Neo4j database:
+
+```powershell
+$env:NEO4J_TEST_URI="bolt://127.0.0.1:7687"
+$env:NEO4J_TEST_USERNAME="neo4j"
+$env:NEO4J_TEST_PASSWORD="password"
+uv run pytest tests/integration/test_neo4j_graph_backend.py
+```
+
 Run the API locally:
 
 ```powershell
@@ -78,6 +88,16 @@ Enable local SQLite persistence:
 ```powershell
 $env:STATE_STORE="sqlite"
 $env:SQLITE_STATE_PATH=".local_state/rune_state.sqlite3"
+uv run uvicorn req_tracker.api.app:app --host 127.0.0.1 --port 8000
+```
+
+Enable Neo4j graph persistence:
+
+```powershell
+$env:GRAPH_BACKEND="neo4j"
+$env:NEO4J_URI="bolt://127.0.0.1:7687"
+$env:NEO4J_USERNAME="neo4j"
+$env:NEO4J_PASSWORD="password"
 uv run uvicorn req_tracker.api.app:app --host 127.0.0.1 --port 8000
 ```
 

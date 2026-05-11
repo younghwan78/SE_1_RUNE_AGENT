@@ -39,13 +39,15 @@ class RuntimeState(BaseModel):
         artifact_root: Path,
         schedule_config: ScheduleConfig | None = None,
         state_store: StateStore | None = None,
+        graph: GraphBackend | None = None,
+        vector: VectorBackend | None = None,
     ) -> "RuntimeState":
         """Create a local runtime state."""
         return cls(
             traces=InMemoryTraceRepository(),
             artifact_store=LocalArtifactStore(artifact_root),
-            graph=MemoryGraphBackend(),
-            vector=MemoryVectorBackend(),
+            graph=graph or MemoryGraphBackend(),
+            vector=vector or MemoryVectorBackend(),
             approvals=ApprovalService(),
             audit=AuditService(),
             analyses={},

@@ -37,7 +37,7 @@ Latest GitHub verification:
 | SQLite state persistence | `SQLiteStateStore`, persistence contract test | Complete |
 | PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, migration loader tests | Complete |
 | Typed PostgreSQL core table foundation | `002_core_state_tables.sql`, typed mirror upsert/read dispatch, rollback scripts, unit tests, optional `POSTGRES_TEST_DSN` integration test | Foundation complete; production DB environment validation pending |
-| Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, graph projection, traceability chain APIs, unsupported backend guard | Interface/local memory complete; Neo4j backend pending |
+| Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, `Neo4jGraphBackend`, graph projection, traceability chain APIs, optional `NEO4J_TEST_*` integration test | Neo4j foundation complete; production DB environment validation pending |
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, unsupported backend guard | Interface/local memory complete; Qdrant backend pending |
 | Approval workflow | approval queue, approve/reject/hold/modify path, graph commit | Complete for local backend |
 | Feedback loop | feedback events, eval candidates, improvement candidates, eval gate | Local foundation complete; real eval datasets/canary pending |
@@ -57,7 +57,8 @@ Latest GitHub verification:
 
 ### P1: Production Backend Expansion
 
-- Add Neo4j graph backend behind the current graph interface.
+- Run the optional Neo4j integration test in a disposable production-like
+  database environment.
 - Add Qdrant vector backend behind the current vector interface.
 - Keep memory backends as deterministic contract-test baselines.
 

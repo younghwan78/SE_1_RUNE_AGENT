@@ -565,6 +565,7 @@ Dummy 검증:
 - ingestion normalization, masking, chunking, evidence span path
 - deterministic node extraction, source-link edge candidate generation, findings rules
 - graph/vector backend protocols for production backend replacement
+- Neo4j graph backend foundation with env-gated integration test
 - pending approval queue and approved graph separation
 - approval approve/reject/hold/modify decision path
 - feedback summary, eval candidate, improvement candidate, eval gate block
