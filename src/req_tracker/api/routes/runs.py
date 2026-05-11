@@ -5,10 +5,10 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
+from req_tracker.api.idempotency import prepare_idempotency, record_idempotency_response
 from req_tracker.api.security import require_project, require_role
 from req_tracker.api.state import RuntimeState
 from req_tracker.config.settings import Settings
-from req_tracker.debug.hash import stable_hash
 from req_tracker.debug.replay import ReplayService
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.workflows.analysis_graph import AnalysisResult
@@ -38,25 +38,14 @@ def analyze(request: Request, payload: AnalyzeRunRequest) -> dict[str, Any]:
     user = require_project(request, payload.project_key)
     runtime: RuntimeState = request.app.state.runtime
     settings = request.app.state.settings
-    request_hash = _analysis_request_hash(payload)
-    idempotency_key = _idempotency_key(request)
-    idempotency_record_id = None
-    if idempotency_key is not None:
-        idempotency_record_id = _idempotency_record_id("runs.analyze", idempotency_key)
-        existing = runtime.idempotency_results.get(idempotency_record_id)
-        if existing is not None:
-            if existing.get("request_hash") != request_hash:
-                raise HTTPException(
-                    status_code=409,
-                    detail={
-                        "message": "idempotency key reused with different request",
-                        "idempotency_key": idempotency_key,
-                    },
-                )
-            response = existing.get("response")
-            if isinstance(response, dict):
-                return response
-
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="runs.analyze",
+        payload=payload.model_dump(mode="json"),
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
     run_id = payload.run_id or settings.new_id("run")
     result = runtime.run_analysis(
         run_id=run_id,
@@ -66,32 +55,14 @@ def analyze(request: Request, payload: AnalyzeRunRequest) -> dict[str, Any]:
         trigger_source="api",
     )
     response = _analysis_response(result)
-    if idempotency_key is not None and idempotency_record_id is not None:
-        runtime.record_idempotency_result(
-            record_id=idempotency_record_id,
-            idempotency_key=idempotency_key,
-            command="runs.analyze",
-            project_key=payload.project_key,
-            request_hash=request_hash,
-            response=response,
-        )
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="runs.analyze",
+        project_key=payload.project_key,
+        response=response,
+    )
     return response
-
-
-def _idempotency_key(request: Request) -> str | None:
-    key = request.headers.get("idempotency-key") or request.headers.get("x-idempotency-key")
-    if key is None:
-        return None
-    normalized = key.strip()
-    return normalized or None
-
-
-def _idempotency_record_id(command: str, key: str) -> str:
-    return f"{command}:{key}"
-
-
-def _analysis_request_hash(payload: AnalyzeRunRequest) -> str:
-    return stable_hash(payload.model_dump(mode="json"))
 
 
 def _analysis_response(result: AnalysisResult) -> dict[str, Any]:

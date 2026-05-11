@@ -92,3 +92,41 @@ def test_improvement_activation_requires_review_and_canary_after_eval_passes(
     assert active.status_code == 200
     assert active.json()["status"] == "active"
     assert active.json()["promotion_status"] == "active"
+
+
+def test_feedback_idempotency_key_avoids_duplicate_feedback_events(
+    client: TestClient,
+) -> None:
+    payload = {
+        "feedback_id": "fb_idempotent_1",
+        "target_type": "edge",
+        "target_id": "edge_idempotent",
+        "action": "rejected",
+        "user_id": "reviewer",
+        "user_role": "System Architect",
+        "reason_code": "wrong_relation",
+    }
+    first = client.post(
+        "/api/v1/feedback",
+        json=payload,
+        headers={"Idempotency-Key": "idem-feedback-1"},
+    )
+    second = client.post(
+        "/api/v1/feedback",
+        json=payload,
+        headers={"Idempotency-Key": "idem-feedback-1"},
+    )
+    conflict = client.post(
+        "/api/v1/feedback",
+        json={**payload, "reason_code": "weak_evidence"},
+        headers={"Idempotency-Key": "idem-feedback-1"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
+    assert conflict.status_code == 409
+
+    summary = client.get("/api/v1/feedback/summary")
+    assert summary.status_code == 200
+    assert summary.json()["wrong_relation"] == 1

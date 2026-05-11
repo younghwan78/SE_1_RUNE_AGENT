@@ -5,6 +5,11 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from req_tracker.api.idempotency import (
+    explicit_model_payload,
+    prepare_idempotency,
+    record_idempotency_response,
+)
 from req_tracker.api.security import require_role
 from req_tracker.evals.datasets import build_eval_candidates, feedback_counts_by_reason
 from req_tracker.evals.runner import run_local_eval_gate
@@ -26,6 +31,14 @@ def record_feedback(request: Request, event: FeedbackEvent) -> dict[str, Any]:
     """Record feedback in local runtime state."""
     require_role(request, "developer")
     runtime = request.app.state.runtime
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="feedback.record",
+        payload=explicit_model_payload(event),
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
     runtime.approvals.feedback.append(event)
     runtime.audit.record(
         action="feedback_recorded",
@@ -37,7 +50,15 @@ def record_feedback(request: Request, event: FeedbackEvent) -> dict[str, Any]:
         metadata={"feedback_id": event.feedback_id, "action": event.action},
     )
     runtime.persist_approval_state()
-    return event.model_dump(mode="json")
+    result = event.model_dump(mode="json")
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="feedback.record",
+        project_key=None,
+        response=result,
+    )
+    return result
 
 
 @router.get("/eval/candidates")

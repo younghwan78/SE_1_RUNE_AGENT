@@ -4,6 +4,11 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 
+from req_tracker.api.idempotency import (
+    explicit_model_payload,
+    prepare_idempotency,
+    record_idempotency_response,
+)
 from req_tracker.api.security import require_project
 from req_tracker.approvals.models import ApprovalDecision
 
@@ -37,6 +42,17 @@ def decide_approval(
     if approval_id not in runtime.approvals.items:
         raise HTTPException(status_code=404, detail="approval not found")
     require_project(request, runtime.approvals.items[approval_id].project_key, "operator")
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="approvals.decision",
+        payload={
+            "approval_id": approval_id,
+            "decision": explicit_model_payload(decision),
+        },
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
     item = runtime.approvals.decide(decision, runtime.graph)
     runtime.audit.record(
         action="approval_decided",
@@ -54,4 +70,11 @@ def decide_approval(
     )
     runtime.persist_approval_state()
     result: dict[str, Any] = item.model_dump(mode="json")
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="approvals.decision",
+        project_key=item.project_key,
+        response=result,
+    )
     return result

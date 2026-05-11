@@ -117,6 +117,51 @@ def test_analyze_run_idempotency_key_rejects_different_payload(client: TestClien
     )
 
 
+def test_approval_decision_idempotency_key_avoids_duplicate_side_effects(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/v1/runs/analyze",
+        json={
+            "project_key": "RUNE_CAM_ALPHA",
+            "scenario": "RUNE_CAM_ALPHA",
+            "run_id": "run_api_approval_idempotent",
+        },
+    )
+    assert response.status_code == 200
+    approval = client.get("/api/v1/approvals").json()[0]
+    payload = {
+        "approval_id": approval["approval_id"],
+        "action": "approve",
+        "decided_by": "reviewer",
+    }
+
+    first = client.post(
+        f"/api/v1/approvals/{approval['approval_id']}/decision",
+        json=payload,
+        headers={"Idempotency-Key": "idem-approval-1"},
+    )
+    second = client.post(
+        f"/api/v1/approvals/{approval['approval_id']}/decision",
+        json=payload,
+        headers={"Idempotency-Key": "idem-approval-1"},
+    )
+    conflict = client.post(
+        f"/api/v1/approvals/{approval['approval_id']}/decision",
+        json={**payload, "action": "reject"},
+        headers={"Idempotency-Key": "idem-approval-1"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
+    assert conflict.status_code == 409
+
+    audit = client.get("/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
+    assert audit.status_code == 200
+    assert [event["action"] for event in audit.json()].count("approval_decided") == 1
+
+
 def test_modify_approval_commits_corrected_edge_and_feedback(client: TestClient) -> None:
     response = client.post(
         "/api/v1/runs/analyze",
