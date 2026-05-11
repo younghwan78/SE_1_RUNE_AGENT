@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `3e6cb08 Trace replay runs separately`
 - `55e3ef2 Record failed run audit state`
 - `dd5aff7 Record run start audit events`
 - `c8e1020 Block stale approval decisions`
@@ -180,7 +181,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25701249969` for `55e3ef2`: completed successfully
+- GitHub Actions `CI` run `25701501361` for `3e6cb08`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
