@@ -43,6 +43,7 @@ _REASON_ALIASES = {
 }
 ImprovementType = Literal[
     "prompt",
+    "few_shot_example",
     "rule",
     "retrieval_policy",
     "scoring_threshold",

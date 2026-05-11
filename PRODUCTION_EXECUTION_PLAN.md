@@ -434,7 +434,15 @@ class FeedbackEvent(BaseModel):
 ```python
 class ImprovementCandidate(BaseModel):
     candidate_id: str
-    candidate_type: Literal["prompt", "rule", "retrieval_policy", "scoring_threshold", "model_profile"]
+    candidate_type: Literal[
+        "prompt",
+        "few_shot_example",
+        "rule",
+        "retrieval_policy",
+        "scoring_threshold",
+        "ontology_normalization",
+        "model_profile",
+    ]
     source_feedback_ids: list[str]
     proposed_change_summary: str
     before_version_id: str

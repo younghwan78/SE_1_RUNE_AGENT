@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from req_tracker.approvals.models import ApprovalItem, GraphDelta, GraphDeltaOperation
 from req_tracker.debug.models import AgentRun, AgentStepTrace, LLMCallTrace
-from req_tracker.feedback.models import FeedbackEvent
+from req_tracker.feedback.models import FeedbackEvent, ImprovementCandidate
 from req_tracker.model_gateway.models import ModelProfile, PromptVersion
 from req_tracker.ontology.models import (
     ArtifactChunk,
@@ -211,6 +211,28 @@ def test_feedback_accepts_command_style_taxonomy_aliases() -> None:
 
     assert feedback.action == "marked_low_quality"
     assert feedback.reason_code == "security_concern"
+
+
+def test_improvement_candidate_accepts_planned_candidate_types() -> None:
+    prompt_example = ImprovementCandidate(
+        candidate_id="imp_few_shot_001",
+        candidate_type="few_shot_example",
+        source_feedback_ids=["fb_001"],
+        proposed_change_summary="Add a reviewed edge-linking example to the eval set.",
+        before_version_id="local_active",
+        after_version_ref="draft://few_shot_example/wrong_relation/001",
+    )
+    ontology = ImprovementCandidate(
+        candidate_id="imp_ontology_001",
+        candidate_type="ontology_normalization",
+        source_feedback_ids=["fb_002"],
+        proposed_change_summary="Normalize recurring node type corrections.",
+        before_version_id="local_active",
+        after_version_ref="draft://ontology_normalization/wrong_node_type/001",
+    )
+
+    assert prompt_example.candidate_type == "few_shot_example"
+    assert ontology.candidate_type == "ontology_normalization"
 
 
 def test_invalid_confidence_is_rejected() -> None:
