@@ -42,3 +42,9 @@ Implemented route groups:
 Do not document MCP tool names or company-specific source credentials here.
 JIRA, Confluence, and Email access procedures belong in `.claude/skills/` and
 company-local MCP configuration.
+
+Feedback API inputs accept command-style aliases such as `approve`, `reject`,
+`modify`, `comment`, and `mark low quality`, then store canonical contract values
+such as `approved`, `rejected`, `modified`, `commented`, and
+`marked_low_quality`. Reason codes are stored with underscores, while
+human-readable aliases such as `wrong relation` are accepted at the API boundary.

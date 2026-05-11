@@ -198,6 +198,21 @@ def test_debug_gateway_approval_feedback_contracts() -> None:
         assert item.model_dump(mode="json")
 
 
+def test_feedback_accepts_command_style_taxonomy_aliases() -> None:
+    feedback = FeedbackEvent(
+        feedback_id="fb_alias_001",
+        target_type="edge",
+        target_id="edge_alias_001",
+        action="mark low quality",
+        user_id="reviewer",
+        user_role="System Architect",
+        reason_code="security concern",
+    )
+
+    assert feedback.action == "marked_low_quality"
+    assert feedback.reason_code == "security_concern"
+
+
 def test_invalid_confidence_is_rejected() -> None:
     with pytest.raises(ValidationError):
         OntologyNode(
@@ -210,4 +225,3 @@ def test_invalid_confidence_is_rejected() -> None:
             created_by="source",
             confidence_score=1.5,
         )
-

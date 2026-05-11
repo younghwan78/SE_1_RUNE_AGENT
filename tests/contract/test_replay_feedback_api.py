@@ -281,3 +281,25 @@ def test_feedback_idempotency_key_avoids_duplicate_feedback_events(
     summary = client.get("/api/v1/feedback/summary")
     assert summary.status_code == 200
     assert summary.json()["wrong_relation"] == 1
+
+
+def test_feedback_api_normalizes_command_style_actions(client: TestClient) -> None:
+    feedback = client.post(
+        "/api/v1/feedback",
+        json={
+            "feedback_id": "fb_api_alias_1",
+            "target_type": "edge",
+            "target_id": "edge_alias",
+            "action": "reject",
+            "user_id": "reviewer",
+            "user_role": "System Architect",
+            "reason_code": "wrong relation",
+        },
+    )
+    summary = client.get("/api/v1/feedback/summary")
+
+    assert feedback.status_code == 200
+    assert feedback.json()["action"] == "rejected"
+    assert feedback.json()["reason_code"] == "wrong_relation"
+    assert summary.status_code == 200
+    assert summary.json()["wrong_relation"] == 1
