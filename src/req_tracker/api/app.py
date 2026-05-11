@@ -57,6 +57,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             interval_seconds=resolved_settings.scheduler_interval_seconds,
             project_key=resolved_settings.scheduler_project_key,
             scenario=resolved_settings.scheduler_scenario,
+            lease_name=resolved_settings.scheduler_lease_name,
+            lease_ttl_seconds=resolved_settings.scheduler_lease_ttl_seconds,
         ),
         state_store=state_store,
         graph=graph,
@@ -66,6 +68,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             max_events=resolved_settings.audit_max_events,
         ),
         audit_archive_store=PostgresAuditArchiveStore(state_store)
+        if isinstance(state_store, PostgreSQLStateStore)
+        else None,
+        scheduler_lease_manager=state_store
         if isinstance(state_store, PostgreSQLStateStore)
         else None,
     )

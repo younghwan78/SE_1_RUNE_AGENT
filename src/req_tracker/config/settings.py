@@ -83,6 +83,15 @@ class Settings(BaseSettings):
         default="RUNE_MULTI_SOURCE",
         validation_alias="SCHEDULER_SCENARIO",
     )
+    scheduler_lease_name: str = Field(
+        default="rune-periodic-analysis",
+        validation_alias="SCHEDULER_LEASE_NAME",
+    )
+    scheduler_lease_ttl_seconds: int = Field(
+        default=300,
+        ge=30,
+        validation_alias="SCHEDULER_LEASE_TTL_SECONDS",
+    )
 
     def new_id(self, prefix: str) -> str:
         """Generate a compact runtime id with a stable prefix."""

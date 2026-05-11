@@ -59,6 +59,8 @@ SCHEDULER_ENABLED=true
 SCHEDULER_INTERVAL_SECONDS=3600
 SCHEDULER_PROJECT_KEY=RUNE_CAM_ALPHA
 SCHEDULER_SCENARIO=RUNE_MULTI_SOURCE
+SCHEDULER_LEASE_NAME=rune-periodic-analysis
+SCHEDULER_LEASE_TTL_SECONDS=300
 ```
 
 For actual company deployment, keep JIRA, Confluence, and Email credentials outside this repo and expose them through the company-approved Claude Code skill/MCP setup.
@@ -93,7 +95,9 @@ On startup, the app applies packaged PostgreSQL migrations through
 `schema_migrations` and stores production-shaped contract payloads in
 `state_entities`. Audit archive/prune stores archive batches in
 `audit_archive_batches` and deletes pruned audit rows from the PostgreSQL state
-tables.
+tables. When `STATE_STORE=postgres`, periodic scheduler workers use the
+`scheduler_leases` table so multiple API replicas do not start the same
+scheduled run at the same interval.
 
 ## 4. Smoke Test
 
@@ -281,7 +285,7 @@ Change interval to 30 minutes:
 ```bash
 curl -s -X PUT http://127.0.0.1:8000/api/v1/schedule \
   -H 'content-type: application/json' \
-  -d '{"enabled":true,"interval_seconds":1800,"project_key":"RUNE_CAM_ALPHA","scenario":"RUNE_MULTI_SOURCE","run_id_prefix":"sched"}'
+  -d '{"enabled":true,"interval_seconds":1800,"project_key":"RUNE_CAM_ALPHA","scenario":"RUNE_MULTI_SOURCE","run_id_prefix":"sched","lease_name":"rune-periodic-analysis","lease_ttl_seconds":300}'
 ```
 
 Run immediately:
@@ -290,7 +294,11 @@ Run immediately:
 curl -s -X POST http://127.0.0.1:8000/api/v1/schedule/run-now
 ```
 
-The current scheduler is process-local. For multi-worker or multi-node production, run a single scheduler instance or move scheduling to system cron/Kubernetes CronJob/queue-backed orchestration before enabling multiple API replicas.
+With `STATE_STORE=postgres`, every periodic run attempts to acquire the
+configured scheduler lease before executing. Manual `run-now` remains an
+operator command and does not require the periodic lease. With `STATE_STORE`
+set to `memory` or `sqlite`, the scheduler remains single-process and should
+only be enabled in one API instance.
 
 Backup and restore rehearsal steps are in `docs/runbooks/BACKUP_RESTORE.md`.
 After creating a staging backup set, verify its required files, checksums, and

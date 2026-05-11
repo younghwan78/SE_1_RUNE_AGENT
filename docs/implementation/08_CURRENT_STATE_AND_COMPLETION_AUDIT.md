@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `4a82f90 Add operation state postgres mirrors`
 - `2574604 Refresh audit after API surface guard`
 - `54d2db6 Add production API surface guard`
 - `aa5baaa Add project graph list read APIs`
@@ -71,7 +72,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 135 passed, 3 skipped
+- `uv run pytest`: 138 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -86,7 +87,7 @@ Latest local verification:
 - `uv run python ops/security/rehearse_trusted_proxy_auth.py`: failed as expected on this local shell because `RUNE_API_BASE_URL` and `TRUSTED_PROXY_SECRET` are unset; output masks secret state and lists missing config
 - `uv run python ops/security/rehearse_masking_policy.py`: passed, verifying representative sensitive inputs are redacted without printing raw sensitive strings or forbidden patterns
 - `uv run pytest tests/unit/ops/test_backup_verify.py`: passed, validating backup-set required files, SHA256 mismatch detection, artifact tar, Qdrant JSON, Neo4j dump marker, and git commit marker checks
-- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3293 ms against a 5000 ms local rehearsal threshold)
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including API restart restore and smoke-load pass (`load_smoke.p95_ms` about 3234 ms against a 5000 ms local rehearsal threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
@@ -95,7 +96,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25690224311` for `2574604`: completed successfully
+- GitHub Actions `CI` run `25690546226` for `4a82f90`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -117,7 +118,7 @@ Latest GitHub verification:
 | LLM-assisted workflow trace | `LocalAnalysisWorkflow` `llm_assisted_reasoning` stage, `ModelGatewayClient`, `LLMCallTrace`, SQLite restore of `llm_call_traces`, `/api/v1/runs/{run_id}/llm-calls`, debug diff LLM panes | Dummy model-gateway integration complete; live model quality validation pending |
 | Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, `/api/v1/runs/{run_id}/llm-calls`, `/api/v1/runs/{run_id}/artifacts`, `/api/v1/runs/{run_id}/graph-delta`, `/api/v1/replays/{replay_id}/diff`, restart-safe `replay_results`, approval lineage API, run diff-view API, run debug UI, LLM/graph delta side-by-side panes | Local debug workbench foundation complete; live LLM payload validation pending |
 | SQLite state persistence | `SQLiteStateStore`, persistence contract test, restart restore contract test | Complete |
-| PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, `003_audit_archive_batches.sql`, `004_operation_state_tables.sql`, migration loader tests | Complete |
+| PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, `003_audit_archive_batches.sql`, `004_operation_state_tables.sql`, `005_scheduler_leases.sql`, migration loader tests | Complete |
 | Typed PostgreSQL core and operation-state table foundation | `002_core_state_tables.sql`, `004_operation_state_tables.sql`, typed mirror upsert/read dispatch for core state, idempotency results, and registry activations, rollback scripts, unit tests, optional `POSTGRES_TEST_DSN` integration test, `ops/integration/run_backend_integration.py` | Foundation complete; disposable Docker PostgreSQL integration passed; company/staging DB rehearsal pending |
 | Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, `Neo4jGraphBackend`, graph projection, traceability chain APIs, optional `NEO4J_TEST_*` integration test, Docker integration runner | Neo4j foundation complete; disposable Docker Neo4j integration passed; company/staging graph rehearsal pending |
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test, Docker integration runner | Qdrant foundation complete; disposable Docker Qdrant integration passed; company/staging vector rehearsal pending |
@@ -125,7 +126,7 @@ Latest GitHub verification:
 | Feedback loop | feedback events, eval candidates, improvement candidates, eval gate, controlled review/canary promotion, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary rehearsal complete; real production feedback calibration pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, blocked debug artifact read audit events, finding status change audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
-| Scheduler | process-local `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture | Single-process complete; multi-worker orchestration pending |
+| Scheduler | `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture, PostgreSQL `scheduler_leases` table, lease acquire/release tests, Ubuntu multi-replica note | Periodic run path complete for single-process and PostgreSQL lease-backed multi-worker deployments; external orchestration/Kubernetes CronJob remains an optional platform decision |
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
 | Migration and Helm operation tracks | packaged migrations under `src/req_tracker/storage/migrations/postgres`, `ops/migrations/README.md`, `ops/helm/README.md` | Migration foundation complete; Helm packaging intentionally deferred until platform details are known |
 | Eval/security/replay test tracks | `tests/unit/evals`, `tests/contract/test_replay_feedback_api.py`, `tests/contract/test_security_api.py`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md` | Current coverage exists; dedicated folders anchored for larger end-to-end fixtures |
@@ -135,8 +136,8 @@ Latest GitHub verification:
 
 ### P0: Production Persistence Hardening
 
-- Extend typed PostgreSQL repositories beyond the current core mirror tables as
-  API query needs grow.
+- Extend typed PostgreSQL repositories beyond the current core and operation
+  mirror tables as API query needs grow.
 - Re-run PostgreSQL integration tests against company/staging PostgreSQL once
   that environment exists.
 
@@ -194,6 +195,10 @@ Latest GitHub verification:
   `check_production_readiness.py --evidence-file`; do not commit real evidence
   files if they contain internal CI URLs, artifact IDs, or incident references.
 - Decide React/React Flow migration after real graph shape validation.
+- If Kubernetes or multiple Ubuntu nodes are selected instead of multi-process
+  API replicas on one PostgreSQL-backed service, decide whether to keep the
+  in-app PostgreSQL scheduler lease or move periodic execution to CronJob or a
+  queue worker.
 
 ## 4. Completion Gate
 

@@ -19,7 +19,7 @@ from req_tracker.graph.base import GraphBackend
 from req_tracker.graph.memory_backend import MemoryGraphBackend
 from req_tracker.ontology.models import Finding, OntologyNode, TraceabilityEdge
 from req_tracker.scheduler.models import ScheduleConfig
-from req_tracker.scheduler.service import RunScheduler
+from req_tracker.scheduler.service import RunScheduler, SchedulerLeaseManager
 from req_tracker.storage.state_store import StateStore
 from req_tracker.vector.base import VectorBackend
 from req_tracker.vector.memory_backend import MemoryVectorBackend
@@ -61,6 +61,7 @@ class RuntimeState(BaseModel):
         vector: VectorBackend | None = None,
         audit_policy: AuditRetentionPolicy | None = None,
         audit_archive_store: AuditArchiveWriter | None = None,
+        scheduler_lease_manager: SchedulerLeaseManager | None = None,
     ) -> "RuntimeState":
         """Create a local runtime state."""
         runtime = cls(
@@ -78,7 +79,10 @@ class RuntimeState(BaseModel):
             replays={},
             idempotency_results={},
             registry_activations={},
-            scheduler=RunScheduler(schedule_config),
+            scheduler=RunScheduler(
+                schedule_config,
+                lease_manager=scheduler_lease_manager,
+            ),
             state_store=state_store,
         )
         runtime.restore_from_state_store()

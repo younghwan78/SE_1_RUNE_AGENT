@@ -3,6 +3,8 @@
 import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
+from typing import Protocol
+from uuid import uuid4
 
 from req_tracker.scheduler.models import (
     ScheduleConfig,
@@ -14,14 +16,39 @@ RunCallback = Callable[[str, str, str], object]
 IdFactory = Callable[[str], str]
 
 
+class SchedulerLeaseManager(Protocol):
+    """Optional distributed lease backend for multi-worker scheduler deployments."""
+
+    def acquire_scheduler_lease(
+        self,
+        *,
+        lease_name: str,
+        owner_id: str,
+        ttl_seconds: int,
+    ) -> bool:
+        """Acquire or renew a scheduler lease."""
+
+    def release_scheduler_lease(self, *, lease_name: str, owner_id: str) -> None:
+        """Release a scheduler lease owned by this instance."""
+
+
 class RunScheduler:
     """Manage periodic analysis runs inside the API process."""
 
-    def __init__(self, config: ScheduleConfig | None = None) -> None:
+    def __init__(
+        self,
+        config: ScheduleConfig | None = None,
+        *,
+        lease_manager: SchedulerLeaseManager | None = None,
+        owner_id: str | None = None,
+    ) -> None:
         self.config = config or ScheduleConfig()
+        self.lease_manager = lease_manager
+        self.owner_id = owner_id or f"scheduler_{uuid4().hex[:12]}"
         self.last_run: ScheduledRunResult | None = None
         self.next_run_at: datetime | None = None
         self.runs_started = 0
+        self.lease_skips = 0
         self.last_error: str | None = None
         self._task: asyncio.Task[None] | None = None
         self._stop_event: asyncio.Event | None = None
@@ -69,6 +96,43 @@ class RunScheduler:
 
     async def run_now(self, *, runner: RunCallback, new_id: IdFactory) -> ScheduledRunResult:
         """Run one scheduled analysis immediately."""
+        return await self._run_now(runner=runner, new_id=new_id, require_lease=False)
+
+    def _acquire_lease(self) -> bool:
+        if self.lease_manager is None:
+            return True
+        return self.lease_manager.acquire_scheduler_lease(
+            lease_name=self.config.lease_name,
+            owner_id=self.owner_id,
+            ttl_seconds=self.config.lease_ttl_seconds,
+        )
+
+    def _release_lease(self) -> None:
+        if self.lease_manager is None:
+            return
+        self.lease_manager.release_scheduler_lease(
+            lease_name=self.config.lease_name,
+            owner_id=self.owner_id,
+        )
+
+    async def _run_now(
+        self,
+        *,
+        runner: RunCallback,
+        new_id: IdFactory,
+        require_lease: bool,
+    ) -> ScheduledRunResult:
+        if require_lease and not self._acquire_lease():
+            self.lease_skips += 1
+            run_id = new_id(self.config.run_id_prefix)
+            result = ScheduledRunResult(
+                run_id=run_id,
+                completed_at=datetime.now(UTC),
+                error="scheduler lease held by another worker",
+            )
+            self.last_run = result
+            self.last_error = result.error
+            return result
         run_id = new_id(self.config.run_id_prefix)
         result = ScheduledRunResult(run_id=run_id)
         self.last_run = result
@@ -82,6 +146,9 @@ class RunScheduler:
             result = result.model_copy(
                 update={"completed_at": datetime.now(UTC), "error": self.last_error}
             )
+        finally:
+            if require_lease:
+                self._release_lease()
         self.last_run = result
         return result
 
@@ -99,6 +166,10 @@ class RunScheduler:
             last_error=self.last_error,
             next_run_at=self.next_run_at,
             runs_started=self.runs_started,
+            lease_name=self.config.lease_name,
+            lease_owner_id=self.owner_id,
+            lease_enabled=self.lease_manager is not None,
+            lease_skips=self.lease_skips,
         )
 
     async def _loop(self, *, runner: RunCallback, new_id: IdFactory) -> None:
@@ -110,7 +181,7 @@ class RunScheduler:
                 )
                 break
             except TimeoutError:
-                await self.run_now(runner=runner, new_id=new_id)
+                await self._run_now(runner=runner, new_id=new_id, require_lease=True)
                 self.next_run_at = datetime.now(UTC) + timedelta(
                     seconds=self.config.interval_seconds
                 )

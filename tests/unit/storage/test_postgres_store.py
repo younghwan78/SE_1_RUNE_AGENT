@@ -36,6 +36,7 @@ class FakePostgresConnection:
         self.entities: dict[tuple[str, str], dict[str, Any]] = {}
         self.typed_entities: dict[tuple[str, str], dict[str, Any]] = {}
         self.audit_archives: dict[str, dict[str, Any]] = {}
+        self.scheduler_leases: dict[str, dict[str, Any]] = {}
         self.migrations: set[str] = set()
         self.executed_sql: list[str] = []
 
@@ -93,6 +94,40 @@ class FakePostgresConnection:
                 "event_ids": event_ids,
                 "archived_events": archived_events,
             }
+            return FakeCursor()
+        if sql.startswith("insert into scheduler_leases"):
+            (
+                lease_name,
+                owner_id,
+                acquired_at,
+                heartbeat_at,
+                expires_at,
+                payload_json,
+                now,
+                renewing_owner_id,
+            ) = _params(params)
+            assert isinstance(payload_json, Jsonb)
+            existing = self.scheduler_leases.get(str(lease_name))
+            can_acquire = (
+                existing is None
+                or existing["expires_at"] <= now
+                or existing["owner_id"] == renewing_owner_id
+            )
+            if not can_acquire:
+                return FakeCursor(one=None)
+            self.scheduler_leases[str(lease_name)] = {
+                "owner_id": owner_id,
+                "acquired_at": acquired_at,
+                "heartbeat_at": heartbeat_at,
+                "expires_at": expires_at,
+                "payload_json": payload_json.obj,
+            }
+            return FakeCursor(one={"owner_id": owner_id})
+        if sql.startswith("delete from scheduler_leases"):
+            lease_name, owner_id = _params(params)
+            existing = self.scheduler_leases.get(str(lease_name))
+            if existing is not None and existing["owner_id"] == owner_id:
+                self.scheduler_leases.pop(str(lease_name), None)
             return FakeCursor()
         if sql.startswith("delete from audit_events"):
             audit_id = str(_params(params)[0])
@@ -154,7 +189,13 @@ class FakePostgresConnection:
 def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     migrations = load_postgres_migrations()
 
-    assert [migration.version for migration in migrations] == ["001", "002", "003", "004"]
+    assert [migration.version for migration in migrations] == [
+        "001",
+        "002",
+        "003",
+        "004",
+        "005",
+    ]
     assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
     assert "JSONB" in migrations[0].sql
     assert "CREATE TABLE IF NOT EXISTS agent_runs" in migrations[1].sql
@@ -162,15 +203,17 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     assert "CREATE TABLE IF NOT EXISTS audit_archive_batches" in migrations[2].sql
     assert "CREATE TABLE IF NOT EXISTS idempotency_results" in migrations[3].sql
     assert "CREATE TABLE IF NOT EXISTS registry_activations" in migrations[3].sql
+    assert "CREATE TABLE IF NOT EXISTS scheduler_leases" in migrations[4].sql
 
 
 def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
     rollbacks = load_postgres_rollbacks()
 
-    assert sorted(rollbacks) == ["001", "002", "003", "004"]
+    assert sorted(rollbacks) == ["001", "002", "003", "004", "005"]
     assert "DROP TABLE IF EXISTS agent_runs" in rollbacks["002"].sql
     assert "DROP TABLE IF EXISTS audit_archive_batches" in rollbacks["003"].sql
     assert "DROP TABLE IF EXISTS idempotency_results" in rollbacks["004"].sql
+    assert "DROP TABLE IF EXISTS scheduler_leases" in rollbacks["005"].sql
 
 
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
@@ -191,7 +234,7 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
         payload=run,
     )
 
-    assert fake.migrations == {"001", "002", "003", "004"}
+    assert fake.migrations == {"001", "002", "003", "004", "005"}
     assert any("insert into agent_runs" in sql for sql in fake.executed_sql)
     stored = store.get("agent_runs", run.run_id)
     assert stored is not None
@@ -236,6 +279,42 @@ def test_postgres_store_typed_operation_state_tables() -> None:
     assert any("insert into registry_activations" in sql for sql in fake.executed_sql)
     assert store.get("idempotency_results", idempotency["record_id"]) == idempotency
     assert store.get("registry_activations", activation["activation_id"]) == activation
+
+
+def test_postgres_store_acquires_renews_and_releases_scheduler_lease() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+
+    first = store.acquire_scheduler_lease(
+        lease_name="rune-periodic-analysis",
+        owner_id="worker-a",
+        ttl_seconds=60,
+    )
+    blocked = store.acquire_scheduler_lease(
+        lease_name="rune-periodic-analysis",
+        owner_id="worker-b",
+        ttl_seconds=60,
+    )
+    renewed = store.acquire_scheduler_lease(
+        lease_name="rune-periodic-analysis",
+        owner_id="worker-a",
+        ttl_seconds=60,
+    )
+    store.release_scheduler_lease(
+        lease_name="rune-periodic-analysis",
+        owner_id="worker-a",
+    )
+    after_release = store.acquire_scheduler_lease(
+        lease_name="rune-periodic-analysis",
+        owner_id="worker-b",
+        ttl_seconds=60,
+    )
+
+    assert first is True
+    assert blocked is False
+    assert renewed is True
+    assert after_release is True
+    assert fake.scheduler_leases["rune-periodic-analysis"]["owner_id"] == "worker-b"
 
 
 def test_postgres_store_rolls_back_one_applied_migration() -> None:

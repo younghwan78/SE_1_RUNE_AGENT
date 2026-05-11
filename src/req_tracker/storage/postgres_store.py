@@ -5,7 +5,7 @@ from __future__ import annotations
 import builtins
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from importlib.resources import files
 from typing import Any
 
@@ -452,6 +452,67 @@ class PostgreSQLStateStore:
                 """
             ).fetchall()
         return {str(row["collection"]): int(row["count"]) for row in rows}
+
+    def acquire_scheduler_lease(
+        self,
+        *,
+        lease_name: str,
+        owner_id: str,
+        ttl_seconds: int,
+    ) -> bool:
+        """Acquire or renew a scheduler lease using PostgreSQL row locking semantics."""
+        now = datetime.now(UTC)
+        expires_at = now + timedelta(seconds=ttl_seconds)
+        payload = {
+            "lease_name": lease_name,
+            "owner_id": owner_id,
+            "acquired_at": now.isoformat(),
+            "heartbeat_at": now.isoformat(),
+            "expires_at": expires_at.isoformat(),
+            "ttl_seconds": ttl_seconds,
+            "schema_version": "v1",
+        }
+        with self._connect() as conn:
+            row = conn.execute(
+                """
+                INSERT INTO scheduler_leases (
+                    lease_name, owner_id, acquired_at, heartbeat_at,
+                    expires_at, payload_json
+                )
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT(lease_name)
+                DO UPDATE SET
+                    owner_id = excluded.owner_id,
+                    heartbeat_at = excluded.heartbeat_at,
+                    expires_at = excluded.expires_at,
+                    payload_json = excluded.payload_json
+                WHERE scheduler_leases.expires_at <= %s
+                   OR scheduler_leases.owner_id = %s
+                RETURNING owner_id
+                """,
+                (
+                    lease_name,
+                    owner_id,
+                    now,
+                    now,
+                    expires_at,
+                    Jsonb(payload),
+                    now,
+                    owner_id,
+                ),
+            ).fetchone()
+        return row is not None
+
+    def release_scheduler_lease(self, *, lease_name: str, owner_id: str) -> None:
+        """Release a scheduler lease if it is still owned by this instance."""
+        with self._connect() as conn:
+            conn.execute(
+                """
+                DELETE FROM scheduler_leases
+                WHERE lease_name = %s AND owner_id = %s
+                """,
+                (lease_name, owner_id),
+            )
 
     def write_audit_archive(
         self,

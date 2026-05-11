@@ -17,6 +17,8 @@ class ScheduleConfig(BaseModel):
     project_key: str = "RUNE_CAM_ALPHA"
     scenario: str = "RUNE_MULTI_SOURCE"
     run_id_prefix: str = "sched"
+    lease_name: str = "rune-periodic-analysis"
+    lease_ttl_seconds: int = Field(default=300, ge=30)
     schema_version: str = SCHEMA_VERSION
 
 
@@ -36,6 +38,10 @@ class ScheduleStatus(BaseModel):
     last_error: str | None = None
     next_run_at: datetime | None = None
     runs_started: int = Field(default=0, ge=0)
+    lease_name: str
+    lease_owner_id: str
+    lease_enabled: bool
+    lease_skips: int = Field(default=0, ge=0)
     schema_version: str = SCHEMA_VERSION
 
 
