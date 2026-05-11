@@ -14,6 +14,7 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
     )
     assert response.status_code == 200
     assert response.json()["run"]["input_snapshot_ids"]
+    assert response.json()["run"]["trigger_source"] == "api"
     counts = response.json()["counts"]
     assert counts["nodes"] == 10
     assert counts["approvals"] >= 1
@@ -22,6 +23,7 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
     assert runs.status_code == 200
     assert runs.json()[0]["run_id"] == "run_api_1"
     assert runs.json()[0]["project_key"] == "RUNE_CAM_ALPHA"
+    assert runs.json()[0]["trigger_source"] == "api"
 
     steps = client.get("/api/v1/runs/run_api_1/steps")
     assert steps.status_code == 200

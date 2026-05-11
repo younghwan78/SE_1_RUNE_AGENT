@@ -13,6 +13,10 @@ def test_replay_and_feedback_eval_api(client: TestClient) -> None:
         json={"replay_run_id": "replay_rf_1", "scenario": "RUNE_CAM_ALPHA"},
     )
     assert replay.status_code == 200
+    replay_run = client.get("/api/v1/runs/replay_rf_1")
+    assert replay_run.status_code == 200
+    assert replay_run.json()["triggered_by"] == "replay"
+    assert replay_run.json()["trigger_source"] == "system"
     diff = replay.json()["diff"]
     assert diff["node_diff"]["added"] == []
     assert diff["edge_diff"]["removed"] == []

@@ -78,6 +78,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     run_id=run_id,
                     project_key=project_key,
                     scenario=scenario,
+                    triggered_by="scheduler",
+                    trigger_source="schedule",
                 ),
                 new_id=resolved_settings.new_id,
             )

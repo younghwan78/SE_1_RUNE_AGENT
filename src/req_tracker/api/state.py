@@ -10,7 +10,7 @@ from req_tracker.audit.archive import AuditArchiveWriter, LocalAuditArchiveStore
 from req_tracker.audit.models import AuditEvent, AuditRetentionPolicy
 from req_tracker.audit.service import AuditService
 from req_tracker.debug.artifacts import LocalArtifactStore
-from req_tracker.debug.models import AgentRun, AgentStepTrace, LLMCallTrace
+from req_tracker.debug.models import AgentRun, AgentStepTrace, LLMCallTrace, TriggerSource
 from req_tracker.debug.replay import ReplayResult
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.feedback.models import FeedbackEvent
@@ -81,12 +81,22 @@ class RuntimeState(BaseModel):
             approvals=self.approvals,
         )
 
-    def run_analysis(self, *, run_id: str, project_key: str, scenario: str) -> AnalysisResult:
+    def run_analysis(
+        self,
+        *,
+        run_id: str,
+        project_key: str,
+        scenario: str,
+        triggered_by: str = "local",
+        trigger_source: TriggerSource = "manual",
+    ) -> AnalysisResult:
         """Run analysis and store the result."""
         result = self.workflow().run(
             run_id=run_id,
             project_key=project_key,
             scenario=scenario,
+            triggered_by=triggered_by,
+            trigger_source=trigger_source,
         )
         self.analyses[run_id] = result
         self.audit.record(

@@ -41,6 +41,8 @@ class ReplayService:
             run_id=replay_run_id,
             project_key=project_key,
             scenario=scenario,
+            triggered_by="replay",
+            trigger_source="system",
         )
         self._analyses[replay_run_id] = after
         diff = diff_analysis_results(

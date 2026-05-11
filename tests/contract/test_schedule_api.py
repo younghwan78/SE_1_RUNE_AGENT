@@ -29,3 +29,5 @@ def test_schedule_status_configure_and_run_now(client: TestClient) -> None:
     detail = client.get(f"/api/v1/runs/{run_id}")
     assert detail.status_code == 200
     assert detail.json()["status"] == "succeeded"
+    assert detail.json()["trigger_source"] == "manual"
+    assert detail.json()["triggered_by"] == "local"

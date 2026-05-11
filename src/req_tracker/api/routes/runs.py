@@ -33,7 +33,7 @@ class ReplayRunRequest(BaseModel):
 @router.post("/runs/analyze")
 def analyze(request: Request, payload: AnalyzeRunRequest) -> dict[str, Any]:
     """Run dummy/local analysis."""
-    require_project(request, payload.project_key)
+    user = require_project(request, payload.project_key)
     runtime = request.app.state.runtime
     settings = request.app.state.settings
     run_id = payload.run_id or settings.new_id("run")
@@ -41,6 +41,8 @@ def analyze(request: Request, payload: AnalyzeRunRequest) -> dict[str, Any]:
         run_id=run_id,
         project_key=payload.project_key,
         scenario=payload.scenario,
+        triggered_by=user.user_id,
+        trigger_source="api",
     )
     return {
         "run": result.run.model_dump(mode="json"),
@@ -224,6 +226,8 @@ async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[
             run_id=run_id,
             project_key=project_key,
             scenario=scenario,
+            triggered_by="scheduler",
+            trigger_source="schedule",
         ),
         new_id=settings.new_id,
     )
@@ -252,6 +256,8 @@ async def run_schedule_now(request: Request) -> dict[str, Any]:
             run_id=run_id,
             project_key=project_key,
             scenario=scenario,
+            triggered_by=user.user_id,
+            trigger_source="manual",
         ),
         new_id=settings.new_id,
     )
