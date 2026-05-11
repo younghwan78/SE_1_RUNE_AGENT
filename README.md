@@ -218,6 +218,19 @@ uv run python ops/source/rehearse_company_sources.py --source all
 The rehearsal prints artifact counts, warnings, and shape checks only; token
 values are masked.
 
+Run the restricted decision/email export rehearsal for approved decision
+archives or limited mailbox exports:
+
+```powershell
+$env:RUNE_EMAIL_EXPORT_PATH="E:\secure_exports\decision_email.jsonl"
+$env:RUNE_PROJECT_KEY="RUNE_CAM_ALPHA"
+uv run python ops/source/rehearse_decision_email_export.py
+```
+
+The rehearsal accepts only `decision_archive` artifacts or email artifacts with
+`decision_source_approved=true` and decision metadata; broad mailbox items are
+reported as skipped warnings.
+
 Ubuntu server deployment details are in `README_ubuntu.md`.
 
 ## Current Implementation Stage

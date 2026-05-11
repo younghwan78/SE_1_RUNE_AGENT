@@ -253,7 +253,10 @@ def _company_rehearsal_checks(env: Mapping[str, str]) -> list[ReadinessCheck]:
                     "production release."
                 ),
             ],
-            next_action="Validate only approved decision-archive or restricted Email export paths.",
+            next_action=(
+                "Run ops/source/rehearse_decision_email_export.py against an approved "
+                "decision archive or restricted Email export path."
+            ),
         )
     )
     checks.append(

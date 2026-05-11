@@ -63,6 +63,7 @@
       "summary": "Approved decision-archive export path passed without broad mailbox ingestion.",
       "evidence": [
         "security-review:decision-archive-scope-approved",
+        "artifact:decision-email-export-rehearsal-report.json",
         "artifact:decision-email-export-policy-report.json"
       ]
     },
