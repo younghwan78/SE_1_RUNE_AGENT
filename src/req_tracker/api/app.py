@@ -26,6 +26,10 @@ from req_tracker.storage.state_store import StateStore
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Create the API application."""
     resolved_settings = settings or get_settings()
+    if resolved_settings.graph_backend != "memory":
+        raise ValueError(f"unsupported GRAPH_BACKEND: {resolved_settings.graph_backend}")
+    if resolved_settings.vector_backend != "memory":
+        raise ValueError(f"unsupported VECTOR_BACKEND: {resolved_settings.vector_backend}")
     state_store: StateStore | None = None
     if resolved_settings.state_store == "sqlite":
         state_store = SQLiteStateStore(resolved_settings.sqlite_state_path)

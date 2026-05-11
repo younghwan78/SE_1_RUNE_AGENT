@@ -37,8 +37,8 @@ Latest GitHub verification:
 | SQLite state persistence | `SQLiteStateStore`, persistence contract test | Complete |
 | PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, migration loader tests | Complete |
 | Typed PostgreSQL core table foundation | `002_core_state_tables.sql`, typed mirror upsert/read dispatch, rollback scripts, unit tests, optional `POSTGRES_TEST_DSN` integration test | Foundation complete; production DB environment validation pending |
-| Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, graph projection, traceability chain APIs | Interface/local memory complete; Neo4j backend pending |
-| Vector backend | `VectorBackend` protocol, `MemoryVectorBackend` | Interface/local memory complete; Qdrant backend pending |
+| Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, graph projection, traceability chain APIs, unsupported backend guard | Interface/local memory complete; Neo4j backend pending |
+| Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, unsupported backend guard | Interface/local memory complete; Qdrant backend pending |
 | Approval workflow | approval queue, approve/reject/hold/modify path, graph commit | Complete for local backend |
 | Feedback loop | feedback events, eval candidates, improvement candidates, eval gate | Local foundation complete; real eval datasets/canary pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, UI audit panel, persistence | Local foundation complete; RBAC/retention pending |
