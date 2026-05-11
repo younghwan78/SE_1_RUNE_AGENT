@@ -24,7 +24,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 80 passed, 3 skipped
+- `uv run pytest`: 81 passed, 3 skipped
 
 Latest GitHub verification:
 
@@ -47,7 +47,7 @@ Latest GitHub verification:
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test | Qdrant foundation complete; production DB environment validation pending |
 | Approval workflow | approval queue, approve/reject/hold/modify path, graph commit | Complete for local backend |
 | Feedback loop | feedback events, eval candidates, improvement candidates, eval gate | Local foundation complete; real eval datasets/canary pending |
-| Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; SSO-backed identity pending |
+| Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, blocked debug artifact read audit events | Local and PostgreSQL archive/prune foundations complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
 | Scheduler | process-local `RunScheduler`, API/UI/runbook | Single-process complete; multi-worker orchestration pending |
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py` | Local/server scaffold and rehearsal assets complete; real environment rehearsal pending |
@@ -85,7 +85,8 @@ Latest GitHub verification:
 
 ### P4: Security and Operations
 
-- Replace API-key RBAC/project-scope foundation with OIDC/SSO-backed group mapping.
+- Rehearse trusted-proxy auth behind a real company SSO/OIDC reverse proxy and
+  replace it with direct IdP token validation only if required.
 - Run backup/restore and load rehearsals against disposable production-like
   PostgreSQL, Neo4j, Qdrant, and artifact store environments.
 - Decide React/React Flow migration after real graph shape validation.

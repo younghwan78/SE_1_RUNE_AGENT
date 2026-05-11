@@ -1,6 +1,8 @@
 """API authentication and RBAC helpers."""
 
 from dataclasses import dataclass
+from hmac import compare_digest
+from typing import Any
 
 from fastapi import HTTPException, Request
 
@@ -24,7 +26,7 @@ class UserContext:
 def current_user(
     request: Request,
 ) -> UserContext:
-    """Resolve current API user from local mode or API-key headers."""
+    """Resolve current API user from local, API-key, or trusted-proxy headers."""
     settings = request.app.state.settings
     api_key = request.headers.get("x-rune-api-key")
     user_id = request.headers.get("x-rune-user")
@@ -35,6 +37,14 @@ def current_user(
         return UserContext(
             user_id=user_id or "local",
             role=role_header or "admin",
+            project_keys=project_keys,
+        )
+    if settings.auth_mode == "trusted_proxy":
+        return _trusted_proxy_user(
+            settings=settings,
+            request=request,
+            user_id=user_id,
+            role_header=role_header,
             project_keys=project_keys,
         )
     if settings.auth_mode != "api_key":
@@ -51,6 +61,56 @@ def current_user(
         role=role,
         project_keys=project_keys,
     )
+
+
+def _trusted_proxy_user(
+    *,
+    settings: Any,
+    request: Request,
+    user_id: str | None,
+    role_header: str | None,
+    project_keys: tuple[str, ...],
+) -> UserContext:
+    """Resolve a user from headers injected by a trusted SSO/OIDC proxy."""
+    if not settings.trusted_proxy_secret:
+        raise HTTPException(
+            status_code=500,
+            detail="TRUSTED_PROXY_SECRET is required for AUTH_MODE=trusted_proxy",
+        )
+    provided_secret = request.headers.get("x-rune-trusted-secret")
+    if not provided_secret or not compare_digest(provided_secret, settings.trusted_proxy_secret):
+        raise HTTPException(status_code=401, detail="invalid trusted proxy secret")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="trusted proxy user header is required")
+    role = _trusted_role_from_headers(
+        role_header=role_header,
+        group_header=request.headers.get("x-rune-groups"),
+        group_role_map=settings.trusted_group_role_map,
+        default_role=settings.trusted_default_role,
+    )
+    return UserContext(user_id=user_id, role=role, project_keys=project_keys)
+
+
+def _trusted_role_from_headers(
+    *,
+    role_header: str | None,
+    group_header: str | None,
+    group_role_map: dict[str, str],
+    default_role: str,
+) -> str:
+    groups = _parse_header_values(group_header)
+    mapped_roles = [
+        group_role_map[group]
+        for group in groups
+        if group in group_role_map
+    ]
+    if mapped_roles:
+        role = max(mapped_roles, key=lambda item: ROLE_ORDER.get(item, -1))
+    else:
+        role = role_header or default_role
+    if role not in ROLE_ORDER:
+        raise HTTPException(status_code=403, detail="unknown role")
+    return role
 
 
 def require_role(request: Request, minimum_role: str) -> UserContext:
@@ -76,11 +136,11 @@ def require_project(
 
 
 def _parse_project_keys(project_header: str | None) -> tuple[str, ...]:
-    if not project_header:
-        return ("*",)
-    project_keys = tuple(
-        item.strip()
-        for item in project_header.split(",")
-        if item.strip()
-    )
+    project_keys = _parse_header_values(project_header)
     return project_keys or ("*",)
+
+
+def _parse_header_values(header: str | None) -> tuple[str, ...]:
+    if not header:
+        return ()
+    return tuple(item.strip() for item in header.split(",") if item.strip())

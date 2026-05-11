@@ -589,6 +589,7 @@ Dummy 검증:
 - PostgreSQL audit archive batch migration and state-store pruning delete path
 - backup/restore rehearsal runbook and API smoke load runner
 - API-key project-scope authorization foundation for graph, run, debug, audit, and scheduler routes
+- trusted SSO/OIDC proxy auth foundation with group-to-role and project-scope headers
 - static operator UI for graph, approval, findings, replay, scheduler, node chain review, run debug, and audit events
 
 아직 production 전환 전 남은 축:
@@ -597,6 +598,6 @@ Dummy 검증:
 - Neo4j backend and Qdrant backend
 - direct production transport implementations behind the source skill/export boundary
 - real external/sandbox LLM payload diff validation after endpoint access is available
-- OIDC/SSO enforcement
+- direct IdP/OIDC token validation and company group mapping rehearsal
 - React/React Flow migration decision after real graph shape validation
 - production deployment hardening and real backup/restore/load rehearsals

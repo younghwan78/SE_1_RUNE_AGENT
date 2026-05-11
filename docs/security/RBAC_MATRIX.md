@@ -1,8 +1,10 @@
 # RBAC Matrix
 
-This is the initial API-key RBAC foundation before company SSO/OIDC is wired.
-`AUTH_MODE=local` keeps local development open. `AUTH_MODE=api_key` requires
-`x-rune-api-key` and evaluates `x-rune-role`.
+This is the initial RBAC foundation before direct company IdP/OIDC validation is
+wired. `AUTH_MODE=local` keeps local development open. `AUTH_MODE=api_key`
+requires `x-rune-api-key` and evaluates `x-rune-role`. `AUTH_MODE=trusted_proxy`
+expects a company-controlled SSO/OIDC reverse proxy to inject trusted identity,
+group, project, and shared-secret headers.
 
 | Role | Intended users | Minimum protected access |
 | --- | --- | --- |
@@ -20,5 +22,14 @@ Current protected routes:
 | `GET /api/v1/debug/artifact` | `developer` | reads raw local debug artifacts |
 | `GET /api/v1/audit/events` | `operator` | exposes operational audit history |
 
-SSO/OIDC integration should replace API-key identity, but preserve these role
-names or provide an explicit mapping from company groups to these roles.
+Trusted proxy mode:
+
+- `x-rune-trusted-secret` must match `TRUSTED_PROXY_SECRET`.
+- `x-rune-user` is required and becomes the audit actor.
+- `x-rune-groups` maps through `TRUSTED_GROUP_ROLE_MAP`; the highest mapped role wins.
+- `x-rune-projects` limits project-scoped routes unless it contains `*`.
+
+The reverse proxy must strip client-supplied versions of these headers before
+adding trusted values. Direct OIDC token validation can replace this boundary
+later, but should preserve these role names or provide an explicit mapping from
+company groups to these roles.

@@ -46,6 +46,10 @@ QDRANT_VECTOR_SIZE=64
 MODEL_GATEWAY_MODE=dummy
 ARTIFACT_STORE=local
 ARTIFACT_ROOT=/var/lib/rune-agent/artifacts
+AUTH_MODE=trusted_proxy
+TRUSTED_PROXY_SECRET=
+TRUSTED_DEFAULT_ROLE=viewer
+TRUSTED_GROUP_ROLE_MAP='{"rune-viewers":"viewer","rune-developers":"developer","rune-operators":"operator","rune-admins":"admin"}'
 STATE_STORE=sqlite
 SQLITE_STATE_PATH=/var/lib/rune-agent/rune_state.sqlite3
 POSTGRES_DSN=
@@ -58,6 +62,11 @@ SCHEDULER_SCENARIO=RUNE_MULTI_SOURCE
 ```
 
 For actual company deployment, keep JIRA, Confluence, and Email credentials outside this repo and expose them through the company-approved Claude Code skill/MCP setup.
+
+When using `AUTH_MODE=trusted_proxy`, terminate OIDC/SAML at a company-approved
+reverse proxy and inject `x-rune-user`, `x-rune-groups`, `x-rune-projects`, and
+`x-rune-trusted-secret`. The proxy must strip incoming client-supplied versions
+of these headers before adding trusted values.
 
 To use PostgreSQL instead of SQLite, create the database/user with your company
 standard policy and switch only these values:

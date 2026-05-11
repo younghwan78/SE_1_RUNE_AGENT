@@ -113,3 +113,48 @@ def test_api_key_auth_enforces_project_scope(tmp_path) -> None:  # type: ignore[
     assert graph_denied.status_code == 403
     assert debug_denied.status_code == 403
     assert audit_denied.status_code == 403
+
+
+def test_trusted_proxy_auth_maps_groups_to_roles_and_projects(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    app = create_app(
+        Settings(
+            artifact_root=tmp_path / "artifacts",
+            auth_mode="trusted_proxy",
+            trusted_proxy_secret="proxy-secret",
+        )
+    )
+    allowed_headers = {
+        "x-rune-trusted-secret": "proxy-secret",
+        "x-rune-user": "sso.user@example.com",
+        "x-rune-groups": "rune-developers,rune-operators",
+        "x-rune-projects": "RUNE_CAM_ALPHA",
+    }
+    denied_headers = {
+        **allowed_headers,
+        "x-rune-projects": "OTHER_PROJECT",
+    }
+    with TestClient(app) as client:
+        allowed = client.get(
+            "/api/v1/audit/events?project_key=RUNE_CAM_ALPHA",
+            headers=allowed_headers,
+        )
+        project_denied = client.get(
+            "/api/v1/audit/events?project_key=RUNE_CAM_ALPHA",
+            headers=denied_headers,
+        )
+        bad_secret = client.get(
+            "/api/v1/audit/events",
+            headers={**allowed_headers, "x-rune-trusted-secret": "wrong"},
+        )
+        missing_user = client.get(
+            "/api/v1/audit/events",
+            headers={
+                "x-rune-trusted-secret": "proxy-secret",
+                "x-rune-groups": "rune-operators",
+            },
+        )
+
+    assert allowed.status_code == 200
+    assert project_denied.status_code == 403
+    assert bad_secret.status_code == 401
+    assert missing_user.status_code == 401

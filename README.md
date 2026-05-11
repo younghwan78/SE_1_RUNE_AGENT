@@ -75,6 +75,16 @@ Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/audit/retention/arch
   -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="admin"}
 ```
 
+Enable trusted SSO/OIDC proxy headers behind a company-controlled reverse proxy:
+
+```powershell
+$env:AUTH_MODE="trusted_proxy"
+$env:TRUSTED_PROXY_SECRET="<from-secret-store>"
+$env:TRUSTED_GROUP_ROLE_MAP='{"rune-viewers":"viewer","rune-developers":"developer","rune-operators":"operator","rune-admins":"admin"}'
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/events `
+  -Headers @{"x-rune-trusted-secret"="<from-secret-store>";"x-rune-user"="user@example.com";"x-rune-groups"="rune-operators";"x-rune-projects"="RUNE_CAM_ALPHA"}
+```
+
 Configure periodic runs:
 
 ```powershell
@@ -136,6 +146,7 @@ Current local implementation:
 - audit retention policy status API
 - admin-only audit archive/prune API with local JSONL or PostgreSQL archive writer
 - API-key project-scope authorization foundation with `x-rune-projects`
+- trusted SSO/OIDC proxy header auth foundation with group-to-role mapping
 - backup/restore rehearsal runbook and smoke load runner
 - periodic analysis scheduler for server operation
 
