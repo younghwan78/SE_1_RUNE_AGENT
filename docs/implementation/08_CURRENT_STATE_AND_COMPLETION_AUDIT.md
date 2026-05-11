@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `1349a9d Restore runtime state after restart`
 - `dd10388 Refresh audit after eval canary rehearsal`
 - `daff157 Add feedback eval canary rehearsal`
 - `465080b Refresh audit after full stack rehearsal`
@@ -40,7 +41,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `dd10388`: completed successfully
+- GitHub Actions `CI` run for `1349a9d`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
