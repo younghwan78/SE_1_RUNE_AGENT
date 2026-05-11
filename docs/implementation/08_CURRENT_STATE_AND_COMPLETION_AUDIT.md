@@ -10,21 +10,21 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
-- `d9dd7e5 Opt CI actions into Node 24`
-- `e992c84 Harden REST source adapter retries`
-- `0174d2b Add Confluence REST source adapter foundation`
-- `9ec511f Add API key RBAC foundation`
-- `5ec1b0c Add debug approval lineage API`
+- `204983f Add operations backup and load rehearsal assets`
+- `d760f79 Add audit retention status policy`
+- `a4b6d0c Add debug artifact access policy`
+- `941fc96 Add debug diff workbench view`
+- `58a459e Add HTTP model provider registry foundation`
 
 Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 65 passed, 3 skipped
+- `uv run pytest`: 74 passed, 3 skipped
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `d9dd7e5`: completed successfully
+- GitHub Actions `CI` run for `204983f`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -53,7 +53,6 @@ Latest GitHub verification:
 
 ### P0: Production Persistence Hardening
 
-- Add typed PostgreSQL query repositories for production read models.
 - Run the optional PostgreSQL integration test in a disposable production-like
   database environment.
 
@@ -91,6 +90,8 @@ Latest GitHub verification:
 ## 4. Completion Gate
 
 The overall production objective is not complete yet. The current repo is a
-validated local/dummy and persistence-foundation stage. The next concrete
-implementation step should be typed PostgreSQL read repositories plus rollback
-migration support, followed by optional real PostgreSQL integration testing.
+validated local/dummy, persistence-foundation, backend-interface, source-adapter,
+debuggability, and operations-rehearsal stage. The next concrete completion gate
+requires disposable production-like services for PostgreSQL, Neo4j, Qdrant,
+JIRA/Confluence, and a sandbox model endpoint so integration, replay, backup,
+restore, load, and live-provider validation can run against real dependencies.
