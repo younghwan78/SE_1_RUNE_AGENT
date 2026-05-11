@@ -150,8 +150,16 @@ def _validate_review_metadata(
     payload: Mapping[str, Any],
     records: Sequence[ManualEvidence],
 ) -> None:
-    if not any(record.status == "passed" for record in records):
+    passed_records = [record for record in records if record.status == "passed"]
+    if not passed_records:
         return
+    if payload.get("schema_version") != "v1":
+        raise ValueError("schema_version must be v1 when passed manual evidence is present")
+    for record in passed_records:
+        if not record.evidence or any(not entry.strip() for entry in record.evidence):
+            raise ValueError(
+                f"{record.check_id} passed manual evidence must include non-empty evidence"
+            )
     for field_name in ("reviewed_by", "reviewed_at"):
         value = payload.get(field_name)
         if not isinstance(value, str) or not value.strip():
