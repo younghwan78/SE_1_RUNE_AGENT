@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `431c252 Align improvement candidate types`
 - `8a54a78 Record replay comparison metadata`
 - `8aff68b Refresh audit after docs alignment`
 - `c2bac5b Align docs for step debug metadata`
@@ -124,7 +125,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 195 passed, 3 skipped
+- `uv run pytest`: 196 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -164,7 +165,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25700106737` for `8a54a78`: completed successfully
+- GitHub Actions `CI` run `25700287906` for `431c252`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -286,7 +287,7 @@ implementation, and step-level retrieval/validation debug metadata:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `195 passed, 3 skipped`
+- `uv run pytest`: `196 passed, 3 skipped`
 - `uv run python ops/observability/validate_observability_assets.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed, including
   metrics surface check with `http_total_requests=7`, `graph_nodes=14`,
