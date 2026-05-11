@@ -43,7 +43,7 @@ Latest GitHub verification:
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test | Qdrant foundation complete; production DB environment validation pending |
 | Approval workflow | approval queue, approve/reject/hold/modify path, graph commit | Complete for local backend |
 | Feedback loop | feedback events, eval candidates, improvement candidates, eval gate | Local foundation complete; real eval datasets/canary pending |
-| Audit trail | `AuditService`, `/api/v1/audit/events`, UI audit panel, persistence | Local foundation complete; RBAC/retention pending |
+| Audit trail | `AuditService`, `/api/v1/audit/events`, UI audit panel, persistence, API-key RBAC foundation | Local foundation complete; SSO/retention pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
 | Scheduler | process-local `RunScheduler`, API/UI/runbook | Single-process complete; multi-worker orchestration pending |
 | Ubuntu runbook | `README_ubuntu.md` | Local/server scaffold complete; backup/restore/load testing pending |
@@ -81,7 +81,7 @@ Latest GitHub verification:
 
 ### P4: Security and Operations
 
-- Add OIDC/SSO and project-level RBAC.
+- Replace API-key RBAC foundation with OIDC/SSO and project-level authorization.
 - Add audit retention and debug artifact access policy.
 - Add backup/restore runbooks and load tests.
 - Decide React/React Flow migration after real graph shape validation.

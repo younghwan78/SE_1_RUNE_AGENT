@@ -4,6 +4,8 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
+from req_tracker.api.security import require_role
+
 router = APIRouter(tags=["debug"])
 
 
@@ -18,6 +20,7 @@ def list_debug_runs(request: Request) -> list[dict[str, Any]]:
 @router.get("/debug/runs/{run_id}/summary")
 def debug_run_summary(request: Request, run_id: str) -> dict[str, Any]:
     """Return run, step, LLM call, artifact, and graph delta debug summary."""
+    require_role(request, "developer")
     runtime = request.app.state.runtime
     run = runtime.traces.runs.get(run_id)
     if run is None:
@@ -49,6 +52,7 @@ def debug_run_summary(request: Request, run_id: str) -> dict[str, Any]:
 @router.get("/debug/approvals/{approval_id}/lineage")
 def debug_approval_lineage(request: Request, approval_id: str) -> dict[str, Any]:
     """Return approval creation, graph delta, step, feedback, and audit lineage."""
+    require_role(request, "developer")
     runtime = request.app.state.runtime
     approval = runtime.approvals.items.get(approval_id)
     if approval is None:
@@ -91,6 +95,7 @@ def read_debug_artifact(
     artifact_ref: str = Query(min_length=1),
 ) -> Any:
     """Read a local JSON debug artifact by artifact ref."""
+    require_role(request, "developer")
     runtime = request.app.state.runtime
     try:
         artifact = runtime.artifact_store.read_json(artifact_ref)

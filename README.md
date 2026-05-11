@@ -60,6 +60,15 @@ Health check:
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
 ```
 
+Enable API-key RBAC for protected debug/audit routes:
+
+```powershell
+$env:AUTH_MODE="api_key"
+$env:API_KEY="change-me"
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/audit/events `
+  -Headers @{"x-rune-api-key"="change-me";"x-rune-role"="operator"}
+```
+
 Configure periodic runs:
 
 ```powershell

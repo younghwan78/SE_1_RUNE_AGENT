@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     qdrant_api_key: str = Field(default="", validation_alias="QDRANT_API_KEY")
     qdrant_collection: str = Field(default="rune_chunks", validation_alias="QDRANT_COLLECTION")
     qdrant_vector_size: int = Field(default=64, ge=8, validation_alias="QDRANT_VECTOR_SIZE")
+    auth_mode: str = Field(default="local", validation_alias="AUTH_MODE")
+    api_key: str = Field(default="", validation_alias="API_KEY")
     model_gateway_mode: str = Field(default="dummy", validation_alias="MODEL_GATEWAY_MODE")
     artifact_store: str = Field(default="local", validation_alias="ARTIFACT_STORE")
     artifact_root: Path = Field(default=Path(".local_artifacts"), validation_alias="ARTIFACT_ROOT")
