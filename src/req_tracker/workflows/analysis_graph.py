@@ -70,6 +70,7 @@ class EdgeReasoningOutput(BaseModel):
     candidate_edge_count: int = Field(ge=0)
     confidence_score: float = Field(ge=0.0, le=1.0)
     rationale: str
+    counter_evidence_refs: list[str] = Field(default_factory=list)
 
 
 class LocalAnalysisWorkflow:
@@ -415,6 +416,7 @@ class LocalAnalysisWorkflow:
                         "Deterministic dummy LLM reviewed candidate edges "
                         "behind the model gateway."
                     ),
+                    "counter_evidence_refs": [],
                 }
             }
         )

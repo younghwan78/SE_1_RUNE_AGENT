@@ -147,6 +147,7 @@ prompt. This keeps the contract stable for later `new_model_*` and
 | finding diff | added/removed/changed finding |
 | severity diff | severity and score change |
 | confidence diff | confidence score change |
+| counter-evidence diff | counter evidence refs and rationale changes |
 | approval routing diff | owner/risk routing change |
 | graph delta diff | final proposed graph mutation |
 

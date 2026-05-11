@@ -66,6 +66,9 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
     assert diff_payload["graph_delta_previews"][0]["right"]["operations"]
     assert diff_payload["counts"]["llm_payload_pairs"] == 1
     assert diff_payload["llm_payload_pairs"][0]["parsed"]["payload"]["candidate_edge_count"] >= 1
+    assert diff_payload["llm_payload_pairs"][0]["parsed"]["payload"][
+        "counter_evidence_refs"
+    ] == []
 
 
 def test_debug_run_summary_requires_existing_run(client: TestClient) -> None:
