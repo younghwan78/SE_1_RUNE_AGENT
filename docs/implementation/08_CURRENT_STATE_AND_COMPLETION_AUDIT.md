@@ -10,6 +10,8 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `8a61830 Add trusted proxy auth foundation`
+- `56d4983 Refresh audit after model gateway smoke`
 - `7d8bca8 Add local model gateway smoke harness`
 - `4f11a09 Refresh audit after PostgreSQL archive pruning`
 - `db72fdb Add PostgreSQL audit archive pruning`
@@ -28,7 +30,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `7d8bca8`: completed successfully
+- GitHub Actions `CI` run for `8a61830`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
