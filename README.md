@@ -62,8 +62,8 @@ uv run python ops/rehearsal/run_full_stack_rehearsal.py
 
 This starts the disposable backends, launches the API with
 `STATE_STORE=postgres`, `GRAPH_BACKEND=neo4j`, and `VECTOR_BACKEND=qdrant`, then
-runs analyze, approval commit, graph projection, audit retention, and API
-restart-restore checks.
+runs readiness, analyze, approval commit, graph projection, audit retention, and
+API restart-restore checks.
 
 Run feedback/eval/canary rehearsal:
 
@@ -90,6 +90,7 @@ Health check:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/ready
 ```
 
 Enable API-key RBAC for protected debug/audit routes:
@@ -195,6 +196,7 @@ Current local implementation:
 - Docker Compose backend integration runner for PostgreSQL, Neo4j, and Qdrant
 - full-stack API rehearsal against PostgreSQL, Neo4j, and Qdrant
 - runtime state restore from persisted state after API restart
+- readiness API for non-destructive backend checks
 - periodic analysis scheduler for server operation
 
 Enable local SQLite persistence:

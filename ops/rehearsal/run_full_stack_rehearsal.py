@@ -95,6 +95,7 @@ def run_full_stack_rehearsal(
         backend_runner.wait_for_backends(env, timeout_seconds=timeout_seconds)
         server = start_api_server(env, api_port)
         health = wait_for_health(api_base_url, timeout_seconds=timeout_seconds)
+        readiness = require_object(get_json(f"{api_base_url}/api/v1/ready"))
         analyze = post_json(
             f"{api_base_url}/api/v1/runs/analyze",
             {
@@ -139,6 +140,7 @@ def run_full_stack_rehearsal(
         )
         passed = (
             health.get("state_store") == "postgres"
+            and readiness.get("status") == "ok"
             and health.get("graph_backend") == "neo4j"
             and health.get("vector_backend") == "qdrant"
             and analyze["counts"]["approvals"] > 0
@@ -151,6 +153,7 @@ def run_full_stack_rehearsal(
             "passed": passed,
             "api_base_url": api_base_url,
             "health": health,
+            "readiness": readiness,
             "run_id": analyze["run"]["run_id"],
             "approval_id": approval_id,
             "approved_status": decision["status"],

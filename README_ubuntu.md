@@ -94,6 +94,7 @@ In another shell:
 
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/health
+curl -s http://127.0.0.1:8000/api/v1/ready
 curl -s -X POST http://127.0.0.1:8000/api/v1/schedule/run-now
 curl -s http://127.0.0.1:8000/api/v1/schedule
 curl -s http://127.0.0.1:8000/api/v1/debug/runs

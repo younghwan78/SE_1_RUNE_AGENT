@@ -62,12 +62,14 @@ uv run python ops/rehearsal/run_full_stack_rehearsal.py
 uv run python ops/evals/run_feedback_eval_rehearsal.py
 uv run python ops/load/smoke_load.py --base-url http://127.0.0.1:8000 --runs 3
 curl -s http://127.0.0.1:8000/api/v1/health
+curl -s http://127.0.0.1:8000/api/v1/ready
 curl -s http://127.0.0.1:8000/api/v1/audit/retention
 ```
 
 Validation criteria:
 
 - app starts with restored config
+- readiness reports `ok` for state store, graph, vector mode, and artifact root
 - PostgreSQL migrations report no missing migration
 - audit archive batches are present after archive/prune rehearsal when retention selects events
 - restored artifact refs can be read only under the configured artifact root
