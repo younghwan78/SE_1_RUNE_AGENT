@@ -10,6 +10,9 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `ac1c811 Cover enabled OpenTelemetry wiring`
+- `eea6429 Add optional OpenTelemetry export foundation`
+- `eea6942 Refresh audit after metrics rehearsal gate`
 - `c9ca4ff Check metrics in full stack rehearsal`
 - `08cd9d2 Propagate request trace context`
 - `48f52f0 Add runtime metrics scrape endpoints`
@@ -99,7 +102,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 176 passed, 3 skipped
+- `uv run pytest`: 179 passed, 3 skipped
 - repo-shape anchor check for `.claude/skills`, `docs/api`, `docs/ontology`,
   `docs/security/DATA_POLICY.md`, `docs/security/RBAC_MATRIX.md`,
   `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/MODEL_POLICY.md`,
@@ -137,7 +140,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25696188697` for `c9ca4ff`: completed successfully
+- GitHub Actions `CI` run `25696779889` for `ac1c811`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
