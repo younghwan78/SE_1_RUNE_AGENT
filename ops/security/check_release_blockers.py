@@ -117,6 +117,10 @@ REQUIRED_COVERAGE: tuple[ReleaseBlockerCoverage, ...] = (
                 snippets=("load_postgres_rollbacks", "rollback_migration", "DROP TABLE IF EXISTS"),
             ),
             EvidenceFile(
+                path="ops/rehearsal/validate_postgres_migration_rollbacks.py",
+                snippets=("missing_rollback", "missing_drop", "orphan_rollback"),
+            ),
+            EvidenceFile(
                 path="ops/migrations/README.md",
                 snippets=("rollback path", "staging PostgreSQL rehearsal"),
             ),
