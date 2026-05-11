@@ -10,6 +10,8 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `0d2bbc5 Add source adapter smoke harness`
+- `11da7f0 Add disposable backend integration runner`
 - `8a61830 Add trusted proxy auth foundation`
 - `56d4983 Refresh audit after model gateway smoke`
 - `7d8bca8 Add local model gateway smoke harness`
@@ -32,7 +34,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run for `8a61830`: completed successfully
+- GitHub Actions `CI` run for `0d2bbc5`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
