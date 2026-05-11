@@ -3,6 +3,75 @@
 from fastapi.testclient import TestClient
 
 
+def test_ingest_run_records_source_snapshots_without_graph_reasoning(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/v1/runs/ingest",
+        json={
+            "project_key": "RUNE_CAM_ALPHA",
+            "scenario": "RUNE_CAM_ALPHA",
+            "run_id": "run_ingest_api_1",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["run"]["run_type"] == "ingestion"
+    assert response.json()["run"]["input_snapshot_ids"]
+    assert response.json()["run"]["trigger_source"] == "api"
+    assert response.json()["counts"] == {
+        "artifacts": 10,
+        "chunks": 10,
+        "source_warnings": 0,
+    }
+
+    steps = client.get("/api/v1/runs/run_ingest_api_1/steps")
+    assert steps.status_code == 200
+    assert [step["stage_name"] for step in steps.json()] == [
+        "source_fetch",
+        "normalize",
+        "mask_chunk",
+    ]
+
+    findings = client.get("/api/v1/findings")
+    approvals = client.get("/api/v1/approvals")
+    assert findings.status_code == 200
+    assert findings.json() == []
+    assert approvals.status_code == 200
+    assert approvals.json() == []
+
+
+def test_ingest_run_idempotency_key_reuses_original_response(client: TestClient) -> None:
+    payload = {
+        "project_key": "RUNE_CAM_ALPHA",
+        "scenario": "RUNE_CAM_ALPHA",
+        "run_id": "run_ingest_idempotent",
+    }
+    first = client.post(
+        "/api/v1/runs/ingest",
+        json=payload,
+        headers={"Idempotency-Key": "idem-ingest-1"},
+    )
+    second = client.post(
+        "/api/v1/runs/ingest",
+        json=payload,
+        headers={"Idempotency-Key": "idem-ingest-1"},
+    )
+    conflict = client.post(
+        "/api/v1/runs/ingest",
+        json={**payload, "scenario": "RUNE_MULTI_SOURCE"},
+        headers={"Idempotency-Key": "idem-ingest-1"},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json() == first.json()
+    assert conflict.status_code == 409
+
+    runs = client.get("/api/v1/runs?project_key=RUNE_CAM_ALPHA")
+    assert runs.status_code == 200
+    assert [run["run_id"] for run in runs.json()].count("run_ingest_idempotent") == 1
+
+
 def test_analyze_run_and_approve_edge(client: TestClient) -> None:
     response = client.post(
         "/api/v1/runs/analyze",

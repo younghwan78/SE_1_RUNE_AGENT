@@ -45,6 +45,18 @@ class AnalysisResult(BaseModel):
     approvals: list[ApprovalItem]
 
 
+class IngestionResult(BaseModel):
+    """Source fetch, normalization, masking, and chunking result."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    run: AgentRun
+    steps: list[AgentStepTrace]
+    artifacts: list[SourceArtifact]
+    chunks: list[ArtifactChunk]
+    source_warnings: list[str] = Field(default_factory=list)
+
+
 class EdgeReasoningOutput(BaseModel):
     """Structured output produced by the local dummy LLM reasoning stage."""
 
@@ -74,6 +86,38 @@ class LocalAnalysisWorkflow:
         self.approvals = approvals
         self.adapter = DummySourceAdapter()
 
+    def ingest(
+        self,
+        *,
+        run_id: str,
+        project_key: str,
+        scenario: str = "RUNE_CAM_ALPHA",
+        triggered_by: str = "local",
+        trigger_source: TriggerSource = "manual",
+    ) -> IngestionResult:
+        """Run deterministic source ingestion stages only."""
+        self.traces.create_run(
+            run_id=run_id,
+            run_type="ingestion",
+            project_key=project_key,
+            triggered_by=triggered_by,
+            trigger_source=trigger_source,
+        )
+        self.traces.mark_run_running(run_id)
+        fetch, artifacts, chunks = self._run_ingestion_stages(
+            run_id=run_id,
+            project_key=project_key,
+            scenario=scenario,
+        )
+        completed = self.traces.complete_run(run_id)
+        return IngestionResult(
+            run=completed,
+            steps=self.traces.list_steps(run_id),
+            artifacts=artifacts,
+            chunks=chunks,
+            source_warnings=fetch.source_warnings,
+        )
+
     def run(
         self,
         *,
@@ -92,62 +136,16 @@ class LocalAnalysisWorkflow:
             trigger_source=trigger_source,
         )
         self.traces.mark_run_running(run_id)
-
-        fetch_step = self.traces.start_step(
-            step_id=f"step_{run_id}_source_fetch",
+        fetch, artifacts, chunks = self._run_ingestion_stages(
             run_id=run_id,
-            stage_name="source_fetch",
-            input_payload={"scenario": scenario},
-        )
-        fetch = self._fetch_all(project_key=project_key, scenario=scenario)
-        fetch_ref = self.artifact_store.write_json(run_id, "source_fetch", fetch)
-        self.traces.finish_step(
-            step_id=fetch_step.step_id,
-            output_payload=fetch.model_dump(mode="json"),
-            output_ref=fetch_ref.artifact_ref,
+            project_key=project_key,
+            scenario=scenario,
         )
 
-        norm_step = self.traces.start_step(
-            step_id=f"step_{run_id}_normalize",
-            run_id=run_id,
-            stage_name="normalize",
-            input_payload=fetch.model_dump(mode="json"),
-        )
-        artifacts = [normalize_raw_artifact(raw) for raw in fetch.artifacts]
-        self._record_input_snapshots(
-            run_id=run_id,
-            input_snapshot_ids=[artifact.artifact_id for artifact in artifacts],
-        )
         evidence_by_external = {
             raw.external_id: build_artifact_evidence(artifact.artifact_id, raw)
             for raw, artifact in zip(fetch.artifacts, artifacts, strict=True)
         }
-        norm_ref = self.artifact_store.write_json(run_id, "normalize", artifacts)
-        self.traces.finish_step(
-            step_id=norm_step.step_id,
-            output_payload=[artifact.model_dump(mode="json") for artifact in artifacts],
-            output_ref=norm_ref.artifact_ref,
-        )
-
-        chunk_step = self.traces.start_step(
-            step_id=f"step_{run_id}_mask_chunk",
-            run_id=run_id,
-            stage_name="mask_chunk",
-            input_payload=[artifact.artifact_id for artifact in artifacts],
-        )
-        chunks: list[ArtifactChunk] = []
-        for raw, artifact in zip(fetch.artifacts, artifacts, strict=True):
-            masked = mask_text(raw.body_text)
-            chunks.extend(
-                chunk_artifact(artifact, masked.text, evidence_by_external[raw.external_id])
-            )
-        self.vector.upsert(chunks)
-        chunk_ref = self.artifact_store.write_json(run_id, "chunks", chunks)
-        self.traces.finish_step(
-            step_id=chunk_step.step_id,
-            output_payload=[chunk.model_dump(mode="json") for chunk in chunks],
-            output_ref=chunk_ref.artifact_ref,
-        )
 
         extract_step = self.traces.start_step(
             step_id=f"step_{run_id}_extract_nodes",
@@ -238,6 +236,71 @@ class LocalAnalysisWorkflow:
             findings=findings,
             approvals=approvals,
         )
+
+    def _run_ingestion_stages(
+        self,
+        *,
+        run_id: str,
+        project_key: str,
+        scenario: str,
+    ) -> tuple[SourceFetchResult, list[SourceArtifact], list[ArtifactChunk]]:
+        """Run shared deterministic ingestion stages for ingest and analyze."""
+        fetch_step = self.traces.start_step(
+            step_id=f"step_{run_id}_source_fetch",
+            run_id=run_id,
+            stage_name="source_fetch",
+            input_payload={"scenario": scenario},
+        )
+        fetch = self._fetch_all(project_key=project_key, scenario=scenario)
+        fetch_ref = self.artifact_store.write_json(run_id, "source_fetch", fetch)
+        self.traces.finish_step(
+            step_id=fetch_step.step_id,
+            output_payload=fetch.model_dump(mode="json"),
+            output_ref=fetch_ref.artifact_ref,
+        )
+
+        norm_step = self.traces.start_step(
+            step_id=f"step_{run_id}_normalize",
+            run_id=run_id,
+            stage_name="normalize",
+            input_payload=fetch.model_dump(mode="json"),
+        )
+        artifacts = [normalize_raw_artifact(raw) for raw in fetch.artifacts]
+        self._record_input_snapshots(
+            run_id=run_id,
+            input_snapshot_ids=[artifact.artifact_id for artifact in artifacts],
+        )
+        evidence_by_external = {
+            raw.external_id: build_artifact_evidence(artifact.artifact_id, raw)
+            for raw, artifact in zip(fetch.artifacts, artifacts, strict=True)
+        }
+        norm_ref = self.artifact_store.write_json(run_id, "normalize", artifacts)
+        self.traces.finish_step(
+            step_id=norm_step.step_id,
+            output_payload=[artifact.model_dump(mode="json") for artifact in artifacts],
+            output_ref=norm_ref.artifact_ref,
+        )
+
+        chunk_step = self.traces.start_step(
+            step_id=f"step_{run_id}_mask_chunk",
+            run_id=run_id,
+            stage_name="mask_chunk",
+            input_payload=[artifact.artifact_id for artifact in artifacts],
+        )
+        chunks: list[ArtifactChunk] = []
+        for raw, artifact in zip(fetch.artifacts, artifacts, strict=True):
+            masked = mask_text(raw.body_text)
+            chunks.extend(
+                chunk_artifact(artifact, masked.text, evidence_by_external[raw.external_id])
+            )
+        self.vector.upsert(chunks)
+        chunk_ref = self.artifact_store.write_json(run_id, "chunks", chunks)
+        self.traces.finish_step(
+            step_id=chunk_step.step_id,
+            output_payload=[chunk.model_dump(mode="json") for chunk in chunks],
+            output_ref=chunk_ref.artifact_ref,
+        )
+        return fetch, artifacts, chunks
 
     def _fetch_all(self, *, project_key: str, scenario: str) -> SourceFetchResult:
         """Fetch all source pages for a local analysis run."""

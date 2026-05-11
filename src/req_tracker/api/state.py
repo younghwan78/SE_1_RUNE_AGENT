@@ -23,7 +23,11 @@ from req_tracker.scheduler.service import RunScheduler
 from req_tracker.storage.state_store import StateStore
 from req_tracker.vector.base import VectorBackend
 from req_tracker.vector.memory_backend import MemoryVectorBackend
-from req_tracker.workflows.analysis_graph import AnalysisResult, LocalAnalysisWorkflow
+from req_tracker.workflows.analysis_graph import (
+    AnalysisResult,
+    IngestionResult,
+    LocalAnalysisWorkflow,
+)
 
 
 class RuntimeState(BaseModel):
@@ -39,6 +43,7 @@ class RuntimeState(BaseModel):
     audit: AuditService
     audit_archive_store: AuditArchiveWriter
     analyses: dict[str, AnalysisResult]
+    ingestions: dict[str, IngestionResult]
     findings: dict[str, Finding]
     replays: dict[str, ReplayResult]
     idempotency_results: dict[str, dict[str, Any]]
@@ -67,6 +72,7 @@ class RuntimeState(BaseModel):
             audit_archive_store=audit_archive_store
             or LocalAuditArchiveStore(artifact_root / "audit_archives"),
             analyses={},
+            ingestions={},
             findings={},
             replays={},
             idempotency_results={},
@@ -123,6 +129,75 @@ class RuntimeState(BaseModel):
         )
         self.persist_analysis_result(result)
         return result
+
+    def run_ingestion(
+        self,
+        *,
+        run_id: str,
+        project_key: str,
+        scenario: str,
+        triggered_by: str = "local",
+        trigger_source: TriggerSource = "manual",
+    ) -> IngestionResult:
+        """Run deterministic ingestion and store the result."""
+        result = self.workflow().ingest(
+            run_id=run_id,
+            project_key=project_key,
+            scenario=scenario,
+            triggered_by=triggered_by,
+            trigger_source=trigger_source,
+        )
+        self.ingestions[run_id] = result
+        self.audit.record(
+            action="run_completed",
+            actor_id="local",
+            actor_role="system",
+            project_key=project_key,
+            target_type="run",
+            target_id=run_id,
+            metadata={
+                "scenario": scenario,
+                "run_type": "ingestion",
+                "artifacts": len(result.artifacts),
+                "chunks": len(result.chunks),
+            },
+        )
+        self.persist_ingestion_result(result)
+        return result
+
+    def persist_ingestion_result(self, result: IngestionResult) -> None:
+        """Persist completed ingestion outputs into the configured state store."""
+        if self.state_store is None:
+            return
+        project_key = result.run.project_key
+        self.state_store.upsert(
+            collection="agent_runs",
+            entity_id=result.run.run_id,
+            project_key=project_key,
+            payload=result.run,
+        )
+        for step in result.steps:
+            self.state_store.upsert(
+                collection="agent_step_traces",
+                entity_id=step.step_id,
+                project_key=project_key,
+                payload=step,
+            )
+        for artifact in result.artifacts:
+            self.state_store.upsert(
+                collection="source_artifacts",
+                entity_id=artifact.artifact_id,
+                project_key=project_key,
+                payload=artifact,
+            )
+        for chunk in result.chunks:
+            self.state_store.upsert(
+                collection="artifact_chunks",
+                entity_id=chunk.chunk_id,
+                project_key=project_key,
+                payload=chunk,
+            )
+        self.persist_approval_state()
 
     def persist_analysis_result(self, result: AnalysisResult) -> None:
         """Persist a completed local analysis into the configured state store."""

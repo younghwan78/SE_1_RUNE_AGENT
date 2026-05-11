@@ -16,13 +16,21 @@ from req_tracker.config.settings import Settings
 from req_tracker.debug.replay import ReplayService
 from req_tracker.ontology.models import Finding, FindingStatus
 from req_tracker.scheduler.models import ScheduleConfig
-from req_tracker.workflows.analysis_graph import AnalysisResult
+from req_tracker.workflows.analysis_graph import AnalysisResult, IngestionResult
 
 router = APIRouter(tags=["runs"])
 
 
 class AnalyzeRunRequest(BaseModel):
     """Start a local analysis run."""
+
+    project_key: str = "RUNE_CAM_ALPHA"
+    scenario: str = "RUNE_CAM_ALPHA"
+    run_id: str | None = Field(default=None)
+
+
+class IngestRunRequest(BaseModel):
+    """Start deterministic source ingestion only."""
 
     project_key: str = "RUNE_CAM_ALPHA"
     scenario: str = "RUNE_CAM_ALPHA"
@@ -46,10 +54,43 @@ class FindingStatusRequest(BaseModel):
     comment: str | None = None
 
 
+@router.post("/runs/ingest")
+def ingest(request: Request, payload: IngestRunRequest) -> dict[str, Any]:
+    """Run deterministic source ingestion without graph reasoning."""
+    user = require_project(request, payload.project_key, "developer")
+    runtime: RuntimeState = request.app.state.runtime
+    settings = request.app.state.settings
+    idempotency = prepare_idempotency(
+        request=request,
+        runtime=runtime,
+        command="runs.ingest",
+        payload=payload.model_dump(mode="json"),
+    )
+    if idempotency.cached_response is not None:
+        return idempotency.cached_response
+    run_id = payload.run_id or settings.new_id("ingest")
+    result = runtime.run_ingestion(
+        run_id=run_id,
+        project_key=payload.project_key,
+        scenario=payload.scenario,
+        triggered_by=user.user_id,
+        trigger_source="api",
+    )
+    response = _ingestion_response(result)
+    record_idempotency_response(
+        runtime=runtime,
+        context=idempotency,
+        command="runs.ingest",
+        project_key=payload.project_key,
+        response=response,
+    )
+    return response
+
+
 @router.post("/runs/analyze")
 def analyze(request: Request, payload: AnalyzeRunRequest) -> dict[str, Any]:
     """Run dummy/local analysis."""
-    user = require_project(request, payload.project_key)
+    user = require_project(request, payload.project_key, "developer")
     runtime: RuntimeState = request.app.state.runtime
     settings = request.app.state.settings
     idempotency = prepare_idempotency(
@@ -77,6 +118,17 @@ def analyze(request: Request, payload: AnalyzeRunRequest) -> dict[str, Any]:
         response=response,
     )
     return response
+
+
+def _ingestion_response(result: IngestionResult) -> dict[str, Any]:
+    return {
+        "run": result.run.model_dump(mode="json"),
+        "counts": {
+            "artifacts": len(result.artifacts),
+            "chunks": len(result.chunks),
+            "source_warnings": len(result.source_warnings),
+        },
+    }
 
 
 def _analysis_response(result: AnalysisResult) -> dict[str, Any]:

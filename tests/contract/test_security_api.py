@@ -289,6 +289,21 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
                 "run_id": "run_query_auth",
             },
         )
+        viewer_analyze = client.post(
+            "/api/v1/runs/analyze",
+            headers=viewer_headers,
+            json={"project_key": "RUNE_CAM_ALPHA", "run_id": "run_viewer_blocked"},
+        )
+        viewer_ingest = client.post(
+            "/api/v1/runs/ingest",
+            headers=viewer_headers,
+            json={"project_key": "RUNE_CAM_ALPHA", "run_id": "ingest_viewer_blocked"},
+        )
+        developer_ingest = client.post(
+            "/api/v1/runs/ingest",
+            headers=developer_headers,
+            json={"project_key": "RUNE_CAM_ALPHA", "run_id": "ingest_developer_allowed"},
+        )
         missing_findings_key = client.get("/api/v1/findings")
         missing_runs_key = client.get("/api/v1/runs")
         viewer_findings = client.get("/api/v1/findings", headers=viewer_headers)
@@ -376,6 +391,9 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
         )
 
     assert run.status_code == 200
+    assert viewer_analyze.status_code == 403
+    assert viewer_ingest.status_code == 403
+    assert developer_ingest.status_code == 200
     assert missing_findings_key.status_code == 401
     assert missing_runs_key.status_code == 401
     assert viewer_findings.status_code == 403
@@ -397,7 +415,7 @@ def test_api_key_auth_protects_findings_schedule_and_debug_run_list(tmp_path) ->
     assert wrong_project_schedule.status_code == 403
     assert viewer_debug_runs.status_code == 403
     assert developer_debug_runs.status_code == 200
-    assert len(developer_debug_runs.json()) == 1
+    assert len(developer_debug_runs.json()) == 2
     assert wrong_project_debug_runs.status_code == 200
     assert wrong_project_debug_runs.json() == []
     assert viewer_steps.status_code == 403
