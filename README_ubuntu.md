@@ -237,7 +237,13 @@ uv run python ops/rehearsal/check_production_readiness.py \
 
 The generated template intentionally marks every unresolved gate as `failed`
 until a release owner replaces the TODO fields with reviewed CI/artifact IDs or
-approval records. After real staging rehearsals, run:
+approval records. Validate that the committed example file is still non-passable:
+
+```bash
+uv run python ops/rehearsal/validate_evidence_example.py
+```
+
+After real staging rehearsals, run:
 
 ```bash
 uv run python ops/rehearsal/check_production_readiness.py \
