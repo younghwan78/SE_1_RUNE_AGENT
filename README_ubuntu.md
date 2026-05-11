@@ -88,6 +88,12 @@ curl -s http://127.0.0.1:8000/api/v1/schedule
 curl -s http://127.0.0.1:8000/api/v1/debug/runs
 ```
 
+Run a small API load smoke after the service is up:
+
+```bash
+uv run python ops/load/smoke_load.py --base-url http://127.0.0.1:8000 --runs 5
+```
+
 ## 5. systemd Service
 
 Create `/etc/systemd/system/rune-agent.service`:
@@ -143,3 +149,5 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/schedule/run-now
 ```
 
 The current scheduler is process-local. For multi-worker or multi-node production, run a single scheduler instance or move scheduling to system cron/Kubernetes CronJob/queue-backed orchestration before enabling multiple API replicas.
+
+Backup and restore rehearsal steps are in `docs/runbooks/BACKUP_RESTORE.md`.

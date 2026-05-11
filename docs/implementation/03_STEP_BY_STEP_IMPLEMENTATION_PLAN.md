@@ -583,6 +583,7 @@ Dummy 검증:
 - audit event capture/API for run completion, approval decisions, feedback, debug artifact reads, and scheduler operations
 - debug artifact store root access policy with blocked-read audit events
 - audit retention policy and non-destructive retention status API
+- backup/restore rehearsal runbook and API smoke load runner
 - static operator UI for graph, approval, findings, replay, scheduler, node chain review, run debug, and audit events
 
 아직 production 전환 전 남은 축:
@@ -593,4 +594,4 @@ Dummy 검증:
 - live LLM payload diff validation with sandbox model calls
 - typed production audit event archive/prune job and RBAC/SSO enforcement
 - React/React Flow migration decision after real graph shape validation
-- production deployment hardening, migrations, backup/restore, and load tests
+- production deployment hardening and real backup/restore/load rehearsals

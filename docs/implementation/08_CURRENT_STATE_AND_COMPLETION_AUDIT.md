@@ -46,7 +46,7 @@ Latest GitHub verification:
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, UI audit panel, persistence, API-key RBAC foundation, blocked debug artifact read audit events | Local foundation complete; SSO and production archive/prune job pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API | Dummy 100+ node path complete; React Flow decision pending |
 | Scheduler | process-local `RunScheduler`, API/UI/runbook | Single-process complete; multi-worker orchestration pending |
-| Ubuntu runbook | `README_ubuntu.md` | Local/server scaffold complete; backup/restore/load testing pending |
+| Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/load/smoke_load.py` | Local/server scaffold and rehearsal assets complete; real environment rehearsal pending |
 | CI | `.github/workflows/ci.yml` | Complete |
 
 ## 3. Remaining Implementation Backlog
@@ -84,7 +84,8 @@ Latest GitHub verification:
 
 - Replace API-key RBAC foundation with OIDC/SSO and project-level authorization.
 - Add production audit archive/prune job.
-- Add backup/restore runbooks and load tests.
+- Run backup/restore and load rehearsals against disposable production-like
+  PostgreSQL, Neo4j, Qdrant, and artifact store environments.
 - Decide React/React Flow migration after real graph shape validation.
 
 ## 4. Completion Gate

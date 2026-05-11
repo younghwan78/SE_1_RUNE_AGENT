@@ -121,6 +121,7 @@ Current local implementation:
 - debug side-by-side panes for LLM payloads and graph delta previews
 - debug artifact store root access policy with blocked-read audit events
 - audit retention policy status API
+- backup/restore rehearsal runbook and smoke load runner
 - periodic analysis scheduler for server operation
 
 Enable local SQLite persistence:
