@@ -46,6 +46,45 @@ def debug_run_summary(request: Request, run_id: str) -> dict[str, Any]:
     }
 
 
+@router.get("/debug/approvals/{approval_id}/lineage")
+def debug_approval_lineage(request: Request, approval_id: str) -> dict[str, Any]:
+    """Return approval creation, graph delta, step, feedback, and audit lineage."""
+    runtime = request.app.state.runtime
+    approval = runtime.approvals.items.get(approval_id)
+    if approval is None:
+        raise HTTPException(status_code=404, detail="approval not found")
+    run = runtime.traces.runs.get(approval.created_from_run_id)
+    step = runtime.traces.steps.get(approval.created_from_step_id)
+    delta = (
+        runtime.approvals.deltas.get(approval.graph_delta_ref)
+        if approval.graph_delta_ref is not None
+        else None
+    )
+    feedback = [
+        event
+        for event in runtime.approvals.feedback
+        if event.target_id == approval.proposal_ref
+    ]
+    audit_events = [
+        event
+        for event in runtime.audit.events.values()
+        if event.target_type == "approval" and event.target_id == approval_id
+    ]
+    return {
+        "approval": approval.model_dump(mode="json"),
+        "run": run.model_dump(mode="json") if run is not None else None,
+        "step": step.model_dump(mode="json") if step is not None else None,
+        "graph_delta": delta.model_dump(mode="json") if delta is not None else None,
+        "feedback": [event.model_dump(mode="json") for event in feedback],
+        "audit_events": [event.model_dump(mode="json") for event in audit_events],
+        "counts": {
+            "feedback": len(feedback),
+            "audit_events": len(audit_events),
+            "graph_delta_operations": len(delta.operations) if delta is not None else 0,
+        },
+    }
+
+
 @router.get("/debug/artifact")
 def read_debug_artifact(
     request: Request,

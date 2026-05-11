@@ -575,6 +575,7 @@ Dummy 검증:
 - scalable graph projection for 100+ dummy nodes
 - traceability chain API with approved/pending edge separation
 - debug summary/artifact API
+- debug approval lineage API
 - audit event capture/API for run completion, approval decisions, feedback, debug artifact reads, and scheduler operations
 - static operator UI for graph, approval, findings, replay, scheduler, node chain review, run debug, and audit events
 

@@ -35,7 +35,7 @@ Latest GitHub verification:
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test | Complete |
 | Core contracts | `src/req_tracker/ontology`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, policy, structured validation retry, fallback trace tests | Retry/fallback foundation complete; real provider profiles pending |
-| Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, run debug UI | API complete; full UX diff/lineage pending |
+| Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, approval lineage API, run debug UI | API foundation complete; full UX diff pending |
 | SQLite state persistence | `SQLiteStateStore`, persistence contract test | Complete |
 | PostgreSQL migration foundation | `PostgreSQLStateStore`, `001_state_entities.sql`, migration loader tests | Complete |
 | Typed PostgreSQL core table foundation | `002_core_state_tables.sql`, typed mirror upsert/read dispatch, rollback scripts, unit tests, optional `POSTGRES_TEST_DSN` integration test | Foundation complete; production DB environment validation pending |
@@ -77,8 +77,7 @@ Latest GitHub verification:
 
 - Add real model provider profile support.
 - Run retry/fallback behavior against live model provider sandboxes.
-- Expand debug UI for LLM payload diff, graph delta side-by-side view, and
-  approval lineage.
+- Expand debug UI for LLM payload diff and graph delta side-by-side view.
 
 ### P4: Security and Operations
 
