@@ -561,6 +561,7 @@ Dummy 검증:
 - PostgreSQL state repository and package migration foundation
 - typed PostgreSQL core table migration, mirror upsert, read path, and rollback foundation
 - dummy model gateway and dummy source adapter
+- model gateway structured validation retry and fallback trace foundation
 - export-file adapters for JIRA, Confluence, and restricted decision/email sources
 - JIRA REST source adapter foundation behind the shared `SourceAdapter` contract
 - ingestion normalization, masking, chunking, evidence span path
