@@ -1,7 +1,9 @@
 """FastAPI application factory."""
 
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
+from time import perf_counter
 
 from fastapi import FastAPI, Request, Response
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +20,7 @@ from req_tracker.api.routes.ui import router as ui_router
 from req_tracker.api.state import RuntimeState
 from req_tracker.audit.archive import PostgresAuditArchiveStore
 from req_tracker.audit.models import AuditRetentionPolicy
+from req_tracker.config.logging import configure_logging
 from req_tracker.config.settings import Settings, get_settings
 from req_tracker.graph.base import GraphBackend
 from req_tracker.graph.memory_backend import MemoryGraphBackend
@@ -30,10 +33,13 @@ from req_tracker.vector.base import VectorBackend
 from req_tracker.vector.memory_backend import MemoryVectorBackend
 from req_tracker.vector.qdrant_backend import QdrantVectorBackend
 
+REQUEST_LOGGER = logging.getLogger("req_tracker.api.request")
+
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Create the API application."""
     resolved_settings = settings or get_settings()
+    configure_logging(resolved_settings.log_level)
     graph = _create_graph_backend(resolved_settings)
     vector = _create_vector_backend(resolved_settings)
     state_store: StateStore | None = None
@@ -99,8 +105,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         correlation_id = request.headers.get("x-correlation-id") or resolved_settings.new_id(
             "corr"
         )
+        request.state.correlation_id = correlation_id
+        started = perf_counter()
         response = await call_next(request)
         response.headers["x-correlation-id"] = correlation_id
+        duration_ms = round((perf_counter() - started) * 1000, 3)
+        REQUEST_LOGGER.info(
+            "http_request",
+            extra={
+                "correlation_id": correlation_id,
+                "user_id": _request_user_id(request, resolved_settings),
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": response.status_code,
+                "duration_ms": duration_ms,
+            },
+        )
         return response
 
     app.include_router(health_router, prefix="/api/v1")
@@ -113,6 +133,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(ui_router)
     app.mount("/ui", StaticFiles(directory=UI_ASSET_DIR), name="ui")
     return app
+
+
+def _request_user_id(request: Request, settings: Settings) -> str:
+    """Resolve a non-authoritative user id for request logs without auth side effects."""
+    user_id = request.headers.get("x-rune-user")
+    if user_id:
+        return user_id
+    if settings.auth_mode == "local":
+        return "local"
+    return "anonymous"
 
 
 def _create_graph_backend(settings: Settings) -> GraphBackend:
