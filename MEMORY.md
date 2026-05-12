@@ -13,13 +13,14 @@ Do not use or recreate removed planning files:
 - `PRD.md`
 - `PRD_ref.md`
 
-## Latest Confirmed Repository State
+## Baseline Repository State Before Final Local Handoff Pass
 
 - Working directory: `E:\51_Codex_MBSE_Agent`
-- Latest pushed commit: `fee8aad Inject configured source adapters`
-- Previous pushed commit: `f88eab1 Persist source sync cursors`
-- Latest GitHub Actions CI for `fee8aad`: `25702518897`, success
-- Worktree was clean when checked after the CI status query.
+- Key pushed commits before this handoff pass:
+  - `edce126 Add project memory snapshot`
+  - `fee8aad Inject configured source adapters`
+  - `f88eab1 Persist source sync cursors`
+- Latest confirmed GitHub Actions CI before this handoff pass: `25702699010`, success
 
 ## Completed Foundation
 
@@ -53,16 +54,23 @@ Do not use or recreate removed planning files:
   - `GET /api/v1/debug/source-cursors`
   - datasource factory
   - runtime workflow injection for `dummy`, `jira_export`, `confluence_export`, `decision_email_export`, `jira_rest`, and `confluence_rest`
+- Local handoff work:
+  - `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`
+  - `ops/source/rehearse_skill_export_sources.py`
+  - `tests/unit/ops/test_skill_export_rehearsal.py`
+  - CI/local gate coverage for source-skill export dry-run
 - Ubuntu/server docs, backup/restore/load rehearsal assets, observability assets, Prometheus/Grafana starter files, readiness evidence template, and validators are present.
 
 ## Latest Validation Evidence
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `208 passed, 3 skipped`
+- `uv run pytest`: `209 passed, 3 skipped`
+- `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`: `19 passed`
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`: `33 passed`
 - `uv run pytest tests/contract/test_debug_api.py tests/contract/test_security_api.py tests/contract/test_openapi_surface.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py tests/unit/storage/test_postgres_store.py tests/contract/test_models.py`: `44 passed`
 - `uv run python ops/source/smoke_source_adapters.py`: passed
+- `uv run python ops/source/rehearse_skill_export_sources.py`: passed
 - `uv run python ops/source/validate_source_boundaries.py`: passed
 - `uv run python ops/security/check_release_blockers.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed
@@ -70,7 +78,7 @@ Do not use or recreate removed planning files:
 
 ## Current Status
 
-The local/dummy production-shaped foundation is implemented and validated.
+The local/dummy production-shaped foundation and non-company handoff package are implemented and validated.
 
 The overall production objective is not fully complete yet because company/staging evidence is still required.
 

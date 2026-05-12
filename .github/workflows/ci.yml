@@ -49,6 +49,9 @@ jobs:
       - name: Source adapter smoke
         run: uv run python ops/source/smoke_source_adapters.py
 
+      - name: Source skill export rehearsal
+        run: uv run python ops/source/rehearse_skill_export_sources.py
+
       - name: Model gateway smoke
         run: uv run python ops/model_gateway/smoke_model_gateway.py
 

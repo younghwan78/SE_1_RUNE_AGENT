@@ -195,6 +195,16 @@ Run local source-adapter smoke without company systems:
 uv run python ops/source/smoke_source_adapters.py
 ```
 
+Run local source-skill export rehearsal without company systems:
+
+```bash
+uv run python ops/source/rehearse_skill_export_sources.py
+```
+
+This proves that `DATASOURCE_MODE=jira_export`, `confluence_export`, and
+`decision_email_export` can drive the API workflow from skill-produced export
+files and persist source cursor debug state.
+
 Run source rehearsals against company-approved sandbox systems:
 
 ```bash

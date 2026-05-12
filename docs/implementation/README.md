@@ -36,6 +36,7 @@ POC에서 그대로 가져오지 않을 것:
 | `06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Claude Code skill과 MCP/REST/export/dummy source 접근 설계 |
 | `07_GRAPH_VIEW_SCALABILITY_PLAN.md` | 100+ node graph view 확장 계획과 단계별 구현 전략 |
 | `08_CURRENT_STATE_AND_COMPLETION_AUDIT.md` | 구현 증거, 남은 backlog, completion gate 점검 |
+| `09_LOCAL_HANDOFF_COMPLETION.md` | 사내 환경 전 로컬 최종 handoff 기준과 gate 명령 |
 
 ## 운영 문서 기준점
 

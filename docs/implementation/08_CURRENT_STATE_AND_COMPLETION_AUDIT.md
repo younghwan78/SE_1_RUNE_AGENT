@@ -133,7 +133,9 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 208 passed, 3 skipped
+- `uv run pytest`: 209 passed, 3 skipped
+- `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`:
+  19 passed, validating source-skill export dry-run and readiness gate coverage
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`:
   33 passed, validating datasource factory settings, skill/export adapter
   workflow injection, dummy defaults, debug cursor exposure, and persistence
@@ -164,6 +166,10 @@ Latest local verification:
   `tests/replay`: passed
 - `uv run python ops/integration/run_backend_integration.py`: 3 passed
 - `uv run python ops/source/smoke_source_adapters.py`: passed
+- `uv run python ops/source/rehearse_skill_export_sources.py`: passed,
+  validating `jira_export`, `confluence_export`, and `decision_email_export`
+  through the API workflow and persisted source cursor debug state without
+  company endpoints, tokens, MCP tools, or mailbox data
 - `uv run python ops/source/rehearse_company_sources.py`: failed as expected on this local shell because JIRA/Confluence sandbox env vars are unset; output masks tokens and lists missing config
 - `uv run python ops/source/rehearse_decision_email_export.py`: failed as expected on this local shell because `RUNE_EMAIL_EXPORT_PATH` is unset; output masks path state and lists missing config
 - `uv run python ops/model_gateway/smoke_model_gateway.py`: passed
@@ -203,14 +209,14 @@ Latest GitHub verification:
 | Requirement | Current evidence | Status |
 | --- | --- | --- |
 | Production plan is the source of truth | `PRODUCTION_EXECUTION_PLAN.md`, `docs/implementation/03_STEP_BY_STEP_IMPLEMENTATION_PLAN.md` | Complete |
-| Expected repository shape is anchored | `src/req_tracker/*`, `.claude/skills/rune-source-*`, `docs/api/README.md`, `docs/ontology/ONTOLOGY_V1.md`, `ops/migrations/README.md`, `ops/helm/README.md`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md` | Complete for implemented and deferred tracks |
+| Expected repository shape is anchored | `src/req_tracker/*`, `.claude/skills/rune-source-*`, `docs/api/README.md`, `docs/ontology/ONTOLOGY_V1.md`, `ops/migrations/README.md`, `ops/helm/README.md`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md`, `MEMORY.md` | Complete for implemented and deferred tracks |
 | Ontology v1 is documented and executable | `docs/ontology/ONTOLOGY_V1.md`, `src/req_tracker/ontology/models.py`, `tests/contract/test_models.py` | Complete |
 | API documentation path exists | `docs/api/README.md`, `src/req_tracker/api/routes/*`, `tests/contract/*`, `tests/contract/test_openapi_surface.py`, method/path OpenAPI guard, `/api/v1/projects`, `/api/v1/graph/nodes`, `/api/v1/graph/edges`, `/api/v1/runs/ingest`, `/api/v1/runs/analyze`, `/api/v1/runs`, `/api/v1/runs/{run_id}/steps`, `/api/v1/runs/{run_id}/llm-calls`, `/api/v1/runs/{run_id}/artifacts`, `/api/v1/runs/{run_id}/graph-delta`, `/api/v1/runs/{run_id}/replay`, `/api/v1/replays/{replay_id}/diff`, `/api/v1/debug/source-cursors`, `/api/v1/debug/approvals/{approval_id}/lineage`, `/api/v1/findings/{finding_id}`, `/api/v1/findings/{finding_id}/status`, `/api/v1/improvements/{candidate_id}/rollback`, `/api/v1/admin/model-profiles/{id}/activate`, `/api/v1/admin/model-profiles/{id}/rollback`, `/api/v1/admin/prompt-versions/{id}/activate`, `/api/v1/admin/prompt-versions/{id}/rollback`, optional `/openapi.json` with `ENABLE_DOCS=true` | Complete |
 | Data and model policies are fixed | `docs/security/DATA_POLICY.md`, `docs/runbooks/MODEL_POLICY.md`, `config/model_profiles.json`, `config/prompt_versions.json`, `src/req_tracker/model_gateway/models.py`, `src/req_tracker/model_gateway/policy.py`, `src/req_tracker/api/routes/admin.py`, `ops/security/rehearse_masking_policy.py`, `ops/model_gateway/smoke_model_gateway.py` | Complete for local policy baseline, restricted/confidential `masking_applied` and `access_checked` enforcement, gated activation records, and registry activation rollback records; company model profile approval pending |
 | Release blocker coverage | `ops/security/check_release_blockers.py`, `ops/security/rehearse_masking_policy.py`, `tests/contract/test_security_api.py`, `tests/contract/test_admin_registry_api.py`, `tests/contract/test_replay_feedback_api.py`, `tests/unit/storage/test_postgres_store.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `tests/unit/model_gateway/test_dummy_gateway.py` | Local release-blocker evidence manifest complete, including explicit migration rollback coverage validation and restricted model payload masking/access policy tests; company/staging evidence still required for real endpoints |
 | Structured request logging, trace context, and OpenTelemetry export foundation | `src/req_tracker/config/logging.py`, `src/req_tracker/api/app.py`, `src/req_tracker/observability/tracing.py`, `src/req_tracker/observability/otel.py`, `tests/contract/test_health_api.py`, `tests/unit/config/test_logging.py`, `tests/unit/observability/test_tracing.py`, `tests/unit/observability/test_otel.py` | Complete for JSON request logs with correlation id, W3C trace id, span id, user id, method, path, status, duration, `traceparent` response propagation, optional OTLP FastAPI span export, disabled/missing-endpoint safeguards, and enabled-path exporter/instrumentor wiring tests |
 | Runtime metrics and scrape surface | `src/req_tracker/observability/metrics.py`, `src/req_tracker/api/routes/health.py`, `/api/v1/metrics`, `/api/v1/metrics/summary`, `ops/observability/prometheus.yml`, `ops/observability/rune-agent-alerts.yml`, `ops/observability/grafana-dashboard.json`, `ops/observability/validate_observability_assets.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `tests/contract/test_health_api.py`, `tests/unit/observability/test_metrics.py`, `tests/unit/ops/test_full_stack_rehearsal.py`, `tests/unit/ops/test_observability_assets.py` | Complete for in-process HTTP/runtime/LLM/graph/approval/finding/feedback/audit/scheduler counters, LLM token/cost gauges, Prometheus text exposition, packaged Prometheus scrape/alert starter assets, Grafana dashboard JSON, asset validation gate, readiness manual evidence gate, and disposable full-stack metrics rehearsal; company collector and dashboard import remain target-environment tasks |
-| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, datasource factory, workflow source-adapter injection, `request_with_retry`, `ops/source/smoke_source_adapters.py`, `ops/source/validate_source_boundaries.py`, `ops/source/rehearse_company_sources.py`, `ops/source/rehearse_decision_email_export.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; DATASOURCE_MODE can select dummy, skill/export, JIRA REST, and Confluence REST adapters without MCP leakage into core code; JIRA/Confluence REST retry with `Retry-After` and bounded exponential backoff, network `OSError` retry, pagination, permission-warning, MCP/core boundary validation, local HTTP smoke validation, env-driven company sandbox rehearsal entrypoint, and restricted decision/email export rehearsal entrypoint complete; Email live access and real company sandbox validation pending |
+| Claude Code source-skill boundary for JIRA/Confluence/Email | `.claude/skills/rune-source-*`, `JiraRestSourceAdapter`, `ConfluenceRestSourceAdapter`, datasource factory, workflow source-adapter injection, `request_with_retry`, `ops/source/smoke_source_adapters.py`, `ops/source/rehearse_skill_export_sources.py`, `ops/source/validate_source_boundaries.py`, `ops/source/rehearse_company_sources.py`, `ops/source/rehearse_decision_email_export.py`, export adapters, restricted decision/email export policy, `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` | Design/export path complete; DATASOURCE_MODE can select dummy, skill/export, JIRA REST, and Confluence REST adapters without MCP leakage into core code; synthetic source-skill export dry-run validates JIRA/Confluence/decision-email export workflow injection and cursor debugging; JIRA/Confluence REST retry with `Retry-After` and bounded exponential backoff, network `OSError` retry, pagination, permission-warning, MCP/core boundary validation, local HTTP smoke validation, env-driven company sandbox rehearsal entrypoint, and restricted decision/email export rehearsal entrypoint complete; Email live access and real company sandbox validation pending |
 | Dummy/local validation path | `LocalAnalysisWorkflow`, dummy fixtures, API tests, integration test, readiness API, persisted runtime restore test, `ops/security/rehearse_masking_policy.py` | Complete |
 | Core contracts | `src/req_tracker/ontology`, `src/req_tracker/adapters/base.py`, `debug`, `approvals`, `feedback`, `audit` models | Complete |
 | Source snapshot lineage | `AgentRun.input_snapshot_ids`, normalized `SourceArtifact.artifact_id`, `SourceSyncCursorState`, `source_sync_cursors`, source-fetch step cursor metadata, datasource factory, skill/export ingestion contract test, `LocalAnalysisWorkflow` metadata update, run/debug API and integration tests | Complete for local/source-artifact snapshot lineage, configured source-adapter injection, and persisted source cursor snapshots |
@@ -234,6 +240,7 @@ Latest GitHub verification:
 | Migration and Helm operation tracks | packaged migrations under `src/req_tracker/storage/migrations/postgres`, `ops/migrations/README.md`, `ops/helm/rune-agent`, `ops/helm/validate_chart.py`, `tests/unit/ops/test_helm_chart.py` | Migration foundation and production-shaped Helm scaffold complete with local structural validation; target-cluster `helm lint/template` and platform-specific values remain pending until Kubernetes environment details are available |
 | Eval/security/replay test tracks | `tests/unit/evals`, `tests/contract/test_replay_feedback_api.py`, `tests/contract/test_security_api.py`, `tests/evals/README.md`, `tests/security/README.md`, `tests/replay/README.md` | Current coverage exists; dedicated folders anchored for larger end-to-end fixtures |
 | CI | `.github/workflows/ci.yml` runs ruff, mypy, pytest, masking rehearsal, release-blocker coverage, source boundary validation, source/model gateway smokes, Helm structural validation, observability asset validation, PostgreSQL migration rollback validation, PostgreSQL typed mirror validation, readiness evidence template smoke, readiness example safety validation, CI gate coverage validation, operator UI graph smoke, and feedback eval rehearsal | Complete for deterministic local gates in GitHub Actions with automated drift detection; disposable Docker/full-stack and company/staging gates remain runbook/readiness responsibilities |
+| Local handoff package | `MEMORY.md`, `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`, source-skill export dry-run, readiness evidence template | Complete for non-company local handoff scope |
 
 ## 3. Remaining Implementation Backlog
 
@@ -334,7 +341,9 @@ blocking:
   `44 passed`
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`:
   `33 passed`
-- `uv run pytest`: `208 passed, 3 skipped`
+- `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`:
+  `19 passed`
+- `uv run pytest`: `209 passed, 3 skipped`
 - `uv run pytest tests/unit/api/test_runtime_state.py tests/unit/debug/test_trace_recorder.py tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   `20 passed`
 - `uv run python ops/observability/validate_observability_assets.py`: passed
@@ -346,6 +355,9 @@ blocking:
 - `uv run python ops/security/check_release_blockers.py`: passed, including
   rollback evidence for prompt/model regression or ungated activation coverage
 - `uv run python ops/source/validate_source_boundaries.py`: passed
+- `uv run python ops/source/rehearse_skill_export_sources.py`: passed, including
+  JIRA, Confluence, and decision/email export-mode workflow injection and
+  source cursor debug state
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed, including
   review-ready, canary, active, rollback, and security-blocked eval paths
 - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed
