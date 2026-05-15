@@ -38,6 +38,17 @@ Do not use or recreate removed planning files:
 - Docker-backed backend integration runner and full-stack rehearsal.
 - Scheduler API/UI/runbook path plus PostgreSQL scheduler lease support for Ubuntu multi-worker deployments.
 - Graph view scalability plan and implementation: larger graph view, zoom/pan/reset, projection modes, 150-node dummy graph smoke validation.
+- Dashboard production uplift:
+  - `docs/implementation/10_DASHBOARD_PRODUCTION_PLAN.md`
+  - `/api/v1/dashboard/summary`
+  - `/api/v1/dashboard/work-queue`
+  - `/api/v1/dashboard/source-health`
+  - `/api/v1/dashboard/run-health`
+  - `/api/v1/dashboard/risk-summary`
+  - `/api/v1/dashboard/recent-activity`
+  - dashboard-first local operator UI command center
+  - work queue, source health, run health, risk snapshot, recent activity, and compact graph preview panels
+  - contract/unit/UI smoke coverage for empty state, `RUNE_CAM_ALPHA`, `RUNE_SCALE_150`, approval count update, source export health, RBAC, and dashboard UI hooks
 - Debug workbench: run summaries, artifact read, LLM payload diff panes, graph delta preview, approval lineage, replay diff, source cursor debug API.
 - Audit trail: run_started/run_completed boundaries for analysis/ingestion/replay, failed completion audit, blocked debug read audit, finding status audit, improvement/model/prompt activation and rollback audit, archive/prune idempotency.
 - Claude Code source skill boundary: source skills remain the company access layer; core app code uses stable adapters and does not leak MCP tool names.
@@ -65,7 +76,8 @@ Do not use or recreate removed planning files:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `209 passed, 3 skipped`
+- `uv run pytest`: `217 passed, 3 skipped`
+- `uv run pytest tests/contract/test_dashboard_api.py tests/unit/dashboard/test_summary_service.py tests/unit/ops/test_operator_ui_smoke.py tests/contract/test_openapi_surface.py`: `10 passed`
 - `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`: `19 passed`
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`: `33 passed`
 - `uv run pytest tests/contract/test_debug_api.py tests/contract/test_security_api.py tests/contract/test_openapi_surface.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py tests/unit/storage/test_postgres_store.py tests/contract/test_models.py`: `44 passed`
@@ -104,4 +116,116 @@ Do not mark the overall production goal complete until a completion audit verifi
 ```text
 E:\51_Codex_MBSE_Agent에서 PRODUCTION_EXECUTION_PLAN.md와 docs/implementation/08_CURRENT_STATE_AND_COMPLETION_AUDIT.md 기준으로 이어서 진행해줘.
 먼저 git status, 최신 CI, readiness gate를 확인하고 company/staging evidence가 필요한 항목과 로컬에서 더 보강 가능한 항목을 분리해줘.
+```
+
+## 2026-05-13 Dashboard UI Phase Handoff
+
+Current local focus:
+
+- The dashboard-first API and static operator UI foundation is implemented, but the UI is not yet complete at commercial/operator quality.
+- The next implementation step requested by the user is the second dashboard UI phase based on `docs/implementation/10_DASHBOARD_PRODUCTION_PLAN.md`.
+- The immediate target is to move from one long scrolling page to a production-shaped operator workspace with clear views:
+  - Dashboard
+  - Work Queue
+  - Traceability Workbench
+  - Run Debug
+  - Source Health
+  - Eval and Improvement
+  - Admin or Operations
+- Work Queue needs an actionable detail panel/drawer so an operator can click an item and see:
+  - item type, severity, status, and summary
+  - related node, run, approval, finding, or eval candidate identifiers
+  - evidence and trace references where available
+  - actions to open the graph context, open the debug context, or route to approval handling where applicable
+- Source Health and Run Health should have fuller operational views, not only dashboard summary cards.
+- Existing graph, approval, scheduler, findings, replay, debug, audit, improvement, and eval functionality must be preserved while reorganizing the UI.
+
+Implementation constraints for the next pass:
+
+- Keep the static FastAPI-served UI unless there is a concrete reason to introduce another frontend framework.
+- Do not add Streamlit; the project intentionally uses the production app surface rather than carrying forward POC Streamlit UI.
+- Keep dashboard data contracts under `/api/v1/dashboard/*`.
+- Update `ops/ui/smoke_operator_ui.py`, `tests/contract/test_ui_route.py`, and related unit/contract tests together with the UI changes.
+- After each meaningful step, run focused tests first, then full regression:
+  - `uv run pytest tests/contract/test_ui_route.py tests/unit/ops/test_operator_ui_smoke.py tests/contract/test_dashboard_api.py tests/unit/dashboard/test_summary_service.py`
+  - `uv run python ops/ui/smoke_operator_ui.py`
+  - `uv run ruff check .`
+  - `uv run mypy src`
+  - `uv run pytest`
+
+Latest verified baseline before this handoff:
+
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `217 passed, 3 skipped`
+- `uv run python ops/ui/smoke_operator_ui.py`: passed
+- Dashboard smoke data included `RUNE_SCALE_150` with 150 graph nodes, 103 pending approvals, 47 open findings, 40 high findings, and 9 orphan nodes.
+
+Continuation prompt:
+
+```text
+E:\51_Codex_MBSE_Agent에서 docs/implementation/10_DASHBOARD_PRODUCTION_PLAN.md를 기준으로 dashboard UI 2단계를 구현해줘.
+먼저 현재 uncommitted 변경을 보존하면서 git status와 src/req_tracker/ui/index.html, app.js, styles.css, ops/ui/smoke_operator_ui.py, tests/contract/test_ui_route.py를 확인해.
+그 다음 view split, work queue detail panel, source/run health detail view를 구현하고 focused test -> UI smoke -> ruff -> mypy -> full pytest 순서로 검증해.
+```
+
+## 2026-05-15 Dashboard Production Uplift Completion Snapshot
+
+Current dashboard status:
+
+- Dashboard read-model APIs and local operator UI production uplift are implemented and locally validated.
+- The static UI now has separate workspace views:
+  - Dashboard
+  - Work Queue
+  - Traceability
+  - Run Debug
+  - Source Health
+  - Eval
+  - Admin
+- Work Queue now has:
+  - item detail panel
+  - graph/debug/source/eval deep-link actions
+  - approval approve/reject routing where applicable
+  - type, priority, owner, and search filters
+  - saved filter presets in browser `localStorage`
+  - local assignment state in browser `localStorage`
+  - `Assign to me` and `Clear assignment`
+- Static JS has been split into focused browser modules:
+  - `core.js`
+  - `dashboard.js`
+  - `work_queue.js`
+  - `graph_workbench.js`
+  - `debug_workbench.js`
+  - `source_health.js`
+- Hash routes/deep links are supported:
+  - `#dashboard`
+  - `#work-queue?item=...`
+  - `#traceability?node=...&mode=neighborhood`
+  - `#debug?run=...`
+  - `#source-health?source=...`
+
+Latest validation evidence:
+
+- `node --check` for all UI JS modules: passed
+- `uv run pytest tests/contract/test_ui_route.py tests/unit/ops/test_operator_ui_smoke.py tests/contract/test_dashboard_api.py tests/unit/dashboard/test_summary_service.py`: `13 passed`
+- `uv run python ops/ui/smoke_operator_ui.py`: passed
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `219 passed, 3 skipped`
+- Playwright CLI screenshot smoke was run manually for dashboard/work-queue rendering and deep-link behavior, but it is intentionally not added to CI per user direction.
+
+Remaining dashboard-specific items:
+
+- CI browser screenshot smoke: intentionally skipped for now.
+- Replace localStorage saved filters and local assignments with backend user preference/assignment APIs after auth/user contracts are stable.
+- Reassess React + React Flow only after real graph shape and reviewer workflow complexity justify it.
+- Optional future UX backlog: SLA/age thresholds, dashboard trend history, source drill-down pages, graph clustering/grouping API, accessibility pass, keyboard navigation, and bulk review.
+
+Recommended continuation prompt:
+
+```text
+E:\51_Codex_MBSE_Agent에서 dashboard local implementation은 완료된 기준으로 보고,
+먼저 git status와 최신 CI를 확인한 뒤 전체 production readiness 기준으로
+company/staging evidence가 필요한 항목과 로컬에서 추가 보강 가능한 항목을 분리해줘.
+CI browser screenshot smoke는 계속 skip하고, React/React Flow는 아직 결정하지 마.
 ```

@@ -114,6 +114,12 @@ Open the local operator UI:
 http://127.0.0.1:8000/
 ```
 
+The first screen is a dashboard-first command center backed by
+`/api/v1/dashboard/*` read models. It summarizes traceability health, pending
+approvals, high findings, source health, run health, eval gate state, a compact
+graph preview, and a prioritized work queue before the full traceability
+workbench.
+
 Health check:
 
 ```powershell
@@ -264,7 +270,8 @@ Current local implementation:
 - audit event capture for approval, feedback, debug artifact, scheduler, and run completion
 - replay diff and eval candidate grouping
 - controlled feedback improvement promotion through eval, review, canary, and active states
-- static local operator UI
+- static local operator UI with dashboard-first command center
+- dashboard read APIs for summary, work queue, source health, run health, risk summary, and recent activity
 - ontology graph view with pending/approved edge projection
 - traceability chain, run debug workbench, and audit events panel
 - debug side-by-side panes for LLM payloads and graph delta previews

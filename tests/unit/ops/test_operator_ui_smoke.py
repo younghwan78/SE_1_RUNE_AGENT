@@ -9,6 +9,8 @@ def test_operator_ui_smoke_exercises_scaled_graph_projection() -> None:
     result = namespace["run_operator_ui_smoke"]()
 
     assert result["passed"] is True
+    assert result["dashboard_counts"]["total_nodes"] >= 150
+    assert result["work_queue_counts"]["approval"] >= 100
     assert result["graph_counts"]["total_nodes"] >= 150
     assert result["graph_counts"]["visible_nodes"] <= 120
     assert all(result["checks"].values())

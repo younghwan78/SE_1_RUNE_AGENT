@@ -133,7 +133,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 209 passed, 3 skipped
+- `uv run pytest`: 217 passed, 3 skipped
 - `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`:
   19 passed, validating source-skill export dry-run and readiness gate coverage
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`:
@@ -173,7 +173,7 @@ Latest local verification:
 - `uv run python ops/source/rehearse_company_sources.py`: failed as expected on this local shell because JIRA/Confluence sandbox env vars are unset; output masks tokens and lists missing config
 - `uv run python ops/source/rehearse_decision_email_export.py`: failed as expected on this local shell because `RUNE_EMAIL_EXPORT_PATH` is unset; output masks path state and lists missing config
 - `uv run python ops/model_gateway/smoke_model_gateway.py`: passed
-- `uv run python ops/ui/smoke_operator_ui.py`: passed, validating static operator UI assets, graph controls, SVG renderer hooks, and `RUNE_SCALE_150` projection modes with 150 total nodes, 120 visible overview nodes, 103 pending edges, and 9 orphan nodes
+- `uv run python ops/ui/smoke_operator_ui.py`: passed, validating dashboard-first static UI assets, dashboard summary/work-queue/source-health read models, graph controls, SVG renderer hooks, and `RUNE_SCALE_150` projection modes with 150 total nodes, 120 visible overview nodes, 103 pending edges, 103 approval work items, 47 finding work items, and 9 orphan nodes
 - `uv run python ops/observability/validate_observability_assets.py`: passed, validating Prometheus scrape config, alert rules, Grafana dashboard JSON, required runtime metric references, and absence of hardcoded observability credentials
 - `uv run python ops/model_gateway/rehearse_model_gateway.py`: failed as expected on this local shell because `MODEL_GATEWAY_ENDPOINT_URL` is unset; output masks API key state and lists missing config
 - `uv run python ops/security/rehearse_trusted_proxy_auth.py`: failed as expected on this local shell because `RUNE_API_BASE_URL` and `TRUSTED_PROXY_SECRET` are unset; output masks secret state and lists missing config
@@ -235,6 +235,7 @@ Latest GitHub verification:
 | Feedback loop | feedback events, command-style feedback action/reason aliases normalized to canonical taxonomy, eval candidates, improvement candidates including few-shot-example and ontology-normalization candidate contracts, ontology-normalization candidates for wrong-node-type feedback, eval gate, controlled review/canary promotion, canary/active rollback, persisted improvement decisions, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary/rollback rehearsal complete; real production feedback calibration pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, analysis/ingestion/replay run start/completion audit boundary events with trigger metadata, failed run status and failed completion audit events, blocked debug artifact read audit events, finding status change audit events, improvement activation/rollback audit events, model/prompt activation/rollback audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, and truncation metadata are locally validated; React Flow decision pending after real graph shape validation |
+| Dashboard production uplift | `10_DASHBOARD_PRODUCTION_PLAN.md`, `src/req_tracker/dashboard/*`, `/api/v1/dashboard/summary`, `/api/v1/dashboard/work-queue`, `/api/v1/dashboard/source-health`, `/api/v1/dashboard/run-health`, `/api/v1/dashboard/risk-summary`, `/api/v1/dashboard/recent-activity`, dashboard-first static UI, split UI modules under `src/req_tracker/ui`, `tests/contract/test_dashboard_api.py`, `tests/unit/dashboard/test_summary_service.py`, `ops/ui/smoke_operator_ui.py` | Local dashboard read model and production-shaped UI complete for empty state, compact 10-node fixture, 150-node fixture, approval count update, source export health, RBAC, view split, work queue detail, source/run health detail, hash deep links, local saved filters, local assignment, UI module split, and operator smoke; CI browser screenshot smoke is intentionally skipped, backend user preference/assignment APIs remain pending until auth/user contracts are stable, and React/React Flow remains a future decision after real graph shape validation |
 | Scheduler | `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture, PostgreSQL `scheduler_leases` table, lease acquire/release tests, Ubuntu multi-replica note | Periodic run path complete for single-process and PostgreSQL lease-backed multi-worker deployments; external orchestration/Kubernetes CronJob remains an optional platform decision |
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `ops/rehearsal/validate_postgres_typed_mirrors.py`, `ops/rehearsal/validate_evidence_example.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, PostgreSQL migration rollback validation, PostgreSQL typed mirror drift validation, observability dashboard manual evidence gate, review-safe manual-evidence template generation, non-passable committed evidence example validation, reviewer metadata, schema-version, non-empty evidence, unique check-id, and UTC review timestamp enforcement for passed manual evidence, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
 | Migration and Helm operation tracks | packaged migrations under `src/req_tracker/storage/migrations/postgres`, `ops/migrations/README.md`, `ops/helm/rune-agent`, `ops/helm/validate_chart.py`, `tests/unit/ops/test_helm_chart.py` | Migration foundation and production-shaped Helm scaffold complete with local structural validation; target-cluster `helm lint/template` and platform-specific values remain pending until Kubernetes environment details are available |
@@ -344,6 +345,21 @@ blocking:
 - `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`:
   `19 passed`
 - `uv run pytest`: `209 passed, 3 skipped`
+- 2026-05-15 dashboard production uplift verification:
+  - `node --check` for `src/req_tracker/ui/app.js`, `core.js`,
+    `dashboard.js`, `work_queue.js`, `graph_workbench.js`,
+    `debug_workbench.js`, and `source_health.js`: passed
+  - `uv run pytest tests/contract/test_ui_route.py tests/unit/ops/test_operator_ui_smoke.py tests/contract/test_dashboard_api.py tests/unit/dashboard/test_summary_service.py`:
+    `13 passed`
+  - `uv run python ops/ui/smoke_operator_ui.py`: passed, including
+    dashboard read models, UI module asset serving, hash routing hooks, saved
+    filter/assignment hooks, and `RUNE_SCALE_150` work queue/graph contracts
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `219 passed, 3 skipped`
+  - Playwright CLI screenshots were used manually for dashboard/work-queue
+    rendering and deep-link behavior; CI browser screenshot smoke is
+    intentionally skipped per product decision.
 - `uv run pytest tests/unit/api/test_runtime_state.py tests/unit/debug/test_trace_recorder.py tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   `20 passed`
 - `uv run python ops/observability/validate_observability_assets.py`: passed

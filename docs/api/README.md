@@ -31,6 +31,7 @@ Implemented route groups:
 - run ingestion, analysis execution, and replay
 - finding list, detail, and status triage
 - project list, graph node/edge lists, graph projection, and traceability chain
+- dashboard summary, work queue, source health, run health, risk summary, and recent activity read models
 - approvals and graph commit
 - feedback, eval candidates, improvement candidates, and improvement rollback
 - admin model profile and prompt version activation/rollback records

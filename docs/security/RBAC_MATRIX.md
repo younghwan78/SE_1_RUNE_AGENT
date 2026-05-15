@@ -23,6 +23,12 @@ Current protected routes:
 | `POST /api/v1/schedule/run-now` | `operator` | starts an operator-triggered analysis run |
 | `GET /api/v1/approvals` | `developer` | exposes pending graph proposals and evidence references |
 | `POST /api/v1/approvals/{approval_id}/decision` | `operator` | commits/rejects/holds approved graph proposals |
+| `GET /api/v1/dashboard/summary` | `viewer` | exposes project-scoped first-viewport dashboard counts |
+| `GET /api/v1/dashboard/run-health` | `viewer` | exposes project-scoped run status summary |
+| `GET /api/v1/dashboard/risk-summary` | `viewer` | exposes aggregated finding severity and top risk items |
+| `GET /api/v1/dashboard/work-queue` | `developer` | exposes actionable findings, approvals, source warnings, failed runs, and eval gate items |
+| `GET /api/v1/dashboard/source-health` | `developer` | exposes source sync cursor health without secrets or transport names |
+| `GET /api/v1/dashboard/recent-activity` | `operator` | exposes sanitized operational audit activity |
 | `GET /api/v1/debug/runs` | `developer` | exposes run inventory for debug navigation |
 | `GET /api/v1/debug/source-cursors` | `developer` | exposes source sync cursor state for ingestion debugging |
 | `GET /api/v1/debug/runs/{run_id}/summary` | `developer` | may expose model trace and artifact refs |

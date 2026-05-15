@@ -21,45 +21,217 @@
     </header>
 
     <main class="workspace">
-      <section class="metrics" aria-label="run metrics">
-        <article>
-          <span>Runs</span>
-          <strong id="metric-runs">0</strong>
-        </article>
-        <article>
-          <span>Nodes</span>
-          <strong id="metric-nodes">0</strong>
-        </article>
-        <article>
-          <span>Edges A/P</span>
-          <strong id="metric-edges">0</strong>
-        </article>
-        <article>
-          <span>Approvals</span>
-          <strong id="metric-approvals">0</strong>
-        </article>
-        <article>
-          <span>Findings</span>
-          <strong id="metric-findings">0</strong>
-        </article>
-        <article>
-          <span>Feedback</span>
-          <strong id="metric-feedback">0</strong>
-        </article>
-        <article>
-          <span>Gate</span>
-          <strong id="metric-gate">blocked</strong>
-        </article>
-        <article>
-          <span>Schedule</span>
-          <strong id="metric-schedule">off</strong>
-        </article>
+      <nav class="view-tabs" aria-label="Workspace Views">
+        <button class="view-tab active" data-view-target="dashboard" type="button">Dashboard</button>
+        <button class="view-tab" data-view-target="work-queue" type="button">Work Queue</button>
+        <button class="view-tab" data-view-target="traceability" type="button">Traceability</button>
+        <button class="view-tab" data-view-target="debug" type="button">Run Debug</button>
+        <button class="view-tab" data-view-target="source-health" type="button">Source Health</button>
+        <button class="view-tab" data-view-target="eval" type="button">Eval</button>
+        <button class="view-tab" data-view-target="admin" type="button">Admin</button>
+      </nav>
+
+      <section class="app-view active" id="view-dashboard" data-app-view="dashboard">
+        <section class="dashboard-hero" data-dashboard-view="summary">
+          <div>
+            <p class="eyebrow">Project Command Center</p>
+            <h2 id="dashboard-title">RUNE_CAM_ALPHA Dashboard</h2>
+            <p id="dashboard-subtitle">No run evidence loaded</p>
+          </div>
+          <div class="dashboard-actions">
+            <button id="dashboard-open-workbench" type="button">Traceability Workbench</button>
+            <button id="dashboard-open-debug" type="button">Run Debug</button>
+          </div>
+        </section>
+
+        <section class="metrics dashboard-health-row" aria-label="dashboard health summary">
+          <article class="health-card">
+            <span>Health</span>
+            <strong id="metric-health">unknown</strong>
+          </article>
+          <article class="health-card">
+            <span>Pending Approvals</span>
+            <strong id="metric-approvals">0</strong>
+          </article>
+          <article class="health-card">
+            <span>High Findings</span>
+            <strong id="metric-high-findings">0</strong>
+          </article>
+          <article class="health-card">
+            <span>Last Run</span>
+            <strong id="metric-runs">0</strong>
+          </article>
+          <article class="health-card">
+            <span>Nodes</span>
+            <strong id="metric-nodes">0</strong>
+          </article>
+          <article class="health-card">
+            <span>Edges A/P</span>
+            <strong id="metric-edges">0</strong>
+          </article>
+          <article class="health-card">
+            <span>Findings</span>
+            <strong id="metric-findings">0</strong>
+          </article>
+          <article class="health-card">
+            <span>Eval Gate</span>
+            <strong id="metric-gate">blocked</strong>
+          </article>
+          <article class="health-card">
+            <span>Schedule</span>
+            <strong id="metric-schedule">off</strong>
+          </article>
+        </section>
+
+        <section class="grid dashboard-grid">
+          <article class="panel work-queue-panel" data-dashboard-view="work-queue">
+            <div class="panel-head">
+              <h2>Work Queue</h2>
+              <span id="work-queue-count">0 open</span>
+            </div>
+            <ul id="work-queue" class="review-list dashboard-work-queue"></ul>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Risk Snapshot</h2>
+              <span id="risk-label">0 critical/high</span>
+            </div>
+            <div class="dashboard-snapshot">
+              <div id="risk-bars" class="risk-bars"></div>
+              <ul id="dashboard-risk-findings" class="compact-list"></ul>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Source Health</h2>
+              <span id="source-health-label">unknown</span>
+            </div>
+            <ul id="source-health" class="compact-list dashboard-list"></ul>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Run Health</h2>
+              <span id="run-health-label">0 runs</span>
+            </div>
+            <ul id="run-health" class="compact-list dashboard-list"></ul>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Recent Activity</h2>
+              <span id="activity-label">0 events</span>
+            </div>
+            <ul id="dashboard-activity" class="compact-list dashboard-list"></ul>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Compact Graph Preview</h2>
+              <span id="graph-preview-label">no graph</span>
+            </div>
+            <div id="graph-preview" class="graph-preview"></div>
+          </article>
+        </section>
       </section>
 
-      <section class="grid ontology-section">
-        <article class="panel ontology-panel">
+      <section class="app-view" id="view-work-queue" data-app-view="work-queue">
+        <section class="grid queue-workbench">
+          <article class="panel work-queue-panel">
+            <div class="panel-head">
+              <h2>Work Queue</h2>
+              <span id="work-queue-full-count">0 open</span>
+            </div>
+            <div class="queue-filter-bar" aria-label="work queue filters">
+              <label>
+                <span>Type</span>
+                <select id="queue-filter-type">
+                  <option value="all">All</option>
+                  <option value="finding">Finding</option>
+                  <option value="approval">Approval</option>
+                  <option value="source_warning">Source</option>
+                  <option value="failed_run">Failed Run</option>
+                  <option value="eval_gate">Eval Gate</option>
+                </select>
+              </label>
+              <label>
+                <span>Priority</span>
+                <select id="queue-filter-priority">
+                  <option value="all">All</option>
+                  <option value="critical">Critical</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                  <option value="info">Info</option>
+                </select>
+              </label>
+              <label>
+                <span>Owner</span>
+                <select id="queue-filter-owner">
+                  <option value="all">All</option>
+                  <option value="assigned_to_me">Assigned to me</option>
+                  <option value="unassigned">Unassigned</option>
+                  <option value="System Architect">System Architect</option>
+                  <option value="Reviewer">Reviewer</option>
+                </select>
+              </label>
+              <label>
+                <span>Search</span>
+                <input id="queue-filter-search" type="search" placeholder="Title, id, summary" />
+              </label>
+              <label>
+                <span>Saved</span>
+                <select id="queue-filter-saved">
+                  <option value="">No saved filter</option>
+                </select>
+              </label>
+              <label>
+                <span>Name</span>
+                <input id="queue-filter-save-name" type="text" placeholder="Save filter as" />
+              </label>
+              <div class="queue-filter-actions">
+                <button id="queue-filter-save" type="button">Save Filter</button>
+                <button id="queue-filter-clear" type="button">Clear</button>
+              </div>
+            </div>
+            <ul id="work-queue-full" class="review-list full-work-queue"></ul>
+          </article>
+
+          <article class="panel queue-detail-panel">
+            <div class="panel-head">
+              <h2>Queue Detail</h2>
+              <span id="work-queue-detail-label">not selected</span>
+            </div>
+            <div id="work-queue-detail" class="queue-detail">Select a work item</div>
+          </article>
+        </section>
+
+        <section class="grid two">
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Approvals</h2>
+              <span id="approval-count">0 pending</span>
+            </div>
+            <ul id="approvals" class="review-list"></ul>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <h2>Findings</h2>
+              <span id="finding-count">0 open</span>
+            </div>
+            <ul id="findings" class="compact-list panel-list"></ul>
+          </article>
+        </section>
+      </section>
+
+      <section class="app-view" id="view-traceability" data-app-view="traceability">
+      <section class="grid ontology-section" id="traceability-workbench">
+        <article class="panel ontology-panel" data-dashboard-view="traceability-workbench">
           <div class="panel-head">
-            <h2>Ontology View</h2>
+            <h2>Traceability Workbench</h2>
             <span id="graph-run-label">no run</span>
           </div>
           <div class="ontology-toolbar">
@@ -125,17 +297,113 @@
           </div>
         </article>
       </section>
+      </section>
+
+      <section class="app-view" id="view-debug" data-app-view="debug">
+      <section class="grid two" id="debug-workbench">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Run Debug</h2>
+            <span id="debug-label">no run</span>
+          </div>
+          <ul id="debug-steps" class="compact-list panel-list"></ul>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Debug Detail</h2>
+            <span id="debug-counts">0 artifacts</span>
+          </div>
+          <pre id="debug-detail">[]</pre>
+        </article>
+      </section>
 
       <section class="grid two">
         <article class="panel">
           <div class="panel-head">
-            <h2>Approvals</h2>
-            <span id="approval-count">0 pending</span>
+            <h2>Replay Diff</h2>
+            <span id="replay-label">not run</span>
           </div>
-          <ul id="approvals" class="review-list"></ul>
+          <pre id="replay-diff">[]</pre>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Graph Delta Preview</h2>
+            <span id="graph-delta-count">0 deltas</span>
+          </div>
+          <div class="diff-grid">
+            <pre id="graph-delta-left">[]</pre>
+            <pre id="graph-delta-right">[]</pre>
+          </div>
         </article>
       </section>
 
+      <section class="grid one">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>LLM Payload Diff</h2>
+            <span id="llm-diff-count">0 calls</span>
+          </div>
+          <div class="diff-grid">
+            <pre id="llm-diff-left">[]</pre>
+            <pre id="llm-diff-right">[]</pre>
+          </div>
+        </article>
+      </section>
+      </section>
+
+      <section class="app-view" id="view-source-health" data-app-view="source-health">
+      <section class="grid two">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Source Health Detail</h2>
+            <span id="source-health-full-label">unknown</span>
+          </div>
+          <ul id="source-health-full" class="compact-list panel-list"></ul>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Run Health Detail</h2>
+            <span id="run-health-full-label">0 runs</span>
+          </div>
+          <ul id="run-health-full" class="compact-list panel-list"></ul>
+        </article>
+      </section>
+      </section>
+
+      <section class="app-view" id="view-eval" data-app-view="eval">
+      <section class="grid two">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Eval Candidates</h2>
+            <span id="eval-count">0 groups</span>
+          </div>
+          <ul id="eval-candidates" class="compact-list panel-list"></ul>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Improvement Candidates</h2>
+            <span id="improvement-count">0 draft</span>
+          </div>
+          <ul id="improvements" class="compact-list panel-list"></ul>
+        </article>
+      </section>
+
+      <section class="grid one">
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Eval Gate</h2>
+            <span id="gate-label">not run</span>
+          </div>
+          <pre id="eval-gate">[]</pre>
+        </article>
+      </section>
+      </section>
+
+      <section class="app-view" id="view-admin" data-app-view="admin">
       <section class="grid two">
         <article class="panel">
           <div class="panel-head">
@@ -180,103 +448,18 @@
         </article>
       </section>
 
-      <section class="grid three">
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Findings</h2>
-            <span id="finding-count">0 open</span>
-          </div>
-          <ul id="findings" class="compact-list"></ul>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Replay Diff</h2>
-            <span id="replay-label">not run</span>
-          </div>
-          <pre id="replay-diff">[]</pre>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Eval Candidates</h2>
-            <span id="eval-count">0 groups</span>
-          </div>
-          <ul id="eval-candidates" class="compact-list"></ul>
-        </article>
-      </section>
-
-      <section class="grid two">
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Run Debug</h2>
-            <span id="debug-label">no run</span>
-          </div>
-          <ul id="debug-steps" class="compact-list"></ul>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Debug Detail</h2>
-            <span id="debug-counts">0 artifacts</span>
-          </div>
-          <pre id="debug-detail">[]</pre>
-        </article>
-      </section>
-
-      <section class="grid two">
-        <article class="panel">
-          <div class="panel-head">
-            <h2>LLM Payload Diff</h2>
-            <span id="llm-diff-count">0 calls</span>
-          </div>
-          <div class="diff-grid">
-            <pre id="llm-diff-left">[]</pre>
-            <pre id="llm-diff-right">[]</pre>
-          </div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Graph Delta Preview</h2>
-            <span id="graph-delta-count">0 deltas</span>
-          </div>
-          <div class="diff-grid">
-            <pre id="graph-delta-left">[]</pre>
-            <pre id="graph-delta-right">[]</pre>
-          </div>
-        </article>
-      </section>
-
-      <section class="grid two">
+      <section class="grid one">
         <article class="panel">
           <div class="panel-head">
             <h2>Audit Events</h2>
             <span id="audit-count">0 events</span>
           </div>
-          <ul id="audit-events" class="compact-list"></ul>
+          <ul id="audit-events" class="compact-list panel-list"></ul>
         </article>
       </section>
-
-      <section class="grid two">
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Improvement Candidates</h2>
-            <span id="improvement-count">0 draft</span>
-          </div>
-          <ul id="improvements" class="compact-list"></ul>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Eval Gate</h2>
-            <span id="gate-label">not run</span>
-          </div>
-          <pre id="eval-gate">[]</pre>
-        </article>
       </section>
     </main>
 
-    <script src="/ui/app.js" defer></script>
+    <script type="module" src="/ui/app.js"></script>
   </body>
 </html>

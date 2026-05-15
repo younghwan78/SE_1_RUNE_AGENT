@@ -12,6 +12,7 @@ from req_tracker.adapters.factory import create_source_adapter
 from req_tracker.api.routes.admin import router as admin_router
 from req_tracker.api.routes.approvals import router as approvals_router
 from req_tracker.api.routes.audit import router as audit_router
+from req_tracker.api.routes.dashboard import router as dashboard_router
 from req_tracker.api.routes.debug import router as debug_router
 from req_tracker.api.routes.feedback import router as feedback_router
 from req_tracker.api.routes.graph import router as graph_router
@@ -162,6 +163,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(runs_router, prefix="/api/v1")
     app.include_router(graph_router, prefix="/api/v1")
     app.include_router(approvals_router, prefix="/api/v1")
+    app.include_router(dashboard_router, prefix="/api/v1")
     app.include_router(feedback_router, prefix="/api/v1")
     app.include_router(debug_router, prefix="/api/v1")
     app.include_router(audit_router, prefix="/api/v1")
