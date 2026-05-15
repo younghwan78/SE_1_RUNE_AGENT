@@ -335,6 +335,14 @@ button:disabled {
   cursor: pointer;
 }
 
+.ontology-node.relationship-node {
+  cursor: grab;
+}
+
+.ontology-node.relationship-node:active {
+  cursor: grabbing;
+}
+
 .ontology-node circle {
   stroke: #ffffff;
   stroke-width: 2;
@@ -354,11 +362,33 @@ button:disabled {
   filter: drop-shadow(0 0 5px rgba(162, 59, 59, 0.35));
 }
 
+.ontology-node.relationship-center circle {
+  stroke: #111827;
+  stroke-width: 5;
+  filter: drop-shadow(0 0 8px rgba(47, 111, 187, 0.35));
+}
+
+.ontology-node.relationship-orphan circle {
+  stroke-dasharray: 4 3;
+}
+
+.ontology-node.relationship-node text {
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 3px;
+}
+
+.ontology-node.relationship-node text.relationship-caption {
+  font-size: 10px;
+  text-anchor: middle;
+}
+
 .ontology-node text {
   fill: var(--text);
   font-size: 11px;
   font-weight: 650;
   paint-order: stroke;
+  pointer-events: none;
   stroke: #ffffff;
   stroke-width: 3px;
 }

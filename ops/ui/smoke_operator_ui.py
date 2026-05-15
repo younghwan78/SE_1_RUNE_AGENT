@@ -111,12 +111,28 @@ def run_operator_ui_smoke() -> dict[str, Any]:
         ),
         "graph_controls_present": all(
             snippet in index_text
-            for snippet in ["Overview", "Orphans", "Pending", "Zoom In", "Reset View"]
+            for snippet in [
+                "Overview",
+                "Orphans",
+                "Pending",
+                "Relationship Graph",
+                "Zoom In",
+                "Reset View",
+            ]
         ),
         "svg_renderer_present": all(
             module_responses["/ui/graph_workbench.js"].status_code == 200
             and snippet in graph_module_text
-            for snippet in ["renderOntologyGraph", "zoomOntology", "pointermove"]
+            for snippet in [
+                "renderOntologyGraph",
+                "renderRelationshipGraph",
+                "relationshipLayoutPositions",
+                "relationshipPinnedPositions",
+                "startRelationshipNodeDrag",
+                "updateRelationshipNodeDrag",
+                "zoomOntology",
+                "pointermove",
+            ]
         ),
         "dashboard_renderer_present": all(
             snippet in script_text

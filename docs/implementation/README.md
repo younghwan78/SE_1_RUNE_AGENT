@@ -38,6 +38,7 @@ POC에서 그대로 가져오지 않을 것:
 | `08_CURRENT_STATE_AND_COMPLETION_AUDIT.md` | 구현 증거, 남은 backlog, completion gate 점검 |
 | `09_LOCAL_HANDOFF_COMPLETION.md` | 사내 환경 전 로컬 최종 handoff 기준과 gate 명령 |
 | `10_DASHBOARD_PRODUCTION_PLAN.md` | 상용 dashboard/workbench 정보 구조, read model, 단계별 구현 계획 |
+| `11_GRAPH_RELATIONSHIP_VIEW_PLAN.md` | 관계 중심 graph view, Requirement Neighborhood, 100+ node 확장 계획 |
 
 ## 운영 문서 기준점
 

@@ -284,7 +284,7 @@ const initWorkspace = () => {
   });
   window.addEventListener("hashchange", () => {
     const route = applyHashRoute();
-    if (route.params.run || route.params.node || route.params.mode || route.params.item) {
+    if (route.params.run || route.params.node || route.params.mode || route.params.layout || route.params.item) {
       refresh().catch(console.error);
     }
   });

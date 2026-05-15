@@ -1,5 +1,7 @@
 """UI route contract tests."""
 
+from pathlib import Path
+
 from fastapi.testclient import TestClient
 
 
@@ -36,6 +38,7 @@ def test_index_serves_operator_ui(client: TestClient) -> None:
     assert "Reset View" in response.text
     assert "Orphans" in response.text
     assert "Neighborhood" in response.text
+    assert "Relationship Graph" in response.text
     assert "Scheduler" in response.text
     assert "LLM Payload Diff" in response.text
     assert "Graph Delta Preview" in response.text
@@ -62,7 +65,16 @@ def test_static_ui_modules_served(client: TestClient) -> None:
         "/ui/core.js": ["state", "navigateTo", "applyHashRoute", "showView"],
         "/ui/dashboard.js": ["renderDashboard", "renderRiskSnapshot", "renderGraphPreview"],
         "/ui/work_queue.js": ["renderWorkQueue", "renderWorkQueueDetail", "selectWorkItem"],
-        "/ui/graph_workbench.js": ["renderOntologyGraph", "zoomOntology", "renderOntologyDetail"],
+        "/ui/graph_workbench.js": [
+            "renderOntologyGraph",
+            "renderRelationshipGraph",
+            "relationshipLayoutPositions",
+            "relationshipPinnedPositions",
+            "startRelationshipNodeDrag",
+            "updateRelationshipNodeDrag",
+            "zoomOntology",
+            "renderOntologyDetail",
+        ],
         "/ui/debug_workbench.js": ["renderDebugSummary", "renderDebugDiffView", "/diff-view"],
         "/ui/source_health.js": ["renderSourceHealthFull", "renderRunHealthFull"],
     }
@@ -87,3 +99,14 @@ def test_work_queue_module_supports_saved_filters_and_local_assignment(
     assert "assignSelectedWorkItem" in response.text
     assert "rune.workQueue.filters.v1" in response.text
     assert "rune.workQueue.assignments.v1" in response.text
+
+
+def test_relationship_graph_plan_is_documented() -> None:
+    plan = Path("docs/implementation/11_GRAPH_RELATIONSHIP_VIEW_PLAN.md")
+
+    assert plan.exists()
+    text = plan.read_text(encoding="utf-8")
+    assert "Relationship Graph" in text
+    assert "Requirement Neighborhood" in text
+    assert "Ontology Lane" in text
+    assert "RUNE_SCALE_150" in text

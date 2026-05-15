@@ -5,6 +5,7 @@ export const state = {
   routeParams: {},
   nodeFilter: "all",
   graphMode: "overview",
+  graphLayout: "ontology",
   searchQuery: "",
   edgeFilter: "all",
   hops: 1,
@@ -153,6 +154,13 @@ export const setActiveGraphMode = (mode) => {
   });
 };
 
+export const setActiveGraphLayout = (layout) => {
+  state.graphLayout = layout;
+  document.querySelectorAll("[data-graph-layout]").forEach((item) => {
+    item.classList.toggle("active", item.dataset.graphLayout === layout);
+  });
+};
+
 export const applyHashRoute = () => {
   const route = parseHash();
   state.routeParams = route.params;
@@ -164,6 +172,9 @@ export const applyHashRoute = () => {
   }
   if (route.params.mode) {
     setActiveGraphMode(route.params.mode);
+  }
+  if (route.params.layout) {
+    setActiveGraphLayout(route.params.layout);
   }
   showView(route.view, { updateHash: false, params: route.params, scroll: false });
   return route;
