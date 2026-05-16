@@ -108,6 +108,10 @@ Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
   `schedule_configs`; GitHub Actions `CI` run `25967994338` passed.
 - Commit `ba9a973 Refresh audit after scheduler persistence` refreshed the
   audit/handoff evidence; GitHub Actions `CI` run `25968026265` passed.
+- Commit `ee3dea2 Document schedule configuration persistence` updated the API
+  documentation for `PUT /api/v1/schedule` restart-safe persistence and the
+  `schedule_configs` typed mirror; GitHub Actions `CI` run `25968150339`
+  passed.
 - Latest full local regression after scheduler persistence: `uv run pytest`
   reported `242 passed, 3 skipped`; readiness local regression gates passed,
   while the overall readiness summary remains

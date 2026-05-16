@@ -107,7 +107,7 @@ Do not use or recreate removed planning files:
 - `uv run python ops/source/validate_source_boundaries.py`: passed
 - `uv run python ops/security/check_release_blockers.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed
-- Latest GitHub Actions CI for `4934186`: success (`25968077139`)
+- Latest GitHub Actions CI for `ee3dea2`: success (`25968150339`)
 
 ## Current Status
 
@@ -473,6 +473,8 @@ Validation evidence:
 - Commit/CI:
   - `c52572d Persist scheduler configuration state`
   - GitHub Actions `CI` run `25967994338`: success
+  - `ee3dea2 Document schedule configuration persistence`
+  - GitHub Actions `CI` run `25968150339`: success
 
 ## 2026-05-16 Dashboard PostgreSQL State and RBAC Snapshot
 
