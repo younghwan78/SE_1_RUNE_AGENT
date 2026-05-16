@@ -808,6 +808,18 @@ Validation evidence:
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
 - `uv run pytest`: `256 passed, 3 skipped`
+- Expanded `.env.example` with company/staging rehearsal variables for
+  PostgreSQL, Neo4j, Qdrant, model gateway, trusted proxy, observability, JIRA,
+  Confluence, and restricted decision/email export handoff.
+- Added `tests/unit/config/test_env_example.py` to keep `.env.example` aligned
+  with production-readiness inputs.
+- `uv run pytest tests/unit/config/test_env_example.py -q`: `1 passed`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `257 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --run-local-gates`:
+  passed, still reporting `goal_complete=false` and `remaining_blocker_count=21`
+  because company/staging env values and reviewed manual evidence are unset.
 
 Remaining production gap is unchanged:
 

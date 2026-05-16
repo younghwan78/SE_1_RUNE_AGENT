@@ -150,7 +150,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 256 passed, 3 skipped
+- `uv run pytest`: 257 passed, 3 skipped
 - `uv run pytest tests/unit/model_gateway -q`: 16 passed, validating dummy
   provider calls, policy enforcement, structured validation retry, fallback
   trace recording, provider usage metadata, and same-input model/prompt
@@ -259,6 +259,11 @@ Latest local verification:
 - GitHub Actions JavaScript actions were updated to Node 24-backed tags:
   `actions/checkout@v6` and `actions/setup-python@v6`; the temporary
   `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` compatibility env was removed
+- `.env.example` now includes company/staging rehearsal variables for
+  PostgreSQL, Neo4j, Qdrant, model gateway, trusted proxy, observability, JIRA,
+  Confluence, and restricted decision/email export handoff
+- `uv run pytest tests/unit/config/test_env_example.py -q`: 1 passed, validating
+  that `.env.example` covers production-readiness input variables
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment
