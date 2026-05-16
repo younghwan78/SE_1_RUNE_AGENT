@@ -58,6 +58,10 @@ Fetch enough data to support traceability and evidence:
 - Do not trust JIRA issue type as MBSE type.
 - Use issue type, labels, title, body, links, and comments as classification signals.
 - Preserve original JIRA issue type in metadata.
+- Preserve comment summaries in `metadata.comment_refs` and the total as
+  `metadata.comment_count` when comments are allowed.
+- Preserve changelog summaries in `metadata.history_refs` and the total as
+  `metadata.history_count` when history is allowed.
 - Preserve source URL for evidence.
 - Map JIRA links into relation candidates only, not approved graph edges.
 - Mark low-confidence classification as review-required.
@@ -71,4 +75,3 @@ Fetch enough data to support traceability and evidence:
 ## Expected Output
 
 Normalize fetched issues into source artifact records matching the shared source contract. Include source warnings for malformed, inaccessible, deleted, moved, or partially fetched issues.
-

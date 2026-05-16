@@ -104,6 +104,10 @@ JIRA skill은 다음을 관리한다.
 
 - project key, JQL, component/release scope
 - issue, comment, link, history 수집 정책
+- comment/changelog이 허용되는 경우 `metadata.comment_refs`,
+  `metadata.comment_count`, `metadata.history_refs`,
+  `metadata.history_count`로 보존해서 replay/debug에서 어떤 입력이
+  사용되었는지 추적 가능하게 한다.
 - JIRA issue type과 MBSE node type을 직접 동일시하지 않는 규칙
 - incremental cursor 기준
 - deleted/moved/renamed issue 처리

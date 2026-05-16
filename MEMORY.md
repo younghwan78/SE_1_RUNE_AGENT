@@ -54,6 +54,7 @@ Do not use or recreate removed planning files:
 - Claude Code source skill boundary: source skills remain the company access layer; core app code uses stable adapters and does not leak MCP tool names.
 - JIRA/Confluence/Email foundations:
   - JIRA REST adapter
+  - JIRA link, comment, and changelog metadata preservation
   - Confluence REST adapter
   - Confluence section-path and table-cell metadata extraction
   - Confluence previous-version metadata and deterministic stale trace findings
@@ -137,6 +138,27 @@ Do not mark the overall production goal complete until a completion audit verifi
   - `uv run ruff check .`: passed
   - `uv run mypy src`: passed
   - `uv run pytest`: `236 passed, 3 skipped`
+
+## 2026-05-17 JIRA Comment and Changelog Local Hardening
+
+- Updated `JiraRestSourceAdapter` to request `comment` fields and `changelog`
+  expansion from the REST search payload.
+- Preserved comment summaries in `metadata.comment_refs` and
+  `metadata.comment_count`, including comment id, author id, created/updated
+  timestamps, and a bounded body preview.
+- Preserved changelog summaries in `metadata.history_refs` and
+  `metadata.history_count`, including history id, author id, timestamp, field,
+  from/to ids, and from/to display strings.
+- Updated `.claude/skills/rune-source-jira/SKILL.md` and
+  `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` so
+  MCP/REST/export source procedures preserve the same debug/replay metadata
+  contract.
+- Validation:
+  - `uv run pytest tests/unit/adapters/test_jira_rest_adapter.py -q`: `6 passed`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `236 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
 
 ## Remaining Production Gates
 

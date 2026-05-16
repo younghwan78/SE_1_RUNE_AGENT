@@ -31,6 +31,8 @@ def test_jira_rest_adapter_fetches_page_and_maps_issue_contract() -> None:
 
     assert calls[0]["method"] == "POST"
     assert calls[0]["payload"]["jql"] == "project = CAM ORDER BY updated ASC"
+    assert "comment" in calls[0]["payload"]["fields"]
+    assert "changelog" in calls[0]["payload"]["expand"]
     assert result.next_cursor is not None
     assert result.next_cursor.offset == 1
     assert result.partial_failure is False
@@ -40,6 +42,33 @@ def test_jira_rest_adapter_fetches_page_and_maps_issue_contract() -> None:
     assert artifact.body_text == "Camera must open fast"
     assert artifact.links == ["CAM-VER-001"]
     assert artifact.metadata["jira_issue_type"] == "Requirement"
+    assert artifact.metadata["comment_count"] == 1
+    assert artifact.metadata["comment_refs"] == [
+        {
+            "comment_id": "10001",
+            "author_id": "user_2",
+            "created": "2026-01-02T01:00:00.000+0000",
+            "updated": "2026-01-02T01:10:00.000+0000",
+            "body_preview": "Verification owner confirmed CAM-VER-001 covers latency.",
+        }
+    ]
+    assert artifact.metadata["history_count"] == 1
+    assert artifact.metadata["history_refs"] == [
+        {
+            "history_id": "20001",
+            "author_id": "user_3",
+            "created": "2026-01-02T02:00:00.000+0000",
+            "items": [
+                {
+                    "field": "status",
+                    "from": "10000",
+                    "from_string": "Backlog",
+                    "to": "10001",
+                    "to_string": "Open",
+                }
+            ],
+        }
+    ]
 
 
 def test_jira_rest_adapter_reports_malformed_issue_warning() -> None:
@@ -208,7 +237,49 @@ def _issue(key: str, summary: str) -> dict[str, Any]:
             "created": "2026-01-01T00:00:00.000+0000",
             "updated": "2026-01-02T00:00:00.000+0000",
             "issuelinks": [{"outwardIssue": {"key": "CAM-VER-001"}}],
+            "comment": {
+                "comments": [
+                    {
+                        "id": "10001",
+                        "author": {"accountId": "user_2"},
+                        "created": "2026-01-02T01:00:00.000+0000",
+                        "updated": "2026-01-02T01:10:00.000+0000",
+                        "body": {
+                            "content": [
+                                {
+                                    "content": [
+                                        {
+                                            "text": (
+                                                "Verification owner confirmed CAM-VER-001 "
+                                                "covers latency."
+                                            )
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                    }
+                ]
+            },
             "parent": {"key": "CAM-EPIC-001"},
             "subtasks": [{"key": "CAM-TASK-001"}],
+        },
+        "changelog": {
+            "histories": [
+                {
+                    "id": "20001",
+                    "author": {"accountId": "user_3"},
+                    "created": "2026-01-02T02:00:00.000+0000",
+                    "items": [
+                        {
+                            "field": "status",
+                            "from": "10000",
+                            "fromString": "Backlog",
+                            "to": "10001",
+                            "toString": "Open",
+                        }
+                    ],
+                }
+            ]
         },
     }

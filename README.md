@@ -261,6 +261,7 @@ Current local implementation:
 - in-memory trace recorder
 - dummy source adapter and fixture-backed analysis workflow
 - JIRA, Confluence, and restricted decision/email export-file adapters
+- JIRA REST link, comment, and changelog metadata preservation
 - Confluence REST section-path and table-cell metadata extraction
 - Confluence previous-version metadata and stale trace finding generation
 - local JIRA/Confluence REST source smoke harness

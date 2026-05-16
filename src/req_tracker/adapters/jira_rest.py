@@ -76,9 +76,11 @@ class JiraRestSourceAdapter:
                 "created",
                 "updated",
                 "issuelinks",
+                "comment",
                 "parent",
                 "subtasks",
             ],
+            "expand": ["changelog"],
         }
         headers = {
             "authorization": f"Bearer {self.token}",
@@ -142,12 +144,18 @@ def _issue_to_artifact(
     body = _extract_text(fields.get("description"))
     labels = [str(label) for label in fields.get("labels", [])]
     links = _issue_links(fields)
+    comment_refs = _comment_refs(fields)
+    history_refs = _history_refs(issue)
     metadata = {
         "jira_issue_type": _nested_name(fields.get("issuetype")),
         "jira_status": _nested_name(fields.get("status")),
         "jira_priority": _nested_name(fields.get("priority")),
         "components": [_nested_name(component) for component in fields.get("components", [])],
         "fix_versions": [_nested_name(version) for version in fields.get("fixVersions", [])],
+        "comment_count": len(comment_refs),
+        "comment_refs": comment_refs,
+        "history_count": len(history_refs),
+        "history_refs": history_refs,
     }
     parent = fields.get("parent")
     subtasks = fields.get("subtasks", [])
@@ -185,6 +193,67 @@ def _issue_links(fields: dict[str, Any]) -> list[str]:
             if isinstance(linked, dict) and "key" in linked:
                 links.append(str(linked["key"]))
     return list(dict.fromkeys(links))
+
+
+def _comment_refs(fields: dict[str, Any]) -> list[dict[str, object]]:
+    comment_container = fields.get("comment", {})
+    comments = comment_container.get("comments", []) if isinstance(comment_container, dict) else []
+    refs: list[dict[str, object]] = []
+    for comment in comments:
+        if not isinstance(comment, dict):
+            continue
+        comment_id = comment.get("id")
+        if comment_id is None:
+            continue
+        body_preview = _extract_text(comment.get("body"))[:240]
+        refs.append(
+            {
+                "comment_id": str(comment_id),
+                "author_id": _account_id(comment.get("author")),
+                "created": comment.get("created"),
+                "updated": comment.get("updated"),
+                "body_preview": body_preview,
+            }
+        )
+    return refs
+
+
+def _history_refs(issue: dict[str, Any]) -> list[dict[str, object]]:
+    changelog = issue.get("changelog", {})
+    histories = changelog.get("histories", []) if isinstance(changelog, dict) else []
+    refs: list[dict[str, object]] = []
+    for history in histories:
+        if not isinstance(history, dict):
+            continue
+        history_id = history.get("id")
+        if history_id is None:
+            continue
+        refs.append(
+            {
+                "history_id": str(history_id),
+                "author_id": _account_id(history.get("author")),
+                "created": history.get("created"),
+                "items": _history_items(history),
+            }
+        )
+    return refs
+
+
+def _history_items(history: dict[str, Any]) -> list[dict[str, object]]:
+    items = history.get("items", [])
+    if not isinstance(items, list):
+        return []
+    return [
+        {
+            "field": str(item.get("field")),
+            "from": item.get("from"),
+            "from_string": item.get("fromString"),
+            "to": item.get("to"),
+            "to_string": item.get("toString"),
+        }
+        for item in items
+        if isinstance(item, dict) and item.get("field") is not None
+    ]
 
 
 def _extract_text(value: Any) -> str:
