@@ -820,6 +820,20 @@ Validation evidence:
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --run-local-gates`:
   passed, still reporting `goal_complete=false` and `remaining_blocker_count=21`
   because company/staging env values and reviewed manual evidence are unset.
+- Added a `prompt_to_artifact_checklist` section to
+  `ops/rehearsal/check_goal_completion.py` so the top-level audit maps each
+  success criterion to concrete artifacts, commands, checks, evidence, and gaps
+  instead of relying only on summary/proxy green signals.
+- Added unit coverage in `tests/unit/ops/test_goal_completion_audit.py` for
+  checklist criterion alignment and release/company evidence mapping.
+- `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`: `4 passed`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `258 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --run-local-gates`:
+  was started after the checklist change but interrupted by the user before
+  completion; rerun this command first in the next session before making a
+  release/goal-completion decision.
 
 Remaining production gap is unchanged:
 

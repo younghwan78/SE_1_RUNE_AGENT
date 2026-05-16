@@ -82,6 +82,11 @@ def build_goal_completion_audit(
         *_release_scope_blockers(release_scope),
         *_production_readiness_blockers(production_readiness),
     ]
+    prompt_to_artifact_checklist = _build_prompt_to_artifact_checklist(
+        release_scope,
+        production_readiness,
+        remaining_blockers,
+    )
     return {
         "schema_version": "v1",
         "objective": OBJECTIVE,
@@ -92,12 +97,14 @@ def build_goal_completion_audit(
         ),
         "summary": {
             "success_criteria_count": len(SUCCESS_CRITERIA),
+            "prompt_to_artifact_checklist_count": len(prompt_to_artifact_checklist),
             "remaining_blocker_count": len(remaining_blockers),
             "release_scope_passed": release_scope["passed"],
             "release_scope_ready": release_scope["release_ready"],
             "production_readiness_passed": production_readiness["passed"],
         },
         "success_criteria": list(SUCCESS_CRITERIA),
+        "prompt_to_artifact_checklist": prompt_to_artifact_checklist,
         "release_scope": {
             "passed": release_scope["passed"],
             "release_ready": release_scope["release_ready"],
@@ -110,6 +117,163 @@ def build_goal_completion_audit(
         },
         "remaining_blockers": remaining_blockers,
     }
+
+
+def _build_prompt_to_artifact_checklist(
+    release_scope: Mapping[str, Any],
+    production_readiness: Mapping[str, Any],
+    remaining_blockers: list[dict[str, str]],
+) -> list[dict[str, Any]]:
+    blocker_ids = {blocker["blocker_id"] for blocker in remaining_blockers}
+    release_items = release_scope["items"]
+    readiness_checks = production_readiness["checks"]
+    readiness_by_id = {check["check_id"]: check for check in readiness_checks}
+    company_check_ids = [
+        check["check_id"]
+        for check in readiness_checks
+        if check["check_id"].startswith("company_")
+    ]
+    return [
+        {
+            "criterion_id": "production_plan_source_of_truth",
+            "requirement": "Use PRODUCTION_EXECUTION_PLAN.md as the source of truth.",
+            "status": "passed" if release_scope["plan_requirements"] else "failed",
+            "artifacts": ["PRODUCTION_EXECUTION_PLAN.md"],
+            "commands": ["uv run python ops/rehearsal/validate_release_scope_artifacts.py"],
+            "evidence": [
+                f"plan_requirement_count={len(release_scope['plan_requirements'])}",
+                "release-scope verifier parses first-release required-scope bullets",
+            ],
+            "gaps": [] if release_scope["plan_requirements"] else ["plan_requirements_missing"],
+        },
+        {
+            "criterion_id": "first_release_scope_artifacts",
+            "requirement": "Map every first-release scope item to concrete artifacts and commands.",
+            "status": "passed" if release_scope["passed"] else "failed",
+            "artifacts": sorted(
+                {
+                    path
+                    for item in release_items
+                    for path in item["evidence_paths"]
+                }
+            ),
+            "commands": sorted(
+                {
+                    command
+                    for item in release_items
+                    for command in item["verification_commands"]
+                }
+            ),
+            "scope_items": [
+                {
+                    "item_id": item["item_id"],
+                    "requirement": item["requirement"],
+                    "status": item["status"],
+                    "audit_covered": item["audit_covered"],
+                    "missing_paths": item["missing_paths"],
+                    "evidence_paths": item["evidence_paths"],
+                    "verification_commands": item["verification_commands"],
+                }
+                for item in release_items
+            ],
+            "gaps": [
+                blocker_id
+                for blocker_id in sorted(blocker_ids)
+                if blocker_id.startswith("release_scope:")
+            ],
+        },
+        {
+            "criterion_id": "completion_audit_coverage",
+            "requirement": "Cover every first-release item in the completion audit.",
+            "status": (
+                "passed"
+                if release_scope["summary"]["audit_coverage_missing"] == 0
+                else "failed"
+            ),
+            "artifacts": ["docs/implementation/08_CURRENT_STATE_AND_COMPLETION_AUDIT.md"],
+            "commands": ["uv run python ops/rehearsal/validate_release_scope_artifacts.py"],
+            "evidence": [
+                f"audit_coverage_missing={release_scope['summary']['audit_coverage_missing']}",
+                f"item_count={release_scope['summary']['item_count']}",
+            ],
+            "gaps": [
+                blocker_id
+                for blocker_id in sorted(blocker_ids)
+                if blocker_id.endswith(":audit_coverage")
+            ],
+        },
+        {
+            "criterion_id": "local_regression_gates",
+            "requirement": "Run deterministic local regression and release gates.",
+            "status": readiness_by_id["local_regression_gates"]["status"],
+            "artifacts": [
+                ".github/workflows/ci.yml",
+                "ops/rehearsal/check_production_readiness.py",
+            ],
+            "commands": production_readiness["local_gate_commands"],
+            "evidence": readiness_by_id["local_regression_gates"]["evidence"],
+            "gaps": (
+                []
+                if readiness_by_id["local_regression_gates"]["status"] == "passed"
+                else ["production_readiness:local_regression_gates"]
+            ),
+        },
+        {
+            "criterion_id": "company_staging_readiness",
+            "requirement": "Pass company/staging environment and reviewed manual-evidence gates.",
+            "status": "passed" if production_readiness["passed"] else "blocked",
+            "artifacts": [
+                ".env.example",
+                "ops/rehearsal/production_readiness_evidence.example.json",
+                "ops/rehearsal/build_staging_evidence_plan.py",
+                "ops/rehearsal/check_production_readiness.py",
+            ],
+            "commands": [
+                "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown",
+                (
+                    "uv run python ops/rehearsal/check_production_readiness.py "
+                    "--run-local-gates --evidence-file <reviewed-evidence.json>"
+                ),
+            ],
+            "checks": [
+                {
+                    "check_id": check["check_id"],
+                    "status": check["status"],
+                    "summary": check["summary"],
+                    "next_action": check.get("next_action"),
+                }
+                for check in readiness_checks
+                if check["check_id"] in company_check_ids
+                or check["status"] in {"failed", "manual_required", "warning"}
+            ],
+            "evidence": [
+                f"manual_evidence_count={production_readiness['manual_evidence_count']}",
+                f"failed={production_readiness['summary']['failed']}",
+                f"manual_required={production_readiness['summary']['manual_required']}",
+                f"warning={production_readiness['summary']['warning']}",
+            ],
+            "gaps": [
+                blocker_id
+                for blocker_id in sorted(blocker_ids)
+                if blocker_id.startswith("production_readiness:")
+            ],
+        },
+        {
+            "criterion_id": "ci_release_gates",
+            "requirement": "Keep deterministic release gates covered in GitHub Actions.",
+            "status": "passed",
+            "artifacts": [
+                ".github/workflows/ci.yml",
+                "ops/rehearsal/validate_ci_gate_coverage.py",
+            ],
+            "commands": ["uv run python ops/rehearsal/validate_ci_gate_coverage.py"],
+            "evidence": [
+                "CI workflow runs deterministic local release gates",
+                "Docker-backed and company/staging gates remain explicitly documented omissions",
+            ],
+            "gaps": [],
+        },
+    ]
 
 
 def _release_scope_blockers(report: Mapping[str, Any]) -> list[dict[str, str]]:

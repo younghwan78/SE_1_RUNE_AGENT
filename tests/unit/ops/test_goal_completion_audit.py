@@ -37,6 +37,37 @@ def test_goal_completion_audit_lists_concrete_success_criteria() -> None:
         "company_staging_readiness",
         "ci_release_gates",
     }
+    checklist_ids = {
+        item["criterion_id"] for item in report["prompt_to_artifact_checklist"]
+    }
+    assert checklist_ids == criteria_ids
+    assert report["summary"]["prompt_to_artifact_checklist_count"] == len(criteria_ids)
+
+
+def test_goal_completion_audit_maps_prompt_requirements_to_artifacts() -> None:
+    namespace = run_path("ops/rehearsal/check_goal_completion.py")
+
+    report = namespace["build_goal_completion_audit"]({})
+    checklist = {
+        item["criterion_id"]: item for item in report["prompt_to_artifact_checklist"]
+    }
+
+    scope_item = checklist["first_release_scope_artifacts"]
+    assert len(scope_item["scope_items"]) == report["release_scope"]["summary"]["item_count"]
+    assert "src/req_tracker/adapters/jira_rest.py" in scope_item["artifacts"]
+    assert any(
+        command.startswith("uv run pytest tests/unit/adapters/test_jira_rest_adapter.py")
+        for command in scope_item["commands"]
+    )
+
+    company_item = checklist["company_staging_readiness"]
+    assert company_item["status"] == "blocked"
+    assert ".env.example" in company_item["artifacts"]
+    assert any(
+        check["check_id"] == "company_jira_sandbox_rehearsal"
+        for check in company_item["checks"]
+    )
+    assert "production_readiness:postgres_state_store" in company_item["gaps"]
 
 
 def test_goal_completion_audit_applies_manual_evidence() -> None:
