@@ -104,6 +104,31 @@ def test_confluence_rest_adapter_preserves_sections_and_table_cells() -> None:
     ]
 
 
+def test_confluence_rest_adapter_preserves_previous_version_metadata() -> None:
+    adapter = ConfluenceRestSourceAdapter(
+        base_url="https://confluence.example.com",
+        token="token",
+        space_key="CAM",
+        transport=lambda *_args: {
+            "size": 1,
+            "totalSize": 1,
+            "results": [
+                _page(
+                    "125",
+                    "Changed Architecture",
+                    history_extra={"previousVersion": {"number": 2}},
+                )
+            ],
+        },
+    )
+
+    result = adapter.fetch_incremental(SourceScope(project_key="RUNE_CAM_ALPHA"))
+
+    artifact = result.artifacts[0]
+    assert artifact.metadata["version_number"] == 3
+    assert artifact.metadata["previous_version_number"] == 2
+
+
 def test_confluence_rest_adapter_reports_malformed_page_warning() -> None:
     adapter = ConfluenceRestSourceAdapter(
         base_url="https://confluence.example.com",
@@ -181,7 +206,19 @@ def test_confluence_rest_adapter_reports_permission_denied_without_retry() -> No
     assert result.source_warnings == ["confluence_permission_denied:401"]
 
 
-def _page(page_id: str, title: str, *, body: str | None = None) -> dict[str, Any]:
+def _page(
+    page_id: str,
+    title: str,
+    *,
+    body: str | None = None,
+    history_extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    history = {
+        "createdDate": "2026-01-01T00:00:00.000Z",
+        "createdBy": {"accountId": "user_1"},
+    }
+    if history_extra:
+        history.update(history_extra)
     return {
         "id": page_id,
         "title": title,
@@ -192,10 +229,7 @@ def _page(page_id: str, title: str, *, body: str | None = None) -> dict[str, Any
             }
         },
         "version": {"number": 3, "when": "2026-01-03T00:00:00.000Z"},
-        "history": {
-            "createdDate": "2026-01-01T00:00:00.000Z",
-            "createdBy": {"accountId": "user_1"},
-        },
+        "history": history,
         "ancestors": [{"id": "5"}, {"id": "10"}],
         "metadata": {"labels": {"results": [{"name": "camera"}, {"name": "design"}]}},
     }

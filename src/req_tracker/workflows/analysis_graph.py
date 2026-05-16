@@ -237,7 +237,12 @@ class LocalAnalysisWorkflow:
             stage_name="detect_findings",
             input_payload={"nodes": len(nodes), "edges": len(edges)},
         )
-        findings = analyze_findings(nodes, edges)
+        findings = analyze_findings(
+            nodes,
+            edges,
+            source_artifacts=fetch.artifacts,
+            evidence_by_external_id=evidence_by_external,
+        )
         self.traces.finish_step(
             step_id=finding_step.step_id,
             output_payload=[finding.model_dump(mode="json") for finding in findings],

@@ -124,6 +124,7 @@ def _page_to_artifact(
     page_id = str(page["id"])
     version = page.get("version", {})
     history = page.get("history", {})
+    previous_version_number = _previous_version_number(page)
     storage_html = str(page.get("body", {}).get("storage", {}).get("value", ""))
     body_text = _html_to_text(storage_html)
     section_paths = _extract_section_paths(storage_html)
@@ -155,6 +156,11 @@ def _page_to_artifact(
         metadata={
             "space_key": page.get("space", {}).get("key"),
             "version_number": version.get("number"),
+            **(
+                {"previous_version_number": previous_version_number}
+                if previous_version_number is not None
+                else {}
+            ),
             "ancestor_ids": ancestors,
             "section_paths": section_paths,
             "table_cells": table_cells,
@@ -213,6 +219,16 @@ def _section_at_end(section_paths: list[str]) -> str | None:
     if not section_paths:
         return None
     return section_paths[-1]
+
+
+def _previous_version_number(page: dict[str, Any]) -> int | None:
+    for container_name in ("history", "version"):
+        previous = page.get(container_name, {}).get("previousVersion")
+        if isinstance(previous, dict):
+            value = previous.get("number")
+            if isinstance(value, int) and not isinstance(value, bool):
+                return value
+    return None
 
 
 def _extract_jira_keys(text: str) -> list[str]:

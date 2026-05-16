@@ -44,6 +44,7 @@ Fetch enough data to preserve document structure:
 - author id
 - created/updated timestamps
 - version number
+- previous version number when version history/diff data is available
 - ancestors and children
 - labels
 - JIRA issue mentions
@@ -55,7 +56,9 @@ Fetch enough data to preserve document structure:
 - Preserve heading hierarchy as `section_path`.
 - Preserve table coordinates as `table_cell_ref` where possible.
 - Extract JIRA mentions and links into metadata and relation candidates.
-- Treat page version changes as possible stale trace triggers.
+- Treat page version changes as possible stale trace triggers. When available,
+  write the previous page version to `metadata.previous_version_number` and the
+  current page version to `metadata.version_number`.
 - Do not turn design prose directly into approved graph data; create candidates with evidence.
 
 ## Security Rules
@@ -67,4 +70,3 @@ Fetch enough data to preserve document structure:
 ## Expected Output
 
 Normalize pages and page sections into source artifact records and evidence span candidates. Preserve page version so replay and stale trace detection can compare old/new source state.
-

@@ -3,11 +3,24 @@
 from collections import defaultdict
 from typing import cast
 
+from req_tracker.adapters.base import RawSourceArtifact
 from req_tracker.debug.hash import stable_hash
-from req_tracker.ontology.models import Finding, FindingType, OntologyNode, TraceabilityEdge
+from req_tracker.ontology.models import (
+    EvidenceSpan,
+    Finding,
+    FindingType,
+    OntologyNode,
+    TraceabilityEdge,
+)
 
 
-def analyze_findings(nodes: list[OntologyNode], edges: list[TraceabilityEdge]) -> list[Finding]:
+def analyze_findings(
+    nodes: list[OntologyNode],
+    edges: list[TraceabilityEdge],
+    *,
+    source_artifacts: list[RawSourceArtifact] | None = None,
+    evidence_by_external_id: dict[str, EvidenceSpan] | None = None,
+) -> list[Finding]:
     """Run deterministic finding rules over candidate graph projection."""
     findings: list[Finding] = []
     incoming_by_target: dict[str, list[TraceabilityEdge]] = defaultdict(list)
@@ -65,6 +78,13 @@ def analyze_findings(nodes: list[OntologyNode], edges: list[TraceabilityEdge]) -
                     rule_id="CONFLICTING_ALTERNATIVES",
                 )
             )
+    findings.extend(
+        _confluence_stale_trace_findings(
+            nodes=nodes,
+            source_artifacts=source_artifacts or [],
+            evidence_by_external_id=evidence_by_external_id or {},
+        )
+    )
     return findings
 
 
@@ -83,3 +103,71 @@ def _finding(rule_id: str, node: OntologyNode, finding_type: str) -> Finding:
         rule_id=rule_id,
     )
 
+
+def _confluence_stale_trace_findings(
+    *,
+    nodes: list[OntologyNode],
+    source_artifacts: list[RawSourceArtifact],
+    evidence_by_external_id: dict[str, EvidenceSpan],
+) -> list[Finding]:
+    node_by_external_id = {_external_id_from_node(node): node for node in nodes}
+    findings: list[Finding] = []
+    for artifact in source_artifacts:
+        if artifact.source_type != "confluence":
+            continue
+        previous_version = _metadata_int(artifact.metadata.get("previous_version_number"))
+        current_version = _metadata_int(artifact.metadata.get("version_number"))
+        if previous_version is None or current_version is None:
+            continue
+        if current_version <= previous_version:
+            continue
+        node = node_by_external_id.get(artifact.external_id)
+        evidence = evidence_by_external_id.get(artifact.external_id)
+        if node is None or evidence is None:
+            continue
+        finding_hash = stable_hash(
+            {
+                "rule": "CONFLUENCE_PAGE_VERSION_CHANGED",
+                "node": node.node_id,
+                "previous_version": previous_version,
+                "current_version": current_version,
+            }
+        )
+        findings.append(
+            Finding(
+                finding_id=f"fdg_{finding_hash[:16]}",
+                finding_type="stale_trace",
+                severity="medium",
+                affected_node_ids=[node.node_id],
+                affected_edge_ids=[],
+                description=(
+                    f"{artifact.external_id} changed from Confluence version "
+                    f"{previous_version} to {current_version}."
+                ),
+                suggested_action=(
+                    "Review linked requirements, design, verification, and findings for stale "
+                    "traceability after the document change."
+                ),
+                evidence=[evidence],
+                detection_method="rule",
+                rule_id="CONFLUENCE_PAGE_VERSION_CHANGED",
+            )
+        )
+    return findings
+
+
+def _metadata_int(value: object) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and value.isdigit():
+        return int(value)
+    return None
+
+
+def _external_id_from_node(node: OntologyNode) -> str:
+    prefix = f"node_{node.project_key}_"
+    if node.node_id.startswith(prefix):
+        return node.node_id.removeprefix(prefix).replace("_", "-")
+    return node.node_id

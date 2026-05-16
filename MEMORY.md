@@ -56,6 +56,7 @@ Do not use or recreate removed planning files:
   - JIRA REST adapter
   - Confluence REST adapter
   - Confluence section-path and table-cell metadata extraction
+  - Confluence previous-version metadata and deterministic stale trace findings
   - export-file adapters for JIRA, Confluence, restricted decision/email
   - restricted decision/email export policy with email thread metadata masking
   - source boundary validator
@@ -98,6 +99,27 @@ The local/dummy production-shaped foundation and non-company handoff package are
 The overall production objective is not fully complete yet because company/staging evidence is still required.
 
 Do not mark the overall production goal complete until a completion audit verifies company/staging readiness evidence.
+
+## 2026-05-17 Confluence Stale Trace Local Hardening
+
+- Added deterministic stale trace finding generation for Confluence source
+  artifacts that provide `metadata.previous_version_number` and a newer
+  `metadata.version_number`.
+- Updated `ConfluenceRestSourceAdapter` to preserve
+  `history.previousVersion.number` or `version.previousVersion.number` as
+  `metadata.previous_version_number` when the REST payload provides it.
+- Routed source artifact metadata into the workflow finding stage so document
+  version changes can create reviewable stale trace candidates without LLM
+  ownership of graph commits.
+- Updated `.claude/skills/rune-source-confluence/SKILL.md` and
+  `docs/implementation/06_CLAUDE_CODE_SKILLS_AND_MCP_DESIGN.md` so company
+  MCP/REST/export procedures preserve the same version metadata contract.
+- Validation:
+  - `uv run pytest tests/unit/adapters/test_confluence_rest_adapter.py::test_confluence_rest_adapter_preserves_previous_version_metadata tests/unit/findings/test_rules.py::test_confluence_version_change_creates_stale_trace_finding tests/integration/test_dummy_analysis_pipeline.py::test_confluence_version_change_is_routed_to_stale_finding -q`: `3 passed`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `235 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
 
 ## Remaining Production Gates
 
@@ -307,7 +329,7 @@ Follow-up production persistence hardening:
   - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed
     including dashboard preference/assignment, source sync cursor, LLM call
     trace, replay result, and improvement decision mirrors
-  - `uv run pytest`: `232 passed, 3 skipped`
+  - `uv run pytest`: `235 passed, 3 skipped`
 - Playwright CLI screenshot smoke was run manually for dashboard/work-queue rendering and deep-link behavior, but it is intentionally not added to CI per user direction.
 
 Remaining dashboard-specific items:

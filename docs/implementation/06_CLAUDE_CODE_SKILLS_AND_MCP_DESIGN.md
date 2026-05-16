@@ -117,7 +117,10 @@ Confluence skill은 다음을 관리한다.
 
 - space key, page tree, label, ancestor scope
 - page body, section heading, table extraction
-- page version과 diff 처리
+- page version과 diff 처리. 이전 version 정보가 있으면 source artifact
+  `metadata.previous_version_number`에 저장하고 현재 version은
+  `metadata.version_number`에 저장해서 stale trace rule이 동일한 contract로
+  동작하게 한다.
 - JIRA mention/link 매핑
 - source evidence의 section path/table cell ref 생성
 - attachment metadata는 초기에 metadata만 수집
@@ -196,4 +199,3 @@ Source skill 설계가 충분한지 확인하는 기준:
 - source access 실패가 `SOURCE_AUTH_ERROR`, `SOURCE_RATE_LIMIT`, `SOURCE_MALFORMED_ARTIFACT`로 trace된다.
 - Email skill은 mailbox 전체 수집을 기본값으로 하지 않는다.
 - skill 문서에 secret이나 실제 endpoint가 없다.
-
