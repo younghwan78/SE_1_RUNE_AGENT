@@ -92,3 +92,8 @@ These endpoints use the same project RBAC boundary as the work queue. Assignment
 writes support `Idempotency-Key`/`X-Idempotency-Key`, record audit events, and
 persist through the configured state store so reviewer queue ownership survives
 API restarts.
+
+Scheduler configuration changes through `PUT /api/v1/schedule` also persist
+through the configured state store. PostgreSQL deployments store the active
+configuration in the `schedule_configs` typed mirror table so periodic run
+settings survive API restarts before the scheduler lifespan starts.
