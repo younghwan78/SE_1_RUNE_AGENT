@@ -10,6 +10,8 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed implementation and gate commits:
 
+- `c52572d Persist scheduler configuration state`
+- `19d58a1 Add work queue feedback reason controls`
 - `360b68e Trace node and finding LLM stages`
 - `e964e3b Block analysis on masking policy violations`
 - `9aa1c22 Add architecture verification finding rule`
@@ -253,6 +255,10 @@ Latest local verification:
 
 Latest implementation GitHub Actions verification:
 
+- GitHub Actions `CI` run `25967994338` for implementation commit `c52572d`:
+  completed successfully
+- GitHub Actions `CI` run `25967835241` for implementation commit `19d58a1`:
+  completed successfully
 - GitHub Actions `CI` run `25967338344` for implementation commit `360b68e`: completed
   successfully
 - GitHub Actions `CI` run `25967125938` for `e964e3b`: completed successfully

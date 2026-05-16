@@ -466,6 +466,9 @@ Validation evidence:
 - `uv run ruff check .`: passed
 - `uv run pytest`: `242 passed, 3 skipped`
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
+- Commit/CI:
+  - `c52572d Persist scheduler configuration state`
+  - GitHub Actions `CI` run `25967994338`: success
 
 ## 2026-05-16 Dashboard PostgreSQL State and RBAC Snapshot
 
