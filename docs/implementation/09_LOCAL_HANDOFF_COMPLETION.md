@@ -105,7 +105,7 @@ Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
 - Commit `6418677 Document dashboard state RBAC` added RBAC matrix coverage and
   regression tests for dashboard work queue preferences/assignments; GitHub
   Actions `CI` run `25965051096` passed.
-- Latest pushed GitHub Actions `CI` run `25965178615` for `d9126b0` passed.
+- Latest pushed GitHub Actions `CI` run `25965768329` for `c2004f2` passed.
 - Latest full local regression after improvement decision typed-state hardening:
   `uv run pytest` reported `229 passed, 3 skipped`.
 

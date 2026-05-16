@@ -273,7 +273,7 @@ Fresh local readiness check:
   SSO/OIDC, artifact storage, OpenTelemetry, JIRA/Confluence, approved
   decision/email export, Prometheus/Grafana, backup/restore/load, and staging
   endpoint rehearsals.
-- Latest pushed GitHub Actions `CI` run `25965178615` for commit `d9126b0`
+- Latest pushed GitHub Actions `CI` run `25965768329` for commit `c2004f2`
   passed.
 
 Follow-up production persistence hardening:

@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed implementation and gate commits:
 
+- `c2004f2 Add improvement decision postgres mirror`
 - `6418677 Document dashboard state RBAC`
 - `156993e Add dashboard state postgres mirrors`
 - `503a123 Persist dashboard work queue state`
@@ -214,7 +215,7 @@ Latest local verification:
 Latest implementation GitHub verification:
 
 - GitHub Actions `CI` run `25965051096` for `6418677`: completed successfully
-- Latest pushed GitHub Actions `CI` run `25965178615` for `d9126b0`: completed
+- Latest pushed GitHub Actions `CI` run `25965768329` for `c2004f2`: completed
   successfully
 
 ## 2. Prompt-to-Artifact Checklist
