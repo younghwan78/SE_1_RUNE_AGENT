@@ -53,6 +53,7 @@ def test_local_gate_commands_include_staging_evidence_plan_smoke() -> None:
         "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown"
         in commands
     )
+    assert "uv run python ops/rehearsal/validate_release_scope_artifacts.py" in commands
 
 
 def test_readiness_report_requires_helm_evidence_for_kubernetes_target() -> None:

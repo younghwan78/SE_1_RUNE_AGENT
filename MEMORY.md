@@ -709,3 +709,54 @@ Validation evidence:
 - `uv run python ops/ui/smoke_operator_ui.py`: passed
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
+
+## 2026-05-17 Release Scope Artifact Verifier
+
+Added a machine-readable first-release scope verifier based on
+`PRODUCTION_EXECUTION_PLAN.md`.
+
+Implemented:
+
+- Added `ops/rehearsal/validate_release_scope_artifacts.py`.
+- Added `tests/unit/ops/test_release_scope_artifacts.py`.
+- Added the verifier to GitHub Actions `CI`.
+- Added the verifier to
+  `ops/rehearsal/validate_ci_gate_coverage.py` required extra commands.
+- Added the verifier to
+  `ops/rehearsal/check_production_readiness.py` `LOCAL_GATE_COMMANDS`.
+
+Verifier behavior:
+
+- Checks that each first-release scope item has concrete repo artifacts.
+- Checks that each item has at least one verification command.
+- Checks that each item has guidance notes.
+- Reports `release_ready=false` separately from structural pass/fail so local
+  artifact coverage can pass while company/staging evidence remains unresolved.
+- Current status counts:
+  - `local_complete=10`
+  - `company_evidence_required=4`
+  - `decision_pending=1`
+  - `missing_artifacts=0`
+
+Validation evidence:
+
+- `uv run pytest tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`:
+  `5 passed`
+- `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed
+  with `release_ready=false`
+- `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+  `ci_command_count=22`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `250 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+  local regression gates passed with the release-scope verifier included;
+  overall readiness failed as expected with summary `failed=7`,
+  `manual_required=10`, `passed=2`, `warning=0`
+
+Remaining production gap is unchanged:
+
+- Real/company staging evidence is still required for company JIRA/Confluence
+  source sync, real model gateway execution, live model quality validation,
+  company SSO/OIDC proxy, PostgreSQL, Neo4j, Qdrant, observability,
+  backup/restore/load, and approved decision/email export validation.

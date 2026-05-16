@@ -53,6 +53,10 @@ def test_ci_gate_coverage_reports_missing_required_command(tmp_path) -> None:  #
         "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown"
         in report["missing_required"]
     )
+    assert (
+        "uv run python ops/rehearsal/validate_release_scope_artifacts.py"
+        in report["missing_required"]
+    )
 
 
 def _load_validator_module() -> ModuleType:

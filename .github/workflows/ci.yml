@@ -73,6 +73,9 @@ jobs:
       - name: Staging evidence plan smoke
         run: uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown
 
+      - name: Release scope artifact validation
+        run: uv run python ops/rehearsal/validate_release_scope_artifacts.py
+
       - name: Readiness example safety validation
         run: uv run python ops/rehearsal/validate_evidence_example.py
 

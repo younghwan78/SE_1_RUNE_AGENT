@@ -150,7 +150,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 242 passed, 3 skipped
+- `uv run pytest`: 250 passed, 3 skipped
 - `uv run pytest tests/unit/model_gateway -q`: 16 passed, validating dummy
   provider calls, policy enforcement, structured validation retry, fallback
   trace recording, provider usage metadata, and same-input model/prompt
@@ -246,6 +246,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed, validating 21 PostgreSQL typed mirror tables against packaged migration DDL
 - `uv run python ops/rehearsal/validate_evidence_example.py`: passed, validating that the committed example evidence file has 11 non-passable manual gates, no passable placeholder entries, fake `run-123*` references, duplicate check IDs, missing evidence arrays, or missing top-level TODO metadata
 - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed, validating that GitHub Actions covers deterministic local release gates and only omits the documented Docker-backed integration/full-stack rehearsals
+- `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed with `release_ready=false`, `missing_artifacts=0`, and status counts `local_complete=10`, `company_evidence_required=4`, `decision_pending=1`
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown`: passed, producing a masked command/evidence collection plan for unresolved company/staging gates without printing secret values
 - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`: passed after first verifying the new staging evidence plan CI smoke requirement failed when absent
@@ -683,6 +684,26 @@ blocking:
   - Added a guard that every unresolved staging evidence gate has command,
     evidence, and docs guidance; filled Neo4j/Qdrant staging doc references.
   - RED/GREEN: `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_guides_every_unresolved_gate -q` failed before Neo4j/Qdrant doc guidance was added and passed after adding it.
+- 2026-05-17 first-release scope artifact verifier:
+  - Added `ops/rehearsal/validate_release_scope_artifacts.py` to map
+    `PRODUCTION_EXECUTION_PLAN.md` first-release scope items to concrete repo
+    artifacts, verification commands, and current status classification.
+  - Added GitHub Actions `CI`, CI coverage validation, and production-readiness
+    local gate coverage for the verifier.
+  - Current verifier result is intentionally not release-ready:
+    `local_complete=10`, `company_evidence_required=4`,
+    `decision_pending=1`, `missing_artifacts=0`.
+  - RED/GREEN: local readiness and CI coverage tests failed while the verifier
+    command was absent from the gate lists, then passed after adding it.
+  - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`:
+    `5 passed`
+  - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=22`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+    local regression gates passed with the release-scope verifier included;
+    overall readiness still failed as expected with summary `failed=7`,
+    `manual_required=10`, `passed=2`, `warning=0`.
 
 ## 5. Completion Gate
 
