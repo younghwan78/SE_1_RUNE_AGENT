@@ -41,7 +41,7 @@ Concrete deliverables:
 | Approval and graph commit safety | approval contract/security tests | Complete |
 | Feedback/eval/improvement loop | `ops/evals/run_feedback_eval_rehearsal.py` | Complete |
 | Debug and replay workbench | debug/replay contract tests | Complete |
-| Persistence foundation | SQLite/PostgreSQL tests and migration validators, including dashboard preference/assignment, source sync cursor, LLM call trace, replay result, and improvement decision typed mirrors | Complete |
+| Persistence foundation | SQLite/PostgreSQL tests and migration validators, including dashboard preference/assignment, schedule config, source sync cursor, LLM call trace, replay result, and improvement decision typed mirrors | Complete |
 | Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete; latest 2026-05-17 workstation run passed with Docker Desktop Linux engine available |
 | Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete; latest 2026-05-17 workstation run passed with Docker Desktop Linux engine available |
 | Release blocker gate | `ops/security/check_release_blockers.py` | Complete locally |
@@ -103,15 +103,14 @@ Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
   `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because
   company/staging environment variables and manual evidence are not configured
   on this workstation.
-- Commit `6418677 Document dashboard state RBAC` added RBAC matrix coverage and
-  regression tests for dashboard work queue preferences/assignments; GitHub
-  Actions `CI` run `25965051096` passed.
-- Latest pushed GitHub Actions `CI` run `25965768329` for `c2004f2` passed.
-- Latest full local regression after masking policy violation workflow block:
-  `uv run pytest` reported `239 passed, 3 skipped`.
-- Latest full local regression after traceable node/finding LLM stage coverage:
-  `uv run pytest` reported `239 passed, 3 skipped`; readiness local regression
-  gates passed, while the overall readiness summary remains
+- Commit `c52572d Persist scheduler configuration state` added restart-safe
+  scheduler configuration persistence and PostgreSQL typed mirror coverage for
+  `schedule_configs`; GitHub Actions `CI` run `25967994338` passed.
+- Commit `ba9a973 Refresh audit after scheduler persistence` refreshed the
+  audit/handoff evidence; GitHub Actions `CI` run `25968026265` passed.
+- Latest full local regression after scheduler persistence: `uv run pytest`
+  reported `242 passed, 3 skipped`; readiness local regression gates passed,
+  while the overall readiness summary remains
   `failed=7`, `manual_required=10`, `passed=2`, `warning=0` until
   company/staging evidence is supplied.
 
@@ -178,8 +177,10 @@ The current repository should be treated as:
 - complete for source-skill/export handoff rehearsal
 - complete for deterministic CI/local release gates
 - complete for Docker-backed disposable backend and full-stack rehearsal scripts,
-  with latest 2026-05-16 local pass evidence after Docker Desktop Linux engine
+  with latest 2026-05-17 local pass evidence after Docker Desktop Linux engine
   was started
+- complete for restart-safe scheduler configuration persistence in local
+  SQLite and PostgreSQL typed mirror foundations
 - incomplete for company/staging production readiness until reviewed external
   evidence is attached
 

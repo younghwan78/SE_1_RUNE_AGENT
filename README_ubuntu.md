@@ -381,7 +381,9 @@ With `STATE_STORE=postgres`, every periodic run attempts to acquire the
 configured scheduler lease before executing. Manual `run-now` remains an
 operator command and does not require the periodic lease. With `STATE_STORE`
 set to `memory` or `sqlite`, the scheduler remains single-process and should
-only be enabled in one API instance.
+only be enabled in one API instance. Schedule configuration changes are
+persisted through the configured state store; the PostgreSQL deployment stores
+them in the `schedule_configs` typed mirror table.
 
 Backup and restore rehearsal steps are in `docs/runbooks/BACKUP_RESTORE.md`.
 After creating a staging backup set, verify its required files, checksums, and
