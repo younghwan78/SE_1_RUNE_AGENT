@@ -10,6 +10,9 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed implementation and gate commits:
 
+- `360b68e Trace node and finding LLM stages`
+- `e964e3b Block analysis on masking policy violations`
+- `9aa1c22 Add architecture verification finding rule`
 - `c2004f2 Add improvement decision postgres mirror`
 - `6418677 Document dashboard state RBAC`
 - `156993e Add dashboard state postgres mirrors`
@@ -146,6 +149,12 @@ Latest local verification:
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
 - `uv run pytest`: 239 passed, 3 skipped
+- `uv run pytest tests/contract/test_health_api.py::test_metrics_summary_reports_http_and_runtime_counts tests/unit/model_gateway tests/contract/test_debug_api.py tests/contract/test_replay_feedback_api.py tests/contract/test_persistence_api.py tests/integration/test_dummy_analysis_pipeline.py -q`:
+  40 passed, validating three traceable local LLM stages
+  (`pv_node_extraction_v1`, `pv_edge_linking_v1`,
+  `pv_finding_reasoning_v1`), model gateway debug artifact namespacing, debug
+  API, replay diff metadata, persistence restore, integration workflow, and
+  metrics summary counts
 - `uv run pytest tests/unit/ingestion/test_masking_chunking.py tests/integration/test_dummy_analysis_pipeline.py tests/unit/api/test_runtime_state.py tests/contract/test_run_api.py tests/unit/debug/test_trace_recorder.py -q`:
   20 passed, validating masking, workflow-level masking violation block,
   runtime failed-run persistence, run API behavior, and trace failure metadata
@@ -218,8 +227,8 @@ Latest local verification:
 - `uv run pytest tests/unit/ops/test_backup_verify.py`: passed, validating backup-set required files, SHA256 mismatch detection, artifact tar, Qdrant JSON, Neo4j dump marker, and git commit marker checks
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed,
   including API restart restore, `audit_total_events=3`, metrics surface check
-  (`http_total_requests=7`, `graph_nodes=14`, `llm_calls=1`), and smoke-load
-  pass (`load_smoke.p95_ms` about 3332 ms against a 5000 ms local rehearsal
+  (`http_total_requests=7`, `graph_nodes=14`, `llm_calls=3`), and smoke-load
+  pass (`load_smoke.p95_ms` about 2369 ms against a 5000 ms local rehearsal
   threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed, including review-ready, canary, active, rollback, and security-blocked eval paths
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
@@ -237,9 +246,10 @@ Latest local verification:
 
 Latest implementation GitHub verification:
 
-- GitHub Actions `CI` run `25965051096` for `6418677`: completed successfully
-- Latest pushed GitHub Actions `CI` run `25965768329` for `c2004f2`: completed
+- Latest pushed GitHub Actions `CI` run `25967338344` for `360b68e`: completed
   successfully
+- GitHub Actions `CI` run `25967125938` for `e964e3b`: completed successfully
+- GitHub Actions `CI` run `25966865346` for `9aa1c22`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -554,6 +564,19 @@ blocking:
     this refresh; full-stack rehearsal reported `passed=true`,
     `restart_restored=true`, `audit_total_events=3`, and local smoke-load p95
     below the 5 second rehearsal threshold
+- 2026-05-17 traceable node/finding LLM stage coverage:
+  - Commit `360b68e Trace node and finding LLM stages` pushed to `origin/main`
+  - GitHub Actions `CI` run `25967338344`: success
+  - `uv run pytest tests/contract/test_health_api.py::test_metrics_summary_reports_http_and_runtime_counts tests/unit/model_gateway tests/contract/test_debug_api.py tests/contract/test_replay_feedback_api.py tests/contract/test_persistence_api.py tests/integration/test_dummy_analysis_pipeline.py -q`:
+    `40 passed`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `239 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+    local regression gates passed; overall readiness still failed as expected
+    with summary `failed=7`, `manual_required=10`, `passed=2`,
+    `warning=0` because company/staging environment variables and reviewed
+    manual evidence are not configured on this workstation
 
 ## 5. Completion Gate
 

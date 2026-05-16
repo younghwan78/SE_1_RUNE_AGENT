@@ -171,6 +171,9 @@ Do not mark the overall production goal complete until a completion audit verifi
   - `uv run mypy src`: passed
   - `uv run pytest`: `239 passed, 3 skipped`
   - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
+- Commit/CI:
+  - `360b68e Trace node and finding LLM stages`
+  - GitHub Actions `CI` run `25967338344`: success
 
 ## 2026-05-17 Decision/Email Manual Review Local Hardening
 
