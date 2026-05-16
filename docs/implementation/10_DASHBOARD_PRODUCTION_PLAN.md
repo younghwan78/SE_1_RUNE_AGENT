@@ -250,9 +250,9 @@ GET /api/v1/dashboard/recent-activity?project_key=RUNE_CAM_ALPHA&limit=20
     "approved_edges": 0,
     "pending_edges": 103,
     "orphan_nodes": 9,
-    "open_findings": 47,
+    "open_findings": 48,
     "critical_findings": 0,
-    "high_findings": 12,
+    "high_findings": 41,
     "pending_approvals": 103,
     "feedback_events": 0
   },
@@ -845,9 +845,9 @@ Validated:
 
 - empty dashboard state returns `traceability_health=unknown`
 - `RUNE_CAM_ALPHA` summary returns 10 nodes, 7 pending edges, 7 pending
-  approvals, and 5 open findings
+  approvals, and 6 open findings
 - `RUNE_SCALE_150` summary returns 150 nodes, 103 pending edges, 103 pending
-  approvals, 47 findings, and 9 orphan nodes
+  approvals, 48 findings, and 9 orphan nodes
 - approval commit updates approved/pending dashboard counts
 - source export adapter path appears in source health without company systems
 - dashboard project/RBAC filtering is enforced

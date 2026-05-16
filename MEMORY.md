@@ -27,7 +27,7 @@ Do not use or recreate removed planning files:
 - FastAPI API skeleton and OpenAPI surface guard.
 - Pydantic contracts for ontology, debug traces, approvals, feedback, audit, source adapter contracts, and source sync cursor snapshots.
 - Local deterministic analysis workflow with ingestion, masking, chunking, evidence spans, node extraction, edge linking, findings, approval staging, LLM-assisted reasoning trace, and replay diff.
-- Deterministic finding rules include missing implementation, missing verification, orphan design, conflicting alternatives, Confluence stale trace, and issue-affects-critical-requirement.
+- Deterministic finding rules include missing implementation, missing verification, orphan design, conflicting alternatives, Confluence stale trace, issue-affects-critical-requirement, and architecture-without-verification-path.
 - Model gateway abstraction with dummy provider, HTTP JSON provider foundation, registry activation/rollback records, structured validation, retry/fallback traces, and token/cost metadata.
 - Approval workflow with pending graph proposals separated from approved graph state.
 - Approval actions: approve, reject, hold, modify.
@@ -241,7 +241,26 @@ Latest verified baseline before this handoff:
 - `uv run mypy src`: passed
 - `uv run pytest`: `217 passed, 3 skipped`
 - `uv run python ops/ui/smoke_operator_ui.py`: passed
-- Dashboard smoke data included `RUNE_SCALE_150` with 150 graph nodes, 103 pending approvals, 47 open findings, 40 high findings, and 9 orphan nodes.
+- Dashboard smoke data included `RUNE_SCALE_150` with 150 graph nodes, 103 pending approvals, 48 open findings, 41 high findings, and 9 orphan nodes after architecture verification-path coverage was added.
+
+## 2026-05-17 Deterministic Architecture Verification-Path Rule
+
+- Added deterministic `ARCHITECTURE_WITHOUT_VERIFICATION_PATH` finding rule.
+- The rule creates a high `missing_verification` finding when an
+  `Architecture_Block` has neither a direct incoming `verifies` edge nor an
+  indirect verification path through linked requirement/design targets.
+- The rule addresses `PRODUCTION_EXECUTION_PLAN.md` Step 7's `architecture
+  without verification path` baseline rule.
+- `RUNE_SCALE_150` now reports 48 open findings, including one
+  architecture verification-path gap, while compact `RUNE_CAM_ALPHA` remains at
+  6 open findings because `CAM-ARCH-010` is covered through verified
+  `CAM-REQ-001`.
+- Fresh verification:
+  - `uv run pytest tests/unit/findings/test_rules.py tests/integration/test_dummy_analysis_pipeline.py tests/contract/test_dashboard_api.py tests/unit/dashboard/test_summary_service.py -q`: `17 passed`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `238 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
 
 Continuation prompt:
 

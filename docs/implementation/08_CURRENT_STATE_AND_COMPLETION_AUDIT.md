@@ -145,7 +145,11 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 237 passed, 3 skipped
+- `uv run pytest`: 238 passed, 3 skipped
+- `uv run pytest tests/unit/findings/test_rules.py tests/integration/test_dummy_analysis_pipeline.py tests/contract/test_dashboard_api.py tests/unit/dashboard/test_summary_service.py -q`:
+  17 passed, validating deterministic finding rules, dummy workflow routing,
+  dashboard summaries, and work-queue ordering after the architecture
+  verification-path rule
 - `uv run pytest tests/unit/adapters/test_jira_rest_adapter.py -q`:
   6 passed, validating JIRA REST pagination/retry/permission handling, link
   extraction, comment metadata preservation, and changelog history metadata
@@ -201,7 +205,7 @@ Latest local verification:
 - `uv run python ops/source/rehearse_company_sources.py`: failed as expected on this local shell because JIRA/Confluence sandbox env vars are unset; output masks tokens and lists missing config
 - `uv run python ops/source/rehearse_decision_email_export.py`: failed as expected on this local shell because `RUNE_EMAIL_EXPORT_PATH` is unset; output masks path state and lists missing config
 - `uv run python ops/model_gateway/smoke_model_gateway.py`: passed
-- `uv run python ops/ui/smoke_operator_ui.py`: passed, validating dashboard-first static UI assets, dashboard summary/work-queue/source-health read models, graph controls, SVG renderer hooks, and `RUNE_SCALE_150` projection modes with 150 total nodes, 120 visible overview nodes, 103 pending edges, 103 approval work items, 47 finding work items, and 9 orphan nodes
+- `uv run python ops/ui/smoke_operator_ui.py`: passed, validating dashboard-first static UI assets, dashboard summary/work-queue/source-health read models, graph controls, SVG renderer hooks, and `RUNE_SCALE_150` projection modes with 150 total nodes, 120 visible overview nodes, 103 pending edges, 103 approval work items, 48 finding work items, and 9 orphan nodes
 - `uv run python ops/observability/validate_observability_assets.py`: passed, validating Prometheus scrape config, alert rules, Grafana dashboard JSON, required runtime metric references, and absence of hardcoded observability credentials
 - `uv run python ops/model_gateway/rehearse_model_gateway.py`: failed as expected on this local shell because `MODEL_GATEWAY_ENDPOINT_URL` is unset; output masks API key state and lists missing config
 - `uv run python ops/security/rehearse_trusted_proxy_auth.py`: failed as expected on this local shell because `RUNE_API_BASE_URL` and `TRUSTED_PROXY_SECRET` are unset; output masks secret state and lists missing config
@@ -262,7 +266,7 @@ Latest implementation GitHub verification:
 | Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, `Neo4jGraphBackend`, graph projection, traceability chain APIs, optional `NEO4J_TEST_*` integration test, Docker integration runner | Neo4j foundation complete; disposable Docker Neo4j integration passed; company/staging graph rehearsal pending |
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test, Docker integration runner | Qdrant foundation complete; disposable Docker Qdrant integration passed; company/staging vector rehearsal pending |
 | Approval workflow | approval queue, deterministic confidence/relation-based risk routing in `src/req_tracker/reasoning/scoring.py`, approve/reject/hold/modify path, expected-version/proposal-hash stale approval guard with blocked audit outcome, graph commit, developer/operator RBAC and project-scope checks | Complete for local and protected API paths |
-| Deterministic traceability rules | `src/req_tracker/findings/rules.py`, source metadata routed into `LocalAnalysisWorkflow`, `tests/unit/findings/test_rules.py`, compact/dashboard contract tests | Complete for requirement without implementation, requirement without verification, design without parent requirement, conflicting alternatives, Confluence page version stale trace, and issue affecting critical requirement; company data calibration still pending |
+| Deterministic traceability rules | `src/req_tracker/findings/rules.py`, source metadata routed into `LocalAnalysisWorkflow`, `tests/unit/findings/test_rules.py`, compact/dashboard contract tests | Complete for requirement without implementation, requirement without verification, design without parent requirement, conflicting alternatives, Confluence page version stale trace, issue affecting critical requirement, and architecture without verification path; company data calibration still pending |
 | Feedback loop | feedback events, command-style feedback action/reason aliases normalized to canonical taxonomy, eval candidates, improvement candidates including few-shot-example and ontology-normalization candidate contracts, ontology-normalization candidates for wrong-node-type feedback, eval gate, controlled review/canary promotion, canary/active rollback, persisted and PostgreSQL-typed improvement decisions, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary/rollback rehearsal complete; real production feedback calibration pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, analysis/ingestion/replay run start/completion audit boundary events with trigger metadata, failed run status and failed completion audit events, blocked debug artifact read audit events, finding status change audit events, improvement activation/rollback audit events, model/prompt activation/rollback audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, `11_GRAPH_RELATIONSHIP_VIEW_PLAN.md`, SVG graph controls, projection API, relationship/component layout, relationship node drag/pin/reset interaction, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, truncation metadata, Relationship Graph layout, component grouping, dense-label reduction, node drag, edge rerender, and reset-to-auto-layout are locally validated; React Flow decision remains pending after real graph shape validation |
@@ -400,7 +404,7 @@ blocking:
     `6 passed`
   - `uv run python ops/ui/smoke_operator_ui.py`: passed, including
     `RUNE_SCALE_150` with 150 total nodes, 120 visible overview nodes,
-    103 pending edges, 103 approval work items, 47 finding work items,
+    103 pending edges, 103 approval work items, 48 finding work items,
     and 9 orphan nodes
   - Playwright CLI verified `Relationship Graph` with `layout=relationship`,
     120 rendered relationship nodes, 73 rendered edges, 26 dense-mode labels,

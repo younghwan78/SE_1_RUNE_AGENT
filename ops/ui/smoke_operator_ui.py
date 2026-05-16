@@ -190,7 +190,7 @@ def run_operator_ui_smoke() -> dict[str, Any]:
         "dashboard_work_queue_contract": (
             work_queue.status_code == 200
             and work_queue_payload.get("counts", {}).get("approval") == 103
-            and work_queue_payload.get("counts", {}).get("finding") == 47
+            and work_queue_payload.get("counts", {}).get("finding") == 48
         ),
         "dashboard_work_queue_preference_contract": (
             work_queue_preferences.status_code == 200

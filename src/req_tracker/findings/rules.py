@@ -92,6 +92,7 @@ def analyze_findings(
             source_artifacts=source_artifacts or [],
         )
     )
+    findings.extend(_architecture_without_verification_path_findings(nodes=nodes, edges=edges))
     return findings
 
 
@@ -209,6 +210,72 @@ def _issue_affects_critical_requirement_findings(
                 evidence=edge.evidence,
                 detection_method="rule",
                 rule_id="ISSUE_AFFECTS_CRITICAL_REQUIREMENT",
+            )
+        )
+    return findings
+
+
+def _architecture_without_verification_path_findings(
+    *,
+    nodes: list[OntologyNode],
+    edges: list[TraceabilityEdge],
+) -> list[Finding]:
+    incoming_by_target: dict[str, list[TraceabilityEdge]] = defaultdict(list)
+    outgoing_by_source: dict[str, list[TraceabilityEdge]] = defaultdict(list)
+    nodes_by_id = {node.node_id: node for node in nodes}
+    for edge in edges:
+        incoming_by_target[edge.target_node_id].append(edge)
+        outgoing_by_source[edge.source_node_id].append(edge)
+
+    findings: list[Finding] = []
+    for node in nodes:
+        if node.node_type != "Architecture_Block":
+            continue
+        direct_verification_edges = [
+            edge for edge in incoming_by_target[node.node_id] if edge.relation == "verifies"
+        ]
+        trace_edges = [
+            edge
+            for edge in outgoing_by_source[node.node_id]
+            if edge.relation in {"satisfies", "implements", "derives"}
+        ]
+        indirect_verified_edges = [
+            edge
+            for trace_edge in trace_edges
+            for edge in incoming_by_target[trace_edge.target_node_id]
+            if edge.relation == "verifies"
+        ]
+        if direct_verification_edges or indirect_verified_edges:
+            continue
+
+        affected_target_ids = [
+            edge.target_node_id for edge in trace_edges if edge.target_node_id in nodes_by_id
+        ]
+        affected_node_ids = [node.node_id, *affected_target_ids]
+        affected_edge_ids = [edge.edge_id for edge in trace_edges]
+        finding_hash = stable_hash(
+            {
+                "rule": "ARCHITECTURE_WITHOUT_VERIFICATION_PATH",
+                "architecture": node.node_id,
+                "targets": affected_target_ids,
+                "edges": affected_edge_ids,
+            }
+        )
+        findings.append(
+            Finding(
+                finding_id=f"fdg_{finding_hash[:16]}",
+                finding_type="missing_verification",
+                severity="high",
+                affected_node_ids=affected_node_ids,
+                affected_edge_ids=affected_edge_ids,
+                description=f"{node.node_id} has no direct or linked verification path.",
+                suggested_action=(
+                    "Add a verification relation to the architecture block or to a linked "
+                    "requirement/design target that validates this architecture."
+                ),
+                evidence=trace_edges[0].evidence if trace_edges else node.evidence,
+                detection_method="rule",
+                rule_id="ARCHITECTURE_WITHOUT_VERIFICATION_PATH",
             )
         )
     return findings

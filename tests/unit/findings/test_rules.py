@@ -145,3 +145,64 @@ def test_issue_affecting_critical_requirement_creates_critical_finding() -> None
     assert critical[0].affected_node_ids == [issue.node_id, requirement.node_id]
     assert critical[0].affected_edge_ids == [edge.edge_id]
     assert critical[0].evidence == [issue_evidence]
+
+
+def test_architecture_without_verification_path_creates_finding() -> None:
+    arch_evidence = EvidenceSpan(
+        artifact_id="src_jira_CAM-ARCH-030",
+        source_url="https://jira.example.com/browse/CAM-ARCH-030",
+        quote_hash="hash_arch_30",
+        extracted_text_preview="Architecture block satisfies CAM-REQ-030.",
+    )
+    req_evidence = EvidenceSpan(
+        artifact_id="src_jira_CAM-REQ-030",
+        source_url="https://jira.example.com/browse/CAM-REQ-030",
+        quote_hash="hash_req_30",
+        extracted_text_preview="Requirement has no verification coverage.",
+    )
+    architecture = OntologyNode(
+        node_id="node_RUNE_CAM_ALPHA_CAM_ARCH_030",
+        node_type="Architecture_Block",
+        name="Unverified architecture block",
+        description="Architecture block satisfies CAM-REQ-030.",
+        project_key="RUNE_CAM_ALPHA",
+        source_artifact_ids=["src_jira_CAM-ARCH-030"],
+        evidence=[arch_evidence],
+        created_by="source",
+        confidence_score=0.95,
+    )
+    requirement = OntologyNode(
+        node_id="node_RUNE_CAM_ALPHA_CAM_REQ_030",
+        node_type="Requirement",
+        name="Unverified requirement",
+        description="Requirement has no verification coverage.",
+        project_key="RUNE_CAM_ALPHA",
+        source_artifact_ids=["src_jira_CAM-REQ-030"],
+        evidence=[req_evidence],
+        created_by="source",
+        confidence_score=0.95,
+    )
+    satisfies_edge = TraceabilityEdge(
+        edge_id="edge_arch_satisfies_req",
+        source_node_id=architecture.node_id,
+        target_node_id=requirement.node_id,
+        relation="satisfies",
+        reasoning="Architecture satisfies requirement.",
+        evidence=[arch_evidence],
+        is_inferred=False,
+        confidence_score=0.9,
+    )
+
+    findings = analyze_findings([architecture, requirement], [satisfies_edge])
+
+    architecture_gaps = [
+        finding
+        for finding in findings
+        if finding.rule_id == "ARCHITECTURE_WITHOUT_VERIFICATION_PATH"
+    ]
+    assert len(architecture_gaps) == 1
+    assert architecture_gaps[0].finding_type == "missing_verification"
+    assert architecture_gaps[0].severity == "high"
+    assert architecture_gaps[0].affected_node_ids == [architecture.node_id, requirement.node_id]
+    assert architecture_gaps[0].affected_edge_ids == [satisfies_edge.edge_id]
+    assert architecture_gaps[0].evidence == [arch_evidence]

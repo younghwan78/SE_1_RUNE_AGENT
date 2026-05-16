@@ -79,12 +79,12 @@ def test_dashboard_scale_fixture_summarizes_large_graph(client: TestClient) -> N
     assert payload["counts"]["pending_edges"] == 103
     assert payload["counts"]["pending_approvals"] == 103
     assert payload["counts"]["orphan_nodes"] == 9
-    assert payload["counts"]["open_findings"] == 47
+    assert payload["counts"]["open_findings"] == 48
 
     assert work_queue.status_code == 200
     queue_payload = work_queue.json()
     assert queue_payload["counts"]["approval"] == 103
-    assert queue_payload["counts"]["finding"] == 47
+    assert queue_payload["counts"]["finding"] == 48
     assert len(queue_payload["items"]) <= 200
 
 

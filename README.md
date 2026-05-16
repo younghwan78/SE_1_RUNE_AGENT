@@ -271,6 +271,8 @@ Current local implementation:
 - local model-gateway smoke harness for HTTP fallback and trace validation
 - in-memory graph/vector backends
 - deterministic critical-impact rule for issues affecting P0/critical requirements
+- deterministic architecture verification-path rule for architecture blocks with no direct
+  or linked verification coverage
 - approval queue, graph commit, feedback capture
 - audit event capture for approval, feedback, debug artifact, scheduler, and run completion
 - replay diff and eval candidate grouping
