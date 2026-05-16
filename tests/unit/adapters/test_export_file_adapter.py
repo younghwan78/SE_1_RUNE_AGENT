@@ -174,6 +174,37 @@ def test_decision_email_export_adapter_masks_email_thread_metadata(tmp_path) -> 
     assert metadata["thread_metadata_redaction_count"] == 4
 
 
+def test_decision_email_export_adapter_routes_sensitive_threads_to_manual_review(
+    tmp_path,
+) -> None:  # type: ignore[no-untyped-def]
+    export_path = tmp_path / "decision_email.jsonl"
+    export_path.write_text(
+        json.dumps(
+            _artifact(
+                "MAIL-SENSITIVE-1",
+                "email",
+                labels=["decision"],
+                metadata={
+                    "mbse_type": "Decision",
+                    "decision_source_approved": True,
+                    "manual_review_required": True,
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    result = DecisionEmailExportSourceAdapter(export_path).fetch_incremental(
+        SourceScope(project_key="RUNE_CAM_ALPHA")
+    )
+
+    assert result.artifacts == []
+    assert result.partial_failure is True
+    assert result.source_warnings == [
+        "decision_email_manual_review_required:MAIL-SENSITIVE-1"
+    ]
+
+
 def test_missing_export_file_reports_partial_failure(tmp_path) -> None:  # type: ignore[no-untyped-def]
     result = JiraExportSourceAdapter(tmp_path / "missing.json").fetch_incremental(
         SourceScope(project_key="RUNE_CAM_ALPHA")

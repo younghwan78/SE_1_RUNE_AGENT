@@ -50,6 +50,18 @@ def test_decision_email_rehearsal_allows_only_approved_decisions(tmp_path) -> No
                         metadata={"mbse_type": "Decision"},
                     )
                 ),
+                json.dumps(
+                    _artifact(
+                        "MAIL-SENSITIVE-1",
+                        "email",
+                        labels=["decision"],
+                        metadata={
+                            "mbse_type": "Decision",
+                            "decision_source_approved": True,
+                            "manual_review_required": True,
+                        },
+                    )
+                ),
             ]
         ),
         encoding="utf-8",
@@ -60,11 +72,13 @@ def test_decision_email_rehearsal_allows_only_approved_decisions(tmp_path) -> No
     assert report["passed"] is True
     assert report["artifact_count"] == 1
     assert report["skipped_count"] == 2
+    assert report["manual_review_count"] == 1
     assert report["config"]["export_path"] == "<set>"
     assert report["artifacts"][0]["external_id"] == "MAIL-DEC-1"
     assert report["warnings"] == [
         "decision_email_artifact_skipped:MAIL-FULL-1",
         "decision_email_artifact_skipped:CONF-LEAK-1",
+        "decision_email_manual_review_required:MAIL-SENSITIVE-1",
     ]
 
 

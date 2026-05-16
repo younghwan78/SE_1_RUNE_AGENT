@@ -58,7 +58,7 @@ Do not use or recreate removed planning files:
   - Confluence section-path and table-cell metadata extraction
   - Confluence previous-version metadata and deterministic stale trace findings
   - export-file adapters for JIRA, Confluence, restricted decision/email
-  - restricted decision/email export policy with email thread metadata masking
+  - restricted decision/email export policy with sensitive-thread manual-review routing and email thread metadata masking
   - source boundary validator
   - source adapter smoke harness
 - Latest source integration work:
@@ -118,8 +118,25 @@ Do not mark the overall production goal complete until a completion audit verifi
   - `uv run pytest tests/unit/adapters/test_confluence_rest_adapter.py::test_confluence_rest_adapter_preserves_previous_version_metadata tests/unit/findings/test_rules.py::test_confluence_version_change_creates_stale_trace_finding tests/integration/test_dummy_analysis_pipeline.py::test_confluence_version_change_is_routed_to_stale_finding -q`: `3 passed`
   - `uv run ruff check .`: passed
   - `uv run mypy src`: passed
-  - `uv run pytest`: `235 passed, 3 skipped`
+  - `uv run pytest`: `236 passed, 3 skipped`
   - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
+
+## 2026-05-17 Decision/Email Manual Review Local Hardening
+
+- Added restricted decision/email export policy that blocks email artifacts with
+  `metadata.manual_review_required=true` or `metadata.sensitive_thread=true`
+  from automatic ingestion even when they are otherwise approved decision
+  artifacts.
+- Added source warning
+  `decision_email_manual_review_required:<external_id>` so sensitive threads
+  are distinguishable from ordinary skipped mailbox artifacts.
+- Updated `ops/source/rehearse_decision_email_export.py` to report
+  `manual_review_count` separately from `skipped_count`.
+- Validation:
+  - `uv run pytest tests/unit/adapters/test_export_file_adapter.py tests/unit/ops/test_decision_email_rehearsal.py -q`: `8 passed`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `236 passed, 3 skipped`
 
 ## Remaining Production Gates
 

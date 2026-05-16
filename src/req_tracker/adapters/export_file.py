@@ -119,6 +119,9 @@ class DecisionEmailExportSourceAdapter(ExportFileSourceAdapter):
         for artifact in self._load():
             if artifact.project_key != scope.project_key:
                 continue
+            if _requires_email_manual_review(artifact):
+                warnings.append(f"decision_email_manual_review_required:{artifact.external_id}")
+                continue
             if _is_allowed_decision_artifact(artifact):
                 artifacts.append(_mask_email_decision_metadata(artifact))
                 continue
@@ -139,6 +142,15 @@ def _is_allowed_decision_artifact(artifact: RawSourceArtifact) -> bool:
         return False
     return bool(artifact.metadata.get("decision_source_approved")) and _artifact_is_decision(
         artifact
+    )
+
+
+def _requires_email_manual_review(artifact: RawSourceArtifact) -> bool:
+    if artifact.source_type != "email":
+        return False
+    return bool(
+        artifact.metadata.get("manual_review_required")
+        or artifact.metadata.get("sensitive_thread")
     )
 
 

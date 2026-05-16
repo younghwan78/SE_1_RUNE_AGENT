@@ -99,6 +99,11 @@ def run_decision_email_export_rehearsal(
         for warning in result.source_warnings
         if warning.startswith("decision_email_artifact_skipped:")
     ]
+    manual_review = [
+        warning
+        for warning in result.source_warnings
+        if warning.startswith("decision_email_manual_review_required:")
+    ]
     passed = bool(artifacts) and all(
         artifact["source_type"] in {"email", "decision_archive"} for artifact in artifacts
     )
@@ -108,6 +113,7 @@ def run_decision_email_export_rehearsal(
         "config": _safe_config(config),
         "artifact_count": len(artifacts),
         "skipped_count": len(skipped),
+        "manual_review_count": len(manual_review),
         "next_cursor_present": result.next_cursor is not None,
         "partial_failure": result.partial_failure,
         "artifacts": artifacts,

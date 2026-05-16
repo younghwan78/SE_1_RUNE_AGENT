@@ -264,7 +264,8 @@ Current local implementation:
 - Confluence REST section-path and table-cell metadata extraction
 - Confluence previous-version metadata and stale trace finding generation
 - local JIRA/Confluence REST source smoke harness
-- restricted decision/email export policy that skips unapproved mailbox artifacts and masks email thread metadata
+- restricted decision/email export policy that skips unapproved mailbox artifacts,
+  routes sensitive threads to manual review, and masks email thread metadata
 - generic HTTP JSON model provider with file-backed model/prompt registry
 - local model-gateway smoke harness for HTTP fallback and trace validation
 - in-memory graph/vector backends
