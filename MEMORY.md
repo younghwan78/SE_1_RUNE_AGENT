@@ -282,13 +282,18 @@ Follow-up production persistence hardening:
   backend dashboard preferences and assignments.
 - Added typed PostgreSQL mirror specs for `dashboard_preferences` and
   `dashboard_assignments`.
+- Added PostgreSQL migration `007_source_cursor_state_tables.sql` and rollback
+  for `source_sync_cursors`.
+- Added typed PostgreSQL mirror spec for `source_sync_cursors`, keeping the
+  full payload JSON and promoting source type, project key, scenario, run id,
+  cursor counters, failure state, and update metadata into typed columns.
 - Validation:
   - `uv run pytest tests/unit/storage/test_postgres_store.py -q`: `9 passed`
   - `uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py`:
-    passed with versions `001` through `006`
+    passed with versions `001` through `007`
   - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed
-    including dashboard preference/assignment mirrors
-  - `uv run pytest`: `225 passed, 3 skipped`
+    including dashboard preference/assignment and source sync cursor mirrors
+  - `uv run pytest`: `227 passed, 3 skipped`
 - `uv run pytest`: `219 passed, 3 skipped`
 - Playwright CLI screenshot smoke was run manually for dashboard/work-queue rendering and deep-link behavior, but it is intentionally not added to CI per user direction.
 

@@ -78,13 +78,14 @@ class FakePostgresConnection:
             or sql.startswith("insert into registry_activations")
             or sql.startswith("insert into dashboard_preferences")
             or sql.startswith("insert into dashboard_assignments")
+            or sql.startswith("insert into source_sync_cursors")
         ):
             table = sql.split(" ", maxsplit=3)[2]
             entity_id = str(_params(params)[0])
             payload_json = _params(params)[-1]
             assert isinstance(payload_json, Jsonb)
             self.typed_entities[(table, entity_id)] = {
-                "project_key": _params(params)[1],
+                "project_key": payload_json.obj.get("project_key"),
                 "payload_json": payload_json.obj,
             }
             return FakeCursor()
@@ -162,11 +163,23 @@ class FakePostgresConnection:
             assignment_id = str(_params(params)[0])
             row = self.typed_entities.get(("dashboard_assignments", assignment_id))
             return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith("select payload_json from source_sync_cursors where cursor_id"):
+            cursor_id = str(_params(params)[0])
+            row = self.typed_entities.get(("source_sync_cursors", cursor_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
         if sql.startswith("select payload_json from agent_runs"):
             rows = [
                 {"payload_json": row["payload_json"]}
                 for (_table, _entity_id), row in sorted(self.typed_entities.items())
                 if row["project_key"] == _params(params)[0]
+            ]
+            return FakeCursor(many=rows)
+        if sql.startswith("select payload_json from source_sync_cursors"):
+            rows = [
+                {"payload_json": row["payload_json"]}
+                for (_table, _entity_id), row in sorted(self.typed_entities.items())
+                if _table == "source_sync_cursors"
+                and (not _params(params) or row["project_key"] == _params(params)[0])
             ]
             return FakeCursor(many=rows)
         if "select payload_json from state_entities" in sql and "order by entity_id" not in sql:
@@ -207,6 +220,7 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
         "004",
         "005",
         "006",
+        "007",
     ]
     assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
     assert "JSONB" in migrations[0].sql
@@ -218,17 +232,19 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     assert "CREATE TABLE IF NOT EXISTS scheduler_leases" in migrations[4].sql
     assert "CREATE TABLE IF NOT EXISTS dashboard_preferences" in migrations[5].sql
     assert "CREATE TABLE IF NOT EXISTS dashboard_assignments" in migrations[5].sql
+    assert "CREATE TABLE IF NOT EXISTS source_sync_cursors" in migrations[6].sql
 
 
 def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
     rollbacks = load_postgres_rollbacks()
 
-    assert sorted(rollbacks) == ["001", "002", "003", "004", "005", "006"]
+    assert sorted(rollbacks) == ["001", "002", "003", "004", "005", "006", "007"]
     assert "DROP TABLE IF EXISTS agent_runs" in rollbacks["002"].sql
     assert "DROP TABLE IF EXISTS audit_archive_batches" in rollbacks["003"].sql
     assert "DROP TABLE IF EXISTS idempotency_results" in rollbacks["004"].sql
     assert "DROP TABLE IF EXISTS scheduler_leases" in rollbacks["005"].sql
     assert "DROP TABLE IF EXISTS dashboard_preferences" in rollbacks["006"].sql
+    assert "DROP TABLE IF EXISTS source_sync_cursors" in rollbacks["007"].sql
 
 
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
@@ -249,7 +265,7 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
         payload=run,
     )
 
-    assert fake.migrations == {"001", "002", "003", "004", "005", "006"}
+    assert fake.migrations == {"001", "002", "003", "004", "005", "006", "007"}
     assert any("insert into agent_runs" in sql for sql in fake.executed_sql)
     stored = store.get("agent_runs", run.run_id)
     assert stored is not None
@@ -336,7 +352,7 @@ def test_postgres_store_typed_dashboard_state_tables() -> None:
     assert store.get("dashboard_assignments", assignment["assignment_id"]) == assignment
 
 
-def test_postgres_store_persists_source_sync_cursor_in_state_entities() -> None:
+def test_postgres_store_persists_source_sync_cursor_in_typed_table() -> None:
     fake = FakePostgresConnection()
     store = PostgreSQLStateStore("", connection_factory=lambda: fake)
     cursor = SourceSyncCursorState(
@@ -358,7 +374,7 @@ def test_postgres_store_persists_source_sync_cursor_in_state_entities() -> None:
         payload=cursor,
     )
 
-    assert not any("insert into source_sync_cursors" in sql for sql in fake.executed_sql)
+    assert any("insert into source_sync_cursors" in sql for sql in fake.executed_sql)
     stored = store.get("source_sync_cursors", cursor.cursor_id)
     assert stored is not None
     assert stored["completed_cursor"]["offset"] == 10

@@ -258,6 +258,24 @@ TYPED_COLLECTIONS: dict[str, TypedCollectionSpec] = {
             ("schema_version", "schema_version"),
         ),
     ),
+    "source_sync_cursors": TypedCollectionSpec(
+        table="source_sync_cursors",
+        id_column="cursor_id",
+        columns=(
+            ("cursor_id", "cursor_id"),
+            ("source_type", "source_type"),
+            ("project_key", "project_key"),
+            ("scenario", "scenario"),
+            ("run_id", "run_id"),
+            ("stage_name", "stage_name"),
+            ("artifact_count", "artifact_count"),
+            ("page_count", "page_count"),
+            ("content_hash", "content_hash"),
+            ("partial_failure", "partial_failure"),
+            ("updated_at", "updated_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
 }
 
 

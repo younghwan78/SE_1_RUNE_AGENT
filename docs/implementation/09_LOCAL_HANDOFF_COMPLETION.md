@@ -41,9 +41,9 @@ Concrete deliverables:
 | Approval and graph commit safety | approval contract/security tests | Complete |
 | Feedback/eval/improvement loop | `ops/evals/run_feedback_eval_rehearsal.py` | Complete |
 | Debug and replay workbench | debug/replay contract tests | Complete |
-| Persistence foundation | SQLite/PostgreSQL tests and migration validators, including dashboard preference/assignment typed mirrors | Complete |
-| Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete; latest 2026-05-16 workstation run passed after Docker Desktop Linux engine was started |
-| Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete; latest 2026-05-16 workstation run passed after Docker Desktop Linux engine was started |
+| Persistence foundation | SQLite/PostgreSQL tests and migration validators, including dashboard preference/assignment and source sync cursor typed mirrors | Complete |
+| Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete; latest 2026-05-17 workstation run passed with Docker Desktop Linux engine available |
+| Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete; latest 2026-05-17 workstation run passed with Docker Desktop Linux engine available |
 | Release blocker gate | `ops/security/check_release_blockers.py` | Complete locally |
 | Dashboard state RBAC | `docs/security/RBAC_MATRIX.md`, `tests/contract/test_dashboard_api.py` | Complete locally |
 | Readiness template | `ops/rehearsal/check_production_readiness.py --write-evidence-template -` | Complete |
