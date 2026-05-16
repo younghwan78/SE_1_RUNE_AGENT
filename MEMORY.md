@@ -35,6 +35,8 @@ Do not use or recreate removed planning files:
   reference, and fail the run with `MASKING_POLICY_VIOLATION`.
 - Deterministic finding rules include missing implementation, missing verification, orphan design, conflicting alternatives, Confluence stale trace, issue-affects-critical-requirement, and architecture-without-verification-path.
 - Model gateway abstraction with dummy provider, HTTP JSON provider foundation, registry activation/rollback records, structured validation, retry/fallback traces, and token/cost metadata.
+- Model gateway same-input comparison helper can run model/prompt candidates and
+  report profile ids, prompt ids, validation statuses, and output diffs.
 - Approval workflow with pending graph proposals separated from approved graph state.
 - Approval actions: approve, reject, hold, modify.
 - Approval safety: idempotency, version/proposal-hash stale checks, RBAC, audit.
@@ -174,6 +176,25 @@ Do not mark the overall production goal complete until a completion audit verifi
 - Commit/CI:
   - `360b68e Trace node and finding LLM stages`
   - GitHub Actions `CI` run `25967338344`: success
+
+## 2026-05-17 Model Gateway Comparison Coverage
+
+- Added `src/req_tracker/model_gateway/comparison.py`.
+- The new comparison helper runs the same `ModelRequest.payload` through two
+  or more model/prompt candidates and reports:
+  - compared model profile ids
+  - compared prompt version ids
+  - per-profile validation status
+  - output hashes
+  - top-level added/removed/changed output fields
+- This closes the local Step 3 gap for comparing the same request across two
+  dummy model profiles without a live provider.
+- Verification:
+  - `uv run pytest tests/unit/model_gateway -q`: `16 passed`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `240 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
 
 ## 2026-05-17 Decision/Email Manual Review Local Hardening
 

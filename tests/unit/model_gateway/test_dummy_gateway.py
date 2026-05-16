@@ -6,6 +6,10 @@ from pydantic import BaseModel, Field
 from req_tracker.debug.artifacts import LocalArtifactStore
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.model_gateway.client import ModelGatewayClient
+from req_tracker.model_gateway.comparison import (
+    ModelGatewayCandidate,
+    compare_model_gateway_candidates,
+)
 from req_tracker.model_gateway.dummy_provider import DummyModelProvider, DummyModelTimeoutError
 from req_tracker.model_gateway.models import (
     ModelProfile,
@@ -310,3 +314,66 @@ def test_gateway_uses_fallback_provider_after_timeout() -> None:
     assert validation.status == "passed"
     assert [trace.model_profile_id for trace in trace_values] == ["dummy-fast", "dummy-fallback"]
     assert [trace.validation_status for trace in trace_values] == ["failed", "passed"]
+
+
+def test_gateway_compares_same_request_across_dummy_profiles() -> None:
+    traces = InMemoryTraceRepository()
+    request = ModelRequest(
+        model_profile_id="dummy-fast",
+        prompt_version_id="pv_node_v1",
+        payload={"fixture_name": "candidate"},
+        data_classification="public_internal",
+    )
+    slow_profile = profile().model_copy(
+        update={"model_profile_id": "dummy-slow", "model_name": "dummy-slow"}
+    )
+
+    report = compare_model_gateway_candidates(
+        run_id="run_compare",
+        step_id="step_compare",
+        request=request,
+        candidates=[
+            ModelGatewayCandidate(
+                provider=DummyModelProvider(
+                    fixtures={
+                        "candidate": {
+                            "node_id": "node_001",
+                            "confidence_score": 0.9,
+                        }
+                    }
+                ),
+                profile=profile(),
+                prompt=prompt(),
+            ),
+            ModelGatewayCandidate(
+                provider=DummyModelProvider(
+                    fixtures={
+                        "candidate": {
+                            "node_id": "node_001",
+                            "confidence_score": 0.72,
+                        }
+                    }
+                ),
+                profile=slow_profile,
+                prompt=prompt().model_copy(update={"prompt_version_id": "pv_node_v1b"}),
+            ),
+        ],
+        response_model=NodeExtractionOutput,
+        trace_repo=traces,
+    )
+
+    assert report.compared_model_profile_ids == ["dummy-fast", "dummy-slow"]
+    assert report.compared_prompt_version_ids == ["pv_node_v1", "pv_node_v1b"]
+    assert report.validation_statuses == {
+        "dummy-fast": "passed",
+        "dummy-slow": "passed",
+    }
+    assert report.output_changed is True
+    assert report.output_diff["changed"]["confidence_score"] == {
+        "left": 0.9,
+        "right": 0.72,
+    }
+    assert [trace.model_profile_id for trace in traces.llm_calls.values()] == [
+        "dummy-fast",
+        "dummy-slow",
+    ]

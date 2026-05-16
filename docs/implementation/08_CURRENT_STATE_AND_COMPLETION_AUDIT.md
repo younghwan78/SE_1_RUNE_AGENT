@@ -148,7 +148,11 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 239 passed, 3 skipped
+- `uv run pytest`: 240 passed, 3 skipped
+- `uv run pytest tests/unit/model_gateway -q`: 16 passed, validating dummy
+  provider calls, policy enforcement, structured validation retry, fallback
+  trace recording, provider usage metadata, and same-input model/prompt
+  comparison diff reporting
 - `uv run pytest tests/contract/test_health_api.py::test_metrics_summary_reports_http_and_runtime_counts tests/unit/model_gateway tests/contract/test_debug_api.py tests/contract/test_replay_feedback_api.py tests/contract/test_persistence_api.py tests/integration/test_dummy_analysis_pipeline.py -q`:
   40 passed, validating three traceable local LLM stages
   (`pv_node_extraction_v1`, `pv_edge_linking_v1`,
@@ -228,7 +232,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed,
   including API restart restore, `audit_total_events=3`, metrics surface check
   (`http_total_requests=7`, `graph_nodes=14`, `llm_calls=3`), and smoke-load
-  pass (`load_smoke.p95_ms` about 2369 ms against a 5000 ms local rehearsal
+  pass (`load_smoke.p95_ms` about 2606 ms against a 5000 ms local rehearsal
   threshold)
 - `uv run python ops/evals/run_feedback_eval_rehearsal.py`: passed, including review-ready, canary, active, rollback, and security-blocked eval paths
 - `uv run python ops/rehearsal/check_production_readiness.py`: failed as expected on this local shell because production env/company-staging endpoints are unset; report produced failed env checks and manual-required gates without secret values
@@ -270,7 +274,7 @@ Latest implementation GitHub Actions verification:
 | Run trigger lineage | `AgentRun.triggered_by`, `AgentRun.trigger_source`, API analyze path, schedule run-now path, periodic scheduler path, replay path, contract tests | Complete for local API/manual/schedule/replay trigger attribution |
 | Agent workflow orchestration | `LocalAnalysisWorkflow`, stable public stage names, `AgentStepTrace`, `LLMCallTrace`, `docs/implementation/01_MODULE_DESIGN.md` LangGraph transition note | Complete for local/dummy workflow contract validation; LangGraph remains a later orchestration swap after production dependency and branching needs justify it |
 | Command idempotency | `POST /api/v1/runs/ingest`, `POST /api/v1/runs/analyze`, `POST /api/v1/runs/{run_id}/replay`, `PUT /api/v1/schedule`, `POST /api/v1/schedule/run-now`, `POST /api/v1/approvals/{approval_id}/decision`, `POST /api/v1/findings/{finding_id}/status`, `POST /api/v1/feedback`, `POST /api/v1/improvements/{candidate_id}/activate`, `POST /api/v1/improvements/{candidate_id}/rollback`, `POST /api/v1/admin/model-profiles/{id}/activate`, `POST /api/v1/admin/model-profiles/{id}/rollback`, `POST /api/v1/admin/prompt-versions/{id}/activate`, `POST /api/v1/admin/prompt-versions/{id}/rollback`, and `POST /api/v1/audit/retention/archive-prune` `Idempotency-Key`/`X-Idempotency-Key`, persisted `idempotency_results`, API conflict tests, SQLite restart restore tests for analyze, replay, and audit archive/prune responses, graph commit idempotency keys | Complete for implemented local command APIs plus graph commit paths |
-| Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests, restricted/confidential masking and access-check gates, provider usage metadata extraction, token/cost trace propagation, `ops/model_gateway/smoke_model_gateway.py`, `ops/model_gateway/rehearse_model_gateway.py` | Profile/registry/live-shaped HTTP foundation, env-driven company sandbox rehearsal entrypoint, and provider-reported token/cost observability complete; real external provider sandbox validation pending |
+| Model gateway abstraction | `src/req_tracker/model_gateway` with dummy provider, HTTP JSON provider, provider factory, file-backed registry, policy, structured validation retry, fallback trace tests, same-input model/prompt comparison helper, restricted/confidential masking and access-check gates, provider usage metadata extraction, token/cost trace propagation, `ops/model_gateway/smoke_model_gateway.py`, `ops/model_gateway/rehearse_model_gateway.py` | Profile/registry/live-shaped HTTP foundation, same-input dummy model/prompt diff report, env-driven company sandbox rehearsal entrypoint, and provider-reported token/cost observability complete; real external provider sandbox validation pending |
 | LLM-assisted workflow trace | `LocalAnalysisWorkflow` node extraction, `llm_assisted_reasoning`, and finding reasoning trace calls, `ModelGatewayClient`, structured reasoning output with confidence and counter-evidence refs, `LLMCallTrace`, step-level `retrieval_context_ref`/`validation_status`/`validation_result`, SQLite restore of `llm_call_traces` and step validation metadata, `/api/v1/runs/{run_id}/llm-calls`, debug diff LLM panes | Dummy model-gateway integration complete for `pv_node_extraction_v1`, `pv_edge_linking_v1`, and `pv_finding_reasoning_v1` with step-level validation/debug metadata; live model quality validation pending |
 | Debug trace and local artifact store | `src/req_tracker/debug`, `/api/v1/debug/*`, `/api/v1/debug/source-cursors`, `/api/v1/runs/{run_id}/steps`, `/api/v1/runs/{run_id}/llm-calls`, `/api/v1/runs/{run_id}/artifacts`, `/api/v1/runs/{run_id}/graph-delta`, `/api/v1/replays/{replay_id}/diff`, restart-safe `replay_results`, replay `AgentRun`/step/LLM trace persistence, compared replay model/prompt metadata, approval lineage API, run diff-view API, run debug UI, LLM/graph delta side-by-side panes | Local debug workbench foundation complete with persisted retrieval/validation metadata on agent steps, source sync cursor snapshots, replay run type, replay audit boundaries, replay comparison version metadata, and typed PostgreSQL mirrors for LLM call traces and replay results; live LLM payload validation pending |
 | SQLite state persistence | `SQLiteStateStore`, persistence contract test, restart restore contract test, restart restore of `source_sync_cursors` | Complete |
@@ -572,6 +576,18 @@ blocking:
   - `uv run ruff check .`: passed
   - `uv run mypy src`: passed
   - `uv run pytest`: `239 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+    local regression gates passed; overall readiness still failed as expected
+    with summary `failed=7`, `manual_required=10`, `passed=2`,
+    `warning=0` because company/staging environment variables and reviewed
+    manual evidence are not configured on this workstation
+- 2026-05-17 model gateway comparison coverage:
+  - Added `src/req_tracker/model_gateway/comparison.py` for same-input
+    model/prompt candidate execution and top-level output diff reporting
+  - `uv run pytest tests/unit/model_gateway -q`: `16 passed`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `240 passed, 3 skipped`
   - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
     local regression gates passed; overall readiness still failed as expected
     with summary `failed=7`, `manual_required=10`, `passed=2`,
