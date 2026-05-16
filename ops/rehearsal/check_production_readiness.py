@@ -528,6 +528,30 @@ def _local_gate_summary(results: Sequence[dict[str, Any]]) -> ReadinessCheck:
             summary="All local regression and rehearsal gates passed.",
             evidence=[str(result["command"]) for result in results],
         )
+    docker_unavailable_failures = [
+        result for result in failures if _is_docker_unavailable_failure(result)
+    ]
+    if len(docker_unavailable_failures) == len(failures):
+        return ReadinessCheck(
+            check_id="local_regression_gates",
+            status="manual_required",
+            summary=(
+                "Docker-backed local gates could not run because Docker is unavailable; "
+                "non-Docker local gates passed."
+            ),
+            evidence=[
+                (
+                    f"{result['command']} -> docker_unavailable"
+                    if result in docker_unavailable_failures
+                    else f"{result['command']} -> {result['returncode']}"
+                )
+                for result in results
+            ],
+            next_action=(
+                "Start Docker Desktop with the Linux engine, or run these "
+                "Docker-backed gates on an Ubuntu/Docker host before release."
+            ),
+        )
     return ReadinessCheck(
         check_id="local_regression_gates",
         status="failed",
@@ -535,6 +559,23 @@ def _local_gate_summary(results: Sequence[dict[str, Any]]) -> ReadinessCheck:
         evidence=[f"{result['command']} -> {result['returncode']}" for result in results],
         next_action="Fix failed local gates before release.",
     )
+
+
+def _is_docker_unavailable_failure(result: Mapping[str, Any]) -> bool:
+    command = str(result.get("command", ""))
+    if not (
+        "ops/integration/run_backend_integration.py" in command
+        or "ops/rehearsal/run_full_stack_rehearsal.py" in command
+    ):
+        return False
+    output = str(result.get("output_tail", "")).lower()
+    docker_unavailable_markers = (
+        "failed to connect to the docker api",
+        "cannot connect to the docker daemon",
+        "dockerdesktoplinuxengine",
+        "is the docker daemon running",
+    )
+    return any(marker in output for marker in docker_unavailable_markers)
 
 
 def _apply_manual_evidence(

@@ -86,7 +86,8 @@ Docker-backed integration/full-stack gates where documented by
 On a Windows workstation, start Docker Desktop with the Linux engine before
 running these two Docker-backed gates. If Docker is unavailable, treat these as
 environment-blocked verification gates rather than evidence of application
-logic failure.
+logic failure. `check_production_readiness.py --run-local-gates` reports this
+case as `manual_required` with `docker_unavailable` evidence.
 
 ## 4. Company/Staging Gates
 

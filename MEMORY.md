@@ -263,7 +263,7 @@ Latest validation evidence:
   restoring the auto layout.
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `220 passed, 3 skipped`
+- `uv run pytest`: `222 passed, 3 skipped`
 
 Production readiness audit update:
 
@@ -271,10 +271,13 @@ Production readiness audit update:
   `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` are updated to reflect
   the latest graph UI work, CI success, and current gate status.
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`
-  was executed on 2026-05-16. Non-Docker local gates passed, but the overall
-  readiness report failed because production/staging env vars are unset and
-  Docker Desktop Linux engine is not running.
-- Docker-backed gates currently blocked on this workstation:
+  was executed on 2026-05-16. Non-Docker local gates passed. The checker now
+  classifies Docker-backed gate failures caused by Docker daemon unavailability
+  as `manual_required` with `docker_unavailable` evidence instead of treating
+  them as application failures. The overall readiness report still fails
+  because production/staging env vars are unset.
+- Docker-backed gates currently blocked on this workstation until Docker
+  Desktop Linux engine or an Ubuntu/Docker host is available:
   - `uv run python ops/integration/run_backend_integration.py`
   - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`
 - Remaining production gates still require company/staging evidence:

@@ -462,6 +462,63 @@ def test_readiness_report_blocks_unknown_manual_evidence_warning() -> None:
     assert checks["unknown_manual_evidence:unknown_gate"]["status"] == "warning"
 
 
+def test_local_gate_summary_treats_docker_unavailable_as_manual_required() -> None:
+    checker = _load_checker_module()
+
+    check = checker._local_gate_summary(  # noqa: SLF001
+        [
+            {
+                "command": "uv run ruff check .",
+                "returncode": 0,
+                "output_tail": "All checks passed!",
+            },
+            {
+                "command": "uv run python ops/integration/run_backend_integration.py",
+                "returncode": 1,
+                "output_tail": (
+                    "failed to connect to the docker API at "
+                    "npipe:////./pipe/dockerDesktopLinuxEngine"
+                ),
+            },
+            {
+                "command": "uv run python ops/rehearsal/run_full_stack_rehearsal.py",
+                "returncode": 1,
+                "output_tail": (
+                    "Cannot connect to the Docker daemon at "
+                    "unix:///var/run/docker.sock"
+                ),
+            },
+        ]
+    )
+
+    assert check.status == "manual_required"
+    assert "Docker-backed" in check.summary
+    assert check.next_action is not None
+    assert "Docker" in check.next_action
+
+
+def test_local_gate_summary_keeps_non_docker_failures_failed() -> None:
+    checker = _load_checker_module()
+
+    check = checker._local_gate_summary(  # noqa: SLF001
+        [
+            {
+                "command": "uv run pytest",
+                "returncode": 1,
+                "output_tail": "FAILED tests/contract/test_models.py",
+            },
+            {
+                "command": "uv run python ops/integration/run_backend_integration.py",
+                "returncode": 1,
+                "output_tail": "failed to connect to the docker API",
+            },
+        ]
+    )
+
+    assert check.status == "failed"
+    assert check.next_action == "Fix failed local gates before release."
+
+
 def _complete_production_env() -> dict[str, str]:
     return {
         "STATE_STORE": "postgres",

@@ -138,7 +138,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 220 passed, 3 skipped
+- `uv run pytest`: 222 passed, 3 skipped
 - `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`:
   19 passed, validating source-skill export dry-run and readiness gate coverage
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`:
@@ -383,12 +383,13 @@ blocking:
     restoring the auto layout position
   - `uv run ruff check .`: passed
   - `uv run mypy src`: passed
-  - `uv run pytest`: `220 passed, 3 skipped`
+  - `uv run pytest`: `222 passed, 3 skipped`
 - 2026-05-16 production-readiness local gate check:
   - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
     failed overall as expected for this workstation because production/staging
-    environment variables are unset and Docker Desktop Linux engine is not
-    running
+    environment variables are unset; Docker-backed local gates are now
+    classified as `manual_required` with `docker_unavailable` evidence when
+    Docker Desktop Linux engine is not running
   - Non-Docker local gates in the readiness run passed, including ruff, mypy,
     pytest, masking rehearsal, release blocker coverage, source boundary
     validation, source adapter smoke, source-skill export rehearsal, model
@@ -397,8 +398,9 @@ blocking:
     validation, evidence example validation, CI gate coverage validation, UI
     smoke, and feedback eval rehearsal
   - Docker-backed `ops/integration/run_backend_integration.py` and
-    `ops/rehearsal/run_full_stack_rehearsal.py` failed in this shell because
-    Docker reported `failed to connect to the docker API at
+    `ops/rehearsal/run_full_stack_rehearsal.py` were reported as
+    `docker_unavailable` in this shell because Docker reported
+    `failed to connect to the docker API at
     npipe:////./pipe/dockerDesktopLinuxEngine`
 - `uv run pytest tests/unit/api/test_runtime_state.py tests/unit/debug/test_trace_recorder.py tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   `20 passed`
