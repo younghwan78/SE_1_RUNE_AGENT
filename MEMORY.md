@@ -107,6 +107,7 @@ Do not use or recreate removed planning files:
 - `uv run python ops/source/validate_source_boundaries.py`: passed
 - `uv run python ops/security/check_release_blockers.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed
+- `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown`: passed
 - Latest GitHub Actions CI for `ee3dea2`: success (`25968150339`)
 
 ## Current Status
@@ -116,6 +117,31 @@ The local/dummy production-shaped foundation and non-company handoff package are
 The overall production objective is not fully complete yet because company/staging evidence is still required.
 
 Do not mark the overall production goal complete until a completion audit verifies company/staging readiness evidence.
+
+## 2026-05-17 Staging Evidence Plan Generator
+
+Added a masked company/staging evidence collection planner:
+
+- New script: `ops/rehearsal/build_staging_evidence_plan.py`
+- New tests: `tests/unit/ops/test_staging_evidence_plan.py`
+- Docs updated: `README_ubuntu.md`,
+  `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`, and
+  `docs/implementation/08_CURRENT_STATE_AND_COMPLETION_AUDIT.md`
+
+Purpose:
+
+- Convert unresolved readiness gates into concrete required env vars,
+  commands, expected evidence artifacts, and runbook references.
+- Print JSON or Markdown without exposing secret values.
+- Help the company/staging phase collect reviewed evidence for PostgreSQL,
+  Neo4j, Qdrant, model gateway, JIRA, Confluence, decision/email export,
+  trusted proxy RBAC, observability, backup/restore/load, and optional Helm.
+
+Validation:
+
+- `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`: `3 passed`
+- `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py tests/unit/ops/test_staging_evidence_plan.py`: passed
+- `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown`: passed
 
 ## 2026-05-17 Confluence Stale Trace Local Hardening
 

@@ -281,6 +281,19 @@ uv run python ops/rehearsal/check_production_readiness.py \
   --write-evidence-template /secure/path/production_readiness_evidence.json
 ```
 
+Generate a concrete collection plan for the same unresolved company/staging
+gates:
+
+```bash
+uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown \
+  --output /secure/path/staging_evidence_plan.md
+```
+
+The plan lists each unresolved gate, required environment variables, the
+recommended rehearsal command, the expected evidence artifact, and the relevant
+runbook. It masks current environment evidence and must not be used to store
+secrets.
+
 The generated template intentionally marks every unresolved gate as `failed`
 until a release owner replaces the TODO fields with reviewed CI/artifact IDs or
 approval records. If any manual evidence entry is marked `passed`, the evidence

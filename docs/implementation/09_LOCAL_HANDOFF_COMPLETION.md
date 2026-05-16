@@ -144,6 +144,13 @@ uv run python ops/rehearsal/check_production_readiness.py \
   --write-evidence-template /secure/path/production_readiness_evidence.json
 ```
 
+Generate the matching command/evidence collection plan:
+
+```bash
+uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown \
+  --output /secure/path/staging_evidence_plan.md
+```
+
 After replacing TODO entries with reviewed evidence:
 
 ```bash
