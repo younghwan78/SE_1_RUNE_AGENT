@@ -102,6 +102,15 @@ uv run python ops/rehearsal/check_production_readiness.py `
   --evidence-file ops/rehearsal/production_readiness_evidence.example.json
 ```
 
+Run the top-level goal-completion audit before declaring this implementation
+complete. Use the same reviewed evidence file after company/staging rehearsals:
+
+```powershell
+uv run python ops/rehearsal/check_goal_completion.py `
+  --run-local-gates `
+  --evidence-file ops/rehearsal/production_readiness_evidence.example.json
+```
+
 Run the API locally:
 
 ```powershell

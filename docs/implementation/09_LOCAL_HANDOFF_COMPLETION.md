@@ -158,6 +158,15 @@ uv run python ops/rehearsal/check_production_readiness.py \
   --evidence-file /secure/path/production_readiness_evidence.json
 ```
 
+Before declaring the overall implementation goal complete, run the top-level
+completion audit with the same reviewed evidence file:
+
+```bash
+uv run python ops/rehearsal/check_goal_completion.py \
+  --run-local-gates \
+  --evidence-file /secure/path/production_readiness_evidence.json
+```
+
 ## 5. Source Skill Export Dry-Run
 
 Use this local command to prove that skill-produced source files can drive the
