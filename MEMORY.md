@@ -732,12 +732,15 @@ Verifier behavior:
 - Checks that each item has guidance notes.
 - Parses the first-release required-scope bullets from
   `PRODUCTION_EXECUTION_PLAN.md` and fails on plan/verifier requirement drift.
+- Checks that each first-release scope item has a marker in
+  `docs/implementation/08_CURRENT_STATE_AND_COMPLETION_AUDIT.md`.
 - Reports `release_ready=false` separately from structural pass/fail so local
   artifact coverage can pass while company/staging evidence remains unresolved.
 - Current status counts:
   - `local_complete=11`
   - `company_evidence_required=4`
   - `missing_artifacts=0`
+  - `audit_coverage_missing=0`
 - Graph UI scope decision:
   - `PRODUCTION_EXECUTION_PLAN.md` now treats the first-release graph UI as
     `production graph UI with renderer decision gate`.
@@ -753,16 +756,20 @@ Validation evidence:
 - RED/GREEN:
   `uv run pytest tests/unit/ops/test_release_scope_artifacts.py::test_release_scope_requirements_match_production_plan -q`
   failed before the plan parser existed, then passed after adding it.
+- RED/GREEN:
+  `uv run pytest tests/unit/ops/test_release_scope_artifacts.py::test_release_scope_items_have_completion_audit_coverage -q`
+  failed before audit coverage was reported, then passed after adding
+  `audit_markers`, `audit_covered`, and `audit_coverage_missing`.
 - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`:
   `6 passed`
 - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed
-  with `release_ready=false` and `plan_requirements` aligned to the production
-  plan
+  with `release_ready=false`, `audit_coverage_missing=0`, and
+  `plan_requirements` aligned to the production plan
 - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
   `ci_command_count=22`
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `252 passed, 3 skipped`
+- `uv run pytest`: `253 passed, 3 skipped`
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
   local regression gates passed with the release-scope verifier included;
   overall readiness failed as expected with summary `failed=7`,

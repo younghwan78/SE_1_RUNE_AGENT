@@ -41,6 +41,15 @@ def test_release_scope_requirements_match_production_plan() -> None:
     assert verifier_requirements == plan_requirements
 
 
+def test_release_scope_items_have_completion_audit_coverage() -> None:
+    module = _load_module()
+
+    report = module.build_release_scope_report()
+
+    assert report["summary"]["audit_coverage_missing"] == 0
+    assert all(item["audit_covered"] is True for item in report["items"])
+
+
 def test_release_scope_artifact_report_flags_missing_paths() -> None:
     module = _load_module()
 
@@ -50,6 +59,7 @@ def test_release_scope_artifact_report_flags_missing_paths() -> None:
         status="local_complete",
         evidence_paths=("does/not/exist.py",),
         verification_commands=("uv run pytest tests/unit/ops/test_release_scope_artifacts.py",),
+        audit_markers=("Production plan is the source of truth",),
         notes="test fixture",
     )
 
@@ -70,6 +80,7 @@ def test_release_scope_artifact_report_rejects_empty_guidance() -> None:
         status="local_complete",
         evidence_paths=("PRODUCTION_EXECUTION_PLAN.md",),
         verification_commands=(),
+        audit_markers=("Production plan is the source of truth",),
         notes="",
     )
 
