@@ -249,6 +249,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown`: passed, producing a masked command/evidence collection plan for unresolved company/staging gates without printing secret values
 - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`: passed after first verifying the new staging evidence plan CI smoke requirement failed when absent
+- `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q`: passed after first verifying `LOCAL_GATE_COMMANDS` did not include the staging evidence plan smoke
 - `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected because the committed example evidence uses `failed` TODO placeholders and production env checks are unset; fake `run-123*` and `status: passed` examples are not present in the committed template
 - `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 20 passed, including manual evidence file loading, duplicate check-id rejection, TODO-placeholder rejection for passed evidence, reviewer metadata enforcement for passed evidence, schema-version and non-empty evidence enforcement for passed evidence, ISO-8601 UTC `reviewed_at` enforcement, failed TODO template loading, non-passable example evidence, review-safe evidence template generation, complete env/evidence pass behavior, unknown evidence warning blocking, Kubernetes Helm evidence gating, and Docker-unavailable local gate classification
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior
@@ -675,6 +676,10 @@ blocking:
   - Added the same command to GitHub Actions `CI` and
     `ops/rehearsal/validate_ci_gate_coverage.py` required extra commands.
   - RED/GREEN: `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q` failed before the CI requirement was added and passed after adding it.
+  - Added the same command to
+    `ops/rehearsal/check_production_readiness.py` `LOCAL_GATE_COMMANDS`.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q` failed before the local gate list was updated and passed after adding it.
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed with the staging evidence plan smoke included; overall readiness still failed as expected with summary `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
 
 ## 5. Completion Gate
 

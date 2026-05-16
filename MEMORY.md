@@ -137,7 +137,8 @@ Purpose:
   Neo4j, Qdrant, model gateway, JIRA, Confluence, decision/email export,
   trusted proxy RBAC, observability, backup/restore/load, and optional Helm.
 - The same Markdown smoke command is now required by
-  `ops/rehearsal/validate_ci_gate_coverage.py` and runs in GitHub Actions `CI`.
+  `ops/rehearsal/validate_ci_gate_coverage.py`, runs in GitHub Actions `CI`,
+  and is included in `check_production_readiness.py --run-local-gates`.
 
 Validation:
 
@@ -145,6 +146,8 @@ Validation:
 - `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py tests/unit/ops/test_staging_evidence_plan.py`: passed
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown`: passed
 - RED/GREEN: `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q` failed before adding the CI requirement and passed after adding it.
+- RED/GREEN: `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q` failed before adding the local gate command and passed after adding it.
+- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local gates passed with staging evidence plan smoke included; overall readiness remains blocked by company/staging evidence.
 
 ## 2026-05-17 Confluence Stale Trace Local Hardening
 

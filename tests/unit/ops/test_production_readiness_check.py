@@ -44,6 +44,17 @@ def test_readiness_report_flags_unverified_company_gates() -> None:
     assert "secret" not in str(report)
 
 
+def test_local_gate_commands_include_staging_evidence_plan_smoke() -> None:
+    checker = _load_checker_module()
+
+    commands = {" ".join(command) for command in checker.LOCAL_GATE_COMMANDS}
+
+    assert (
+        "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown"
+        in commands
+    )
+
+
 def test_readiness_report_requires_helm_evidence_for_kubernetes_target() -> None:
     checker = _load_checker_module()
 
