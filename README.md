@@ -261,6 +261,7 @@ Current local implementation:
 - in-memory trace recorder
 - dummy source adapter and fixture-backed analysis workflow
 - JIRA, Confluence, and restricted decision/email export-file adapters
+- Confluence REST section-path and table-cell metadata extraction
 - local JIRA/Confluence REST source smoke harness
 - restricted decision/email export policy that skips unapproved mailbox artifacts
 - generic HTTP JSON model provider with file-backed model/prompt registry

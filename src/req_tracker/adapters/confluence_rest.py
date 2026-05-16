@@ -1,5 +1,6 @@
 """Confluence REST source adapter."""
 
+import html
 import json
 import re
 import time
@@ -123,9 +124,10 @@ def _page_to_artifact(
     page_id = str(page["id"])
     version = page.get("version", {})
     history = page.get("history", {})
-    body_text = _html_to_text(
-        page.get("body", {}).get("storage", {}).get("value", "")
-    )
+    storage_html = str(page.get("body", {}).get("storage", {}).get("value", ""))
+    body_text = _html_to_text(storage_html)
+    section_paths = _extract_section_paths(storage_html)
+    table_cells = _extract_table_cells(storage_html, section_path=_section_at_end(section_paths))
     labels = [
         str(label.get("name"))
         for label in page.get("metadata", {}).get("labels", {}).get("results", [])
@@ -154,6 +156,8 @@ def _page_to_artifact(
             "space_key": page.get("space", {}).get("key"),
             "version_number": version.get("number"),
             "ancestor_ids": ancestors,
+            "section_paths": section_paths,
+            "table_cells": table_cells,
         },
         access_scope=[project_key, str(page.get("space", {}).get("key") or "")],
         data_classification="public_internal",
@@ -161,19 +165,54 @@ def _page_to_artifact(
 
 
 def _html_to_text(value: str) -> str:
-    text = value.replace("<br />", "\n").replace("<br/>", "\n").replace("</p>", "\n")
-    result: list[str] = []
-    in_tag = False
-    for char in text:
-        if char == "<":
-            in_tag = True
+    text = value.replace("<br />", "\n").replace("<br/>", "\n")
+    text = re.sub(r"</(p|div|li|h[1-6]|tr|td|th)>", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", "", text)
+    return " ".join(html.unescape(text).split())
+
+
+def _extract_section_paths(value: str) -> list[str]:
+    headings: list[str | None] = [None] * 6
+    section_paths: list[str] = []
+    for match in re.finditer(r"<h([1-6])[^>]*>(.*?)</h\1>", value, flags=re.IGNORECASE | re.DOTALL):
+        level = int(match.group(1))
+        text = _html_to_text(match.group(2))
+        if not text:
             continue
-        if char == ">":
-            in_tag = False
-            continue
-        if not in_tag:
-            result.append(char)
-    return " ".join("".join(result).split())
+        headings[level - 1] = text
+        for index in range(level, len(headings)):
+            headings[index] = None
+        section_paths.append(" > ".join(heading for heading in headings if heading))
+    return section_paths
+
+
+def _extract_table_cells(value: str, *, section_path: str | None) -> list[dict[str, object]]:
+    cells: list[dict[str, object]] = []
+    table_pattern = re.compile(r"<table[^>]*>(.*?)</table>", flags=re.IGNORECASE | re.DOTALL)
+    row_pattern = re.compile(r"<tr[^>]*>(.*?)</tr>", flags=re.IGNORECASE | re.DOTALL)
+    cell_pattern = re.compile(r"<t[dh][^>]*>(.*?)</t[dh]>", flags=re.IGNORECASE | re.DOTALL)
+    for table_index, table_match in enumerate(table_pattern.finditer(value)):
+        for row_index, row_match in enumerate(row_pattern.finditer(table_match.group(1))):
+            for column_index, cell_match in enumerate(cell_pattern.finditer(row_match.group(1))):
+                text = _html_to_text(cell_match.group(1))
+                if not text:
+                    continue
+                cells.append(
+                    {
+                        "table_index": table_index,
+                        "row_index": row_index,
+                        "column_index": column_index,
+                        "section_path": section_path,
+                        "text_preview": text[:120],
+                    }
+                )
+    return cells
+
+
+def _section_at_end(section_paths: list[str]) -> str | None:
+    if not section_paths:
+        return None
+    return section_paths[-1]
 
 
 def _extract_jira_keys(text: str) -> list[str]:

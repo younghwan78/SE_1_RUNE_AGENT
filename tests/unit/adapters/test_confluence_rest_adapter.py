@@ -44,6 +44,66 @@ def test_confluence_rest_adapter_fetches_page_and_maps_contract() -> None:
     assert artifact.metadata["version_number"] == 3
 
 
+def test_confluence_rest_adapter_preserves_sections_and_table_cells() -> None:
+    adapter = ConfluenceRestSourceAdapter(
+        base_url="https://confluence.example.com",
+        token="token",
+        space_key="CAM",
+        transport=lambda *_args: {
+            "size": 1,
+            "totalSize": 1,
+            "results": [
+                _page(
+                    "124",
+                    "Verification Matrix",
+                    body=(
+                        "<h1>Camera</h1>"
+                        "<h2>Verification</h2>"
+                        "<table><tr><th>Requirement</th><th>Verification</th></tr>"
+                        "<tr><td>CAM-REQ-001</td><td>CAM-VER-002</td></tr></table>"
+                    ),
+                )
+            ],
+        },
+    )
+
+    result = adapter.fetch_incremental(SourceScope(project_key="RUNE_CAM_ALPHA"))
+
+    artifact = result.artifacts[0]
+    assert artifact.links == ["CAM-REQ-001", "CAM-VER-002"]
+    assert artifact.metadata["section_paths"] == ["Camera", "Camera > Verification"]
+    assert artifact.metadata["table_cells"] == [
+        {
+            "table_index": 0,
+            "row_index": 0,
+            "column_index": 0,
+            "section_path": "Camera > Verification",
+            "text_preview": "Requirement",
+        },
+        {
+            "table_index": 0,
+            "row_index": 0,
+            "column_index": 1,
+            "section_path": "Camera > Verification",
+            "text_preview": "Verification",
+        },
+        {
+            "table_index": 0,
+            "row_index": 1,
+            "column_index": 0,
+            "section_path": "Camera > Verification",
+            "text_preview": "CAM-REQ-001",
+        },
+        {
+            "table_index": 0,
+            "row_index": 1,
+            "column_index": 1,
+            "section_path": "Camera > Verification",
+            "text_preview": "CAM-VER-002",
+        },
+    ]
+
+
 def test_confluence_rest_adapter_reports_malformed_page_warning() -> None:
     adapter = ConfluenceRestSourceAdapter(
         base_url="https://confluence.example.com",
@@ -121,14 +181,14 @@ def test_confluence_rest_adapter_reports_permission_denied_without_retry() -> No
     assert result.source_warnings == ["confluence_permission_denied:401"]
 
 
-def _page(page_id: str, title: str) -> dict[str, Any]:
+def _page(page_id: str, title: str, *, body: str | None = None) -> dict[str, Any]:
     return {
         "id": page_id,
         "title": title,
         "space": {"key": "CAM"},
         "body": {
             "storage": {
-                "value": "<p>Design references CAM-REQ-001 and CAM-VER-002.</p>",
+                "value": body or "<p>Design references CAM-REQ-001 and CAM-VER-002.</p>",
             }
         },
         "version": {"number": 3, "when": "2026-01-03T00:00:00.000Z"},
