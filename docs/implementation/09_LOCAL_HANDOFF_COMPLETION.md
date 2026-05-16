@@ -90,7 +90,7 @@ environment-blocked verification gates rather than evidence of application
 logic failure. `check_production_readiness.py --run-local-gates` reports this
 case as `manual_required` with `docker_unavailable` evidence.
 
-Latest 2026-05-16 local evidence after starting Docker Desktop Linux engine:
+Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
 
 - `uv run python ops/integration/run_backend_integration.py`: passed with
   disposable PostgreSQL, Neo4j, and Qdrant containers.
@@ -98,12 +98,14 @@ Latest 2026-05-16 local evidence after starting Docker Desktop Linux engine:
   restart restore, metrics surface check, audit event persistence, and local
   smoke-load threshold coverage.
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
-  local regression gates passed; overall readiness still failed because
+  local regression gates passed; overall readiness still failed with summary
+  `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because
   company/staging environment variables and manual evidence are not configured
   on this workstation.
 - Commit `6418677 Document dashboard state RBAC` added RBAC matrix coverage and
   regression tests for dashboard work queue preferences/assignments; GitHub
   Actions `CI` run `25965051096` passed.
+- Latest pushed GitHub Actions `CI` run `25965178615` for `d9126b0` passed.
 - Latest full local regression after that commit: `uv run pytest` reported
   `227 passed, 3 skipped`.
 

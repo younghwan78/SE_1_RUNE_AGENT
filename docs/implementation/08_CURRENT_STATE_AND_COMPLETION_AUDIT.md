@@ -1,6 +1,6 @@
 # Current State and Completion Audit
 
-Last reviewed: 2026-05-16
+Last reviewed: 2026-05-17
 
 This document maps `PRODUCTION_EXECUTION_PLAN.md` requirements to current repo
 artifacts and verification evidence. A requirement is complete only when
@@ -214,6 +214,8 @@ Latest local verification:
 Latest implementation GitHub verification:
 
 - GitHub Actions `CI` run `25965051096` for `6418677`: completed successfully
+- Latest pushed GitHub Actions `CI` run `25965178615` for `d9126b0`: completed
+  successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -475,6 +477,24 @@ blocking:
   - `uv run mypy src`: passed
   - `git diff --check`: passed
   - `uv run pytest`: `227 passed, 3 skipped`
+- 2026-05-17 production-readiness local gate refresh:
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+    local regression gates passed, including `ruff`, `mypy`, full `pytest`,
+    masking rehearsal, release blocker coverage, source boundary validation,
+    disposable PostgreSQL/Neo4j/Qdrant integration, source adapter smoke,
+    source-skill export rehearsal, model gateway smoke, Helm chart validation,
+    observability asset validation, PostgreSQL migration rollback validation,
+    PostgreSQL typed mirror validation, evidence example validation, CI gate
+    coverage validation, operator UI smoke, Docker-backed full-stack rehearsal,
+    and feedback eval rehearsal
+  - Overall production readiness still failed as expected with summary
+    `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because
+    company/staging environment variables and reviewed manual evidence are not
+    configured on this workstation
+  - Docker-backed disposable integration and full-stack rehearsal both ran in
+    this refresh; full-stack rehearsal reported `passed=true`,
+    `restart_restored=true`, `audit_total_events=3`, and local smoke-load p95
+    below the 5 second rehearsal threshold
 
 ## 5. Completion Gate
 

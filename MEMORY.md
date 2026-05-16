@@ -256,6 +256,26 @@ Current status:
   trusted proxy SSO/OIDC, real model gateway, observability,
   backup/restore/load, and approved decision/email export validation.
 
+## 2026-05-17 Local Readiness Refresh
+
+Fresh local readiness check:
+
+- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`
+  was executed with Docker Desktop Linux engine available.
+- All local regression and rehearsal gates passed, including disposable
+  PostgreSQL/Neo4j/Qdrant integration and Docker-backed full-stack rehearsal.
+- Full-stack rehearsal evidence included `passed=true`, `restart_restored=true`,
+  `audit_total_events=3`, and smoke-load p95 under the 5 second local threshold.
+- Overall readiness remains incomplete by design in this workstation shell:
+  summary `failed=7`, `manual_required=10`, `passed=2`, `warning=0`.
+- The remaining failed/manual gates require company/staging configuration and
+  reviewed evidence for PostgreSQL, Neo4j, Qdrant, model gateway, trusted proxy
+  SSO/OIDC, artifact storage, OpenTelemetry, JIRA/Confluence, approved
+  decision/email export, Prometheus/Grafana, backup/restore/load, and staging
+  endpoint rehearsals.
+- Latest pushed GitHub Actions `CI` run `25965178615` for commit `d9126b0`
+  passed.
+
 Follow-up production persistence hardening:
 
 - Added PostgreSQL migration `006_dashboard_state_tables.sql` and rollback for
