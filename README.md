@@ -263,7 +263,7 @@ Current local implementation:
 - JIRA, Confluence, and restricted decision/email export-file adapters
 - Confluence REST section-path and table-cell metadata extraction
 - local JIRA/Confluence REST source smoke harness
-- restricted decision/email export policy that skips unapproved mailbox artifacts
+- restricted decision/email export policy that skips unapproved mailbox artifacts and masks email thread metadata
 - generic HTTP JSON model provider with file-backed model/prompt registry
 - local model-gateway smoke harness for HTTP fallback and trace validation
 - in-memory graph/vector backends

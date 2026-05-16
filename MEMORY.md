@@ -57,7 +57,7 @@ Do not use or recreate removed planning files:
   - Confluence REST adapter
   - Confluence section-path and table-cell metadata extraction
   - export-file adapters for JIRA, Confluence, restricted decision/email
-  - restricted decision/email export policy
+  - restricted decision/email export policy with email thread metadata masking
   - source boundary validator
   - source adapter smoke harness
 - Latest source integration work:
@@ -307,7 +307,7 @@ Follow-up production persistence hardening:
   - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed
     including dashboard preference/assignment, source sync cursor, LLM call
     trace, replay result, and improvement decision mirrors
-  - `uv run pytest`: `231 passed, 3 skipped`
+  - `uv run pytest`: `232 passed, 3 skipped`
 - Playwright CLI screenshot smoke was run manually for dashboard/work-queue rendering and deep-link behavior, but it is intentionally not added to CI per user direction.
 
 Remaining dashboard-specific items:

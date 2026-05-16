@@ -107,8 +107,8 @@ Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
   regression tests for dashboard work queue preferences/assignments; GitHub
   Actions `CI` run `25965051096` passed.
 - Latest pushed GitHub Actions `CI` run `25965768329` for `c2004f2` passed.
-- Latest full local regression after Confluence section/table metadata hardening:
-  `uv run pytest` reported `231 passed, 3 skipped`.
+- Latest full local regression after decision/email metadata masking:
+  `uv run pytest` reported `232 passed, 3 skipped`.
 
 ## 4. Company/Staging Gates
 

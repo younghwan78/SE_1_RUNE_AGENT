@@ -140,6 +140,40 @@ def test_decision_email_export_adapter_allows_only_approved_decision_scope(tmp_p
     ]
 
 
+def test_decision_email_export_adapter_masks_email_thread_metadata(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    export_path = tmp_path / "decision_email.jsonl"
+    export_path.write_text(
+        json.dumps(
+            _artifact(
+                "MAIL-DEC-2",
+                "email",
+                labels=["decision"],
+                metadata={
+                    "mbse_type": "Decision",
+                    "decision_source_approved": True,
+                    "thread_subject": "Architecture decision from alice@example.com",
+                    "participants": ["alice@example.com", "bob@example.com"],
+                    "headers": {"from": "alice@example.com"},
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+
+    result = DecisionEmailExportSourceAdapter(export_path).fetch_incremental(
+        SourceScope(project_key="RUNE_CAM_ALPHA")
+    )
+
+    metadata = result.artifacts[0].metadata
+    assert "alice@example.com" not in str(metadata)
+    assert "bob@example.com" not in str(metadata)
+    assert metadata["thread_subject"] == "Architecture decision from [EMAIL]"
+    assert metadata["participants"] == ["[EMAIL]", "[EMAIL]"]
+    assert metadata["headers"] == {"from": "[EMAIL]"}
+    assert metadata["thread_metadata_masked"] is True
+    assert metadata["thread_metadata_redaction_count"] == 4
+
+
 def test_missing_export_file_reports_partial_failure(tmp_path) -> None:  # type: ignore[no-untyped-def]
     result = JiraExportSourceAdapter(tmp_path / "missing.json").fetch_incremental(
         SourceScope(project_key="RUNE_CAM_ALPHA")
