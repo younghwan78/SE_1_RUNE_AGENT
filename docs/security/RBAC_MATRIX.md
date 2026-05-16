@@ -27,6 +27,10 @@ Current protected routes:
 | `GET /api/v1/dashboard/run-health` | `viewer` | exposes project-scoped run status summary |
 | `GET /api/v1/dashboard/risk-summary` | `viewer` | exposes aggregated finding severity and top risk items |
 | `GET /api/v1/dashboard/work-queue` | `developer` | exposes actionable findings, approvals, source warnings, failed runs, and eval gate items |
+| `GET /api/v1/dashboard/work-queue/preferences` | `developer` | exposes project-scoped reviewer filter presets for the current user |
+| `PUT /api/v1/dashboard/work-queue/preferences` | `developer` | saves project-scoped reviewer filter presets and writes an audit event |
+| `GET /api/v1/dashboard/work-queue/assignments` | `developer` | exposes project-scoped reviewer work queue ownership state |
+| `POST /api/v1/dashboard/work-queue/assignments/{queue_id}` | `developer` | assigns or clears a work queue item through an idempotent audited write |
 | `GET /api/v1/dashboard/source-health` | `developer` | exposes source sync cursor health without secrets or transport names |
 | `GET /api/v1/dashboard/recent-activity` | `operator` | exposes sanitized operational audit activity |
 | `GET /api/v1/debug/runs` | `developer` | exposes run inventory for debug navigation |

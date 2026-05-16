@@ -184,6 +184,79 @@ def test_dashboard_rbac_project_filtering(tmp_path: Path) -> None:
     assert developer_only.status_code == 403
 
 
+def test_dashboard_work_queue_state_routes_require_developer_project_access(
+    tmp_path: Path,
+) -> None:
+    app = create_app(
+        Settings(
+            artifact_root=tmp_path / "artifacts",
+            auth_mode="api_key",
+            api_key="secret",
+        )
+    )
+    viewer_headers = {
+        "x-rune-api-key": "secret",
+        "x-rune-role": "viewer",
+        "x-rune-projects": "RUNE_CAM_ALPHA",
+    }
+    wrong_project_headers = {
+        "x-rune-api-key": "secret",
+        "x-rune-role": "developer",
+        "x-rune-projects": "OTHER_PROJECT",
+    }
+    with TestClient(app) as client:
+        viewer_preferences = client.get(
+            "/api/v1/dashboard/work-queue/preferences?project_key=RUNE_CAM_ALPHA",
+            headers=viewer_headers,
+        )
+        viewer_assignments = client.get(
+            "/api/v1/dashboard/work-queue/assignments?project_key=RUNE_CAM_ALPHA",
+            headers=viewer_headers,
+        )
+        viewer_assignment_write = client.post(
+            "/api/v1/dashboard/work-queue/assignments/q_finding_001",
+            headers=viewer_headers,
+            json={"project_key": "RUNE_CAM_ALPHA", "action": "assign"},
+        )
+        wrong_project_preferences = client.put(
+            "/api/v1/dashboard/work-queue/preferences?project_key=RUNE_CAM_ALPHA",
+            headers=wrong_project_headers,
+            json={"saved_filters": {}},
+        )
+        wrong_project_assignment_write = client.post(
+            "/api/v1/dashboard/work-queue/assignments/q_finding_001",
+            headers=wrong_project_headers,
+            json={"project_key": "RUNE_CAM_ALPHA", "action": "assign"},
+        )
+
+    assert viewer_preferences.status_code == 403
+    assert viewer_assignments.status_code == 403
+    assert viewer_assignment_write.status_code == 403
+    assert wrong_project_preferences.status_code == 403
+    assert wrong_project_assignment_write.status_code == 403
+
+
+def test_rbac_matrix_documents_dashboard_work_queue_state_routes() -> None:
+    matrix = Path("docs/security/RBAC_MATRIX.md").read_text(encoding="utf-8")
+
+    assert (
+        "| `GET /api/v1/dashboard/work-queue/preferences` | `developer` |"
+        in matrix
+    )
+    assert (
+        "| `PUT /api/v1/dashboard/work-queue/preferences` | `developer` |"
+        in matrix
+    )
+    assert (
+        "| `GET /api/v1/dashboard/work-queue/assignments` | `developer` |"
+        in matrix
+    )
+    assert (
+        "| `POST /api/v1/dashboard/work-queue/assignments/{queue_id}` | `developer` |"
+        in matrix
+    )
+
+
 def test_dashboard_work_queue_preferences_and_assignments_are_backend_backed(
     client: TestClient,
 ) -> None:
