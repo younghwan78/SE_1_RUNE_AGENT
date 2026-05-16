@@ -733,22 +733,30 @@ Verifier behavior:
 - Reports `release_ready=false` separately from structural pass/fail so local
   artifact coverage can pass while company/staging evidence remains unresolved.
 - Current status counts:
-  - `local_complete=10`
+  - `local_complete=11`
   - `company_evidence_required=4`
-  - `decision_pending=1`
   - `missing_artifacts=0`
+- Graph UI scope decision:
+  - `PRODUCTION_EXECUTION_PLAN.md` now treats the first-release graph UI as
+    `production graph UI with renderer decision gate`.
+  - The deterministic SVG relationship graph is the first-release renderer.
+  - React Flow/Cytoscape remains a future renderer-decision gate after real
+    graph shape and editing workflow validation.
 
 Validation evidence:
 
+- RED/GREEN: `uv run pytest tests/unit/ops/test_release_scope_artifacts.py -q`
+  failed while the verifier still reported `decision_pending=1`, then passed
+  after moving the graph UI item to `local_complete`.
 - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`:
-  `5 passed`
+  `6 passed`
 - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed
   with `release_ready=false`
 - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
   `ci_command_count=22`
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `250 passed, 3 skipped`
+- `uv run pytest`: `251 passed, 3 skipped`
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
   local regression gates passed with the release-scope verifier included;
   overall readiness failed as expected with summary `failed=7`,

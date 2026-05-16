@@ -150,7 +150,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 250 passed, 3 skipped
+- `uv run pytest`: 251 passed, 3 skipped
 - `uv run pytest tests/unit/model_gateway -q`: 16 passed, validating dummy
   provider calls, policy enforcement, structured validation retry, fallback
   trace recording, provider usage metadata, and same-input model/prompt
@@ -246,7 +246,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed, validating 21 PostgreSQL typed mirror tables against packaged migration DDL
 - `uv run python ops/rehearsal/validate_evidence_example.py`: passed, validating that the committed example evidence file has 11 non-passable manual gates, no passable placeholder entries, fake `run-123*` references, duplicate check IDs, missing evidence arrays, or missing top-level TODO metadata
 - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed, validating that GitHub Actions covers deterministic local release gates and only omits the documented Docker-backed integration/full-stack rehearsals
-- `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed with `release_ready=false`, `missing_artifacts=0`, and status counts `local_complete=10`, `company_evidence_required=4`, `decision_pending=1`
+- `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed with `release_ready=false`, `missing_artifacts=0`, and status counts `local_complete=11`, `company_evidence_required=4`
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown`: passed, producing a masked command/evidence collection plan for unresolved company/staging gates without printing secret values
 - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`: passed after first verifying the new staging evidence plan CI smoke requirement failed when absent
@@ -303,7 +303,7 @@ Latest implementation GitHub Actions verification:
 | Deterministic traceability rules | `src/req_tracker/findings/rules.py`, source metadata routed into `LocalAnalysisWorkflow`, `tests/unit/findings/test_rules.py`, compact/dashboard contract tests | Complete for requirement without implementation, requirement without verification, design without parent requirement, conflicting alternatives, Confluence page version stale trace, issue affecting critical requirement, and architecture without verification path; company data calibration still pending |
 | Feedback loop | feedback events, command-style feedback action/reason aliases normalized to canonical taxonomy, work queue approval reason-code controls, eval candidates, improvement candidates including few-shot-example and ontology-normalization candidate contracts, ontology-normalization candidates for wrong-node-type feedback, eval gate, controlled review/canary promotion, canary/active rollback, persisted and PostgreSQL-typed improvement decisions, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary/rollback rehearsal complete with UI reason-code selection for approval reject/hold/approve decisions; real production feedback calibration pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, analysis/ingestion/replay run start/completion audit boundary events with trigger metadata, failed run status and failed completion audit events, blocked debug artifact read audit events, finding status change audit events, improvement activation/rollback audit events, model/prompt activation/rollback audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
-| Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, `11_GRAPH_RELATIONSHIP_VIEW_PLAN.md`, SVG graph controls, projection API, relationship/component layout, relationship node drag/pin/reset interaction, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, truncation metadata, Relationship Graph layout, component grouping, dense-label reduction, node drag, edge rerender, and reset-to-auto-layout are locally validated; React Flow decision remains pending after real graph shape validation |
+| Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, `11_GRAPH_RELATIONSHIP_VIEW_PLAN.md`, SVG graph controls, projection API, relationship/component layout, relationship node drag/pin/reset interaction, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, truncation metadata, Relationship Graph layout, component grouping, dense-label reduction, node drag, edge rerender, and reset-to-auto-layout are locally validated. The deterministic SVG relationship graph is the first-release renderer; React Flow/Cytoscape remains a future renderer-decision gate after real graph shape validation |
 | Dashboard production uplift | `10_DASHBOARD_PRODUCTION_PLAN.md`, `src/req_tracker/dashboard/*`, `/api/v1/dashboard/summary`, `/api/v1/dashboard/work-queue`, `/api/v1/dashboard/work-queue/preferences`, `/api/v1/dashboard/work-queue/assignments`, `/api/v1/dashboard/source-health`, `/api/v1/dashboard/run-health`, `/api/v1/dashboard/risk-summary`, `/api/v1/dashboard/recent-activity`, dashboard-first static UI, split UI modules under `src/req_tracker/ui`, `tests/contract/test_dashboard_api.py`, `tests/contract/test_persistence_api.py`, `tests/unit/dashboard/test_summary_service.py`, `ops/ui/smoke_operator_ui.py`, `docs/security/RBAC_MATRIX.md` | Local dashboard read model and production-shaped UI complete for empty state, compact 10-node fixture, 150-node fixture, approval count update, source export health, RBAC, view split, work queue detail, approval feedback reason controls, source/run health detail, hash deep links, backend-backed saved filters, backend-backed work queue assignment, idempotent assignment writes, SQLite/PostgreSQL typed state for preferences/assignments, RBAC matrix coverage for dashboard state routes, UI module split, and operator smoke; CI browser screenshot smoke is intentionally skipped, and React/React Flow remains a future decision after real graph shape validation |
 | Scheduler | `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture, persisted schedule configuration, PostgreSQL `scheduler_leases` and `schedule_configs` tables, lease acquire/release tests, Ubuntu multi-replica note | Periodic run path complete for single-process and PostgreSQL lease-backed multi-worker deployments, including restart-safe schedule configuration; external orchestration/Kubernetes CronJob remains an optional platform decision |
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `docs/runbooks/INCIDENT_RESPONSE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/build_staging_evidence_plan.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `ops/rehearsal/validate_postgres_typed_mirrors.py`, `ops/rehearsal/validate_evidence_example.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, incident response triage/rollback/evidence/review runbook, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, masked staging evidence collection plan generation, PostgreSQL migration rollback validation through `010_schedule_config_state_tables`, PostgreSQL typed mirror drift validation including dashboard preferences/assignments, schedule configs, source sync cursors, LLM call traces, replay results, and improvement decisions, observability dashboard manual evidence gate, review-safe manual-evidence template generation, non-passable committed evidence example validation, reviewer metadata, schema-version, non-empty evidence, unique check-id, and UTC review timestamp enforcement for passed manual evidence, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
@@ -379,7 +379,8 @@ Latest implementation GitHub Actions verification:
   `ops/rehearsal/production_readiness_evidence.example.json` and pass it to
   `check_production_readiness.py --evidence-file`; do not commit real evidence
   files if they contain internal CI URLs, artifact IDs, or incident references.
-- Decide React/React Flow migration after real graph shape validation.
+- Keep the deterministic SVG relationship graph as the first-release renderer.
+  Decide React Flow/Cytoscape migration only after real graph shape validation.
 - If Kubernetes or multiple Ubuntu nodes are selected instead of multi-process
   API replicas on one PostgreSQL-backed service, decide whether to keep the
   in-app PostgreSQL scheduler lease or move periodic execution to CronJob or a
@@ -691,12 +692,12 @@ blocking:
   - Added GitHub Actions `CI`, CI coverage validation, and production-readiness
     local gate coverage for the verifier.
   - Current verifier result is intentionally not release-ready:
-    `local_complete=10`, `company_evidence_required=4`,
-    `decision_pending=1`, `missing_artifacts=0`.
+    `local_complete=11`, `company_evidence_required=4`,
+    `missing_artifacts=0`.
   - RED/GREEN: local readiness and CI coverage tests failed while the verifier
     command was absent from the gate lists, then passed after adding it.
   - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`:
-    `5 passed`
+    `6 passed`
   - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed
   - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
     `ci_command_count=22`
@@ -704,6 +705,13 @@ blocking:
     local regression gates passed with the release-scope verifier included;
     overall readiness still failed as expected with summary `failed=7`,
     `manual_required=10`, `passed=2`, `warning=0`.
+  - Resolved the local graph renderer decision by aligning
+    `PRODUCTION_EXECUTION_PLAN.md` first-release scope to `production graph UI
+    with renderer decision gate`; deterministic SVG is now the first-release
+    renderer and React Flow/Cytoscape remains a future gate.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_release_scope_artifacts.py -q`
+    failed while the verifier still reported `decision_pending=1`, then passed
+    after the graph UI item moved to `local_complete`.
 
 ## 5. Completion Gate
 

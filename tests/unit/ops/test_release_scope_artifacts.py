@@ -16,7 +16,20 @@ def test_release_scope_artifact_report_is_valid_but_not_release_ready() -> None:
     assert report["summary"]["missing_artifacts"] == 0
     statuses = {item["status"] for item in report["items"]}
     assert "company_evidence_required" in statuses
-    assert "decision_pending" in statuses
+    assert "decision_pending" not in statuses
+
+
+def test_graph_ui_release_scope_is_resolved_locally() -> None:
+    module = _load_module()
+
+    report = module.build_release_scope_report()
+    graph_item = next(
+        item for item in report["items"] if item["item_id"] == "production_graph_ui"
+    )
+
+    assert graph_item["status"] == "local_complete"
+    assert "src/req_tracker/ui/graph_workbench.js" in graph_item["evidence_paths"]
+    assert "ops/ui/smoke_operator_ui.py" in graph_item["verification_commands"][0]
 
 
 def test_release_scope_artifact_report_flags_missing_paths() -> None:

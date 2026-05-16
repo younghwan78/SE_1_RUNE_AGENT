@@ -107,7 +107,7 @@ Persistence Layer
 
 Service & UI Layer
   ├─ FastAPI
-  ├─ React Flow graph UI
+  ├─ Production graph UI
   ├─ Approval workbench
   ├─ Debug workbench
   ├─ Eval dashboard
@@ -134,7 +134,7 @@ Observability Layer
 | Vector DB | Qdrant | metadata filtering, on-prem 운영, embedding version 관리 |
 | LLM Gateway | LiteLLM 또는 사내 gateway wrapper | 자체 모델/외부 모델 교체, 공통 logging과 policy 적용 |
 | Structured Output | Pydantic + Instructor | LLM output validation, retry, schema evolution |
-| UI | React + React Flow | 복잡한 graph 조작, delta preview, debug UI 구현 |
+| UI | FastAPI static UI + deterministic SVG graph renderer first, React Flow/Cytoscape decision gate later | 사내 Ubuntu 배포와 회귀 검증을 단순하게 유지하면서 100개 이상 graph 조작, delta preview, debug UI를 제공한다. 실제 graph 규모와 편집 요구가 커지면 전용 graph library 도입을 별도 gate로 판단한다. |
 | Auth | OIDC/SAML SSO | 사내 계정과 group 기반 RBAC |
 | Observability | OpenTelemetry + Prometheus/Grafana | run/step/model call 추적 |
 
@@ -995,7 +995,7 @@ ops/
 
 작업:
 
-- React Flow graph view
+- production graph view with renderer decision gate
 - node/edge detail panel
 - traceability chain view
 - finding list/detail
@@ -1129,7 +1129,7 @@ ops/
 - debug workbench
 - replay skeleton
 - graph/chain/finding read API
-- React Flow graph UI
+- production graph UI with renderer decision gate
 - SSO/RBAC 기본 연동
 - audit log
 

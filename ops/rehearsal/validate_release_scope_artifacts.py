@@ -16,7 +16,7 @@ from typing import Any, Literal
 
 ROOT = Path(__file__).resolve().parents[2]
 
-ScopeStatus = Literal["local_complete", "company_evidence_required", "decision_pending"]
+ScopeStatus = Literal["local_complete", "company_evidence_required"]
 
 
 @dataclass(frozen=True)
@@ -204,9 +204,9 @@ RELEASE_SCOPE_ITEMS: tuple[ReleaseScopeItem, ...] = (
         notes="Graph projection, chain, finding, dashboard read paths exist locally.",
     ),
     ReleaseScopeItem(
-        item_id="react_flow_graph_ui",
-        requirement="React Flow graph UI",
-        status="decision_pending",
+        item_id="production_graph_ui",
+        requirement="production graph UI with renderer decision gate",
+        status="local_complete",
         evidence_paths=(
             "src/req_tracker/ui/graph_workbench.js",
             "docs/implementation/07_GRAPH_VIEW_SCALABILITY_PLAN.md",
@@ -215,8 +215,8 @@ RELEASE_SCOPE_ITEMS: tuple[ReleaseScopeItem, ...] = (
         ),
         verification_commands=("uv run python ops/ui/smoke_operator_ui.py",),
         notes=(
-            "Current UI uses deterministic SVG; React Flow/Cytoscape decision "
-            "is deferred until real graph shape validation."
+            "Deterministic SVG relationship graph is the first-release renderer; "
+            "React Flow/Cytoscape remains gated by documented scale and editing needs."
         ),
     ),
     ReleaseScopeItem(
