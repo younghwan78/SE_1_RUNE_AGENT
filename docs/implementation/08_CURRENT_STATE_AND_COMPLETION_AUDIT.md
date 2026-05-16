@@ -8,7 +8,7 @@ implementation and a relevant verification path exist in the repository.
 
 ## 1. Current Verified Baseline
 
-Latest confirmed commits:
+Latest confirmed implementation and gate commits:
 
 - `6418677 Document dashboard state RBAC`
 - `156993e Add dashboard state postgres mirrors`
@@ -211,7 +211,7 @@ Latest local verification:
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment
 
-Latest GitHub verification:
+Latest implementation GitHub verification:
 
 - GitHub Actions `CI` run `25965051096` for `6418677`: completed successfully
 
