@@ -1,6 +1,6 @@
 # Current State and Completion Audit
 
-Last reviewed: 2026-05-12
+Last reviewed: 2026-05-16
 
 This document maps `PRODUCTION_EXECUTION_PLAN.md` requirements to current repo
 artifacts and verification evidence. A requirement is complete only when
@@ -10,6 +10,11 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `0e438b0 Add relationship graph workbench interactions`
+- `9135b84 Add production dashboard workbench`
+- `5cb3edb Add local handoff completion gates`
+- `edce126 Add project memory snapshot`
+- `fee8aad Inject configured source adapters`
 - `4c8fafa Cover audit archive idempotency restore`
 - `cc0d36b Restore replay idempotency after restart`
 - `3e6cb08 Trace replay runs separately`
@@ -133,7 +138,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 217 passed, 3 skipped
+- `uv run pytest`: 220 passed, 3 skipped
 - `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`:
   19 passed, validating source-skill export dry-run and readiness gate coverage
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`:
@@ -202,7 +207,7 @@ Latest local verification:
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25701891047` for `4c8fafa`: completed successfully
+- GitHub Actions `CI` run `25929814655` for `0e438b0`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -234,7 +239,7 @@ Latest GitHub verification:
 | Approval workflow | approval queue, deterministic confidence/relation-based risk routing in `src/req_tracker/reasoning/scoring.py`, approve/reject/hold/modify path, expected-version/proposal-hash stale approval guard with blocked audit outcome, graph commit, developer/operator RBAC and project-scope checks | Complete for local and protected API paths |
 | Feedback loop | feedback events, command-style feedback action/reason aliases normalized to canonical taxonomy, eval candidates, improvement candidates including few-shot-example and ontology-normalization candidate contracts, ontology-normalization candidates for wrong-node-type feedback, eval gate, controlled review/canary promotion, canary/active rollback, persisted improvement decisions, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary/rollback rehearsal complete; real production feedback calibration pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, analysis/ingestion/replay run start/completion audit boundary events with trigger metadata, failed run status and failed completion audit events, blocked debug artifact read audit events, finding status change audit events, improvement activation/rollback audit events, model/prompt activation/rollback audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
-| Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, SVG graph controls, projection API, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, and truncation metadata are locally validated; React Flow decision pending after real graph shape validation |
+| Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, `11_GRAPH_RELATIONSHIP_VIEW_PLAN.md`, SVG graph controls, projection API, relationship/component layout, relationship node drag/pin/reset interaction, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, truncation metadata, Relationship Graph layout, component grouping, dense-label reduction, node drag, edge rerender, and reset-to-auto-layout are locally validated; React Flow decision remains pending after real graph shape validation |
 | Dashboard production uplift | `10_DASHBOARD_PRODUCTION_PLAN.md`, `src/req_tracker/dashboard/*`, `/api/v1/dashboard/summary`, `/api/v1/dashboard/work-queue`, `/api/v1/dashboard/source-health`, `/api/v1/dashboard/run-health`, `/api/v1/dashboard/risk-summary`, `/api/v1/dashboard/recent-activity`, dashboard-first static UI, split UI modules under `src/req_tracker/ui`, `tests/contract/test_dashboard_api.py`, `tests/unit/dashboard/test_summary_service.py`, `ops/ui/smoke_operator_ui.py` | Local dashboard read model and production-shaped UI complete for empty state, compact 10-node fixture, 150-node fixture, approval count update, source export health, RBAC, view split, work queue detail, source/run health detail, hash deep links, local saved filters, local assignment, UI module split, and operator smoke; CI browser screenshot smoke is intentionally skipped, backend user preference/assignment APIs remain pending until auth/user contracts are stable, and React/React Flow remains a future decision after real graph shape validation |
 | Scheduler | `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture, PostgreSQL `scheduler_leases` table, lease acquire/release tests, Ubuntu multi-replica note | Periodic run path complete for single-process and PostgreSQL lease-backed multi-worker deployments; external orchestration/Kubernetes CronJob remains an optional platform decision |
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `ops/rehearsal/validate_postgres_typed_mirrors.py`, `ops/rehearsal/validate_evidence_example.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, PostgreSQL migration rollback validation, PostgreSQL typed mirror drift validation, observability dashboard manual evidence gate, review-safe manual-evidence template generation, non-passable committed evidence example validation, reviewer metadata, schema-version, non-empty evidence, unique check-id, and UTC review timestamp enforcement for passed manual evidence, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
@@ -360,6 +365,41 @@ blocking:
   - Playwright CLI screenshots were used manually for dashboard/work-queue
     rendering and deep-link behavior; CI browser screenshot smoke is
     intentionally skipped per product decision.
+- 2026-05-16 relationship graph verification:
+  - Commit `0e438b0 Add relationship graph workbench interactions` pushed to
+    `origin/main`
+  - GitHub Actions `CI` run `25929814655`: success
+  - `node --check src/req_tracker/ui/graph_workbench.js`: passed
+  - `uv run pytest tests/contract/test_ui_route.py tests/unit/ops/test_operator_ui_smoke.py`:
+    `6 passed`
+  - `uv run python ops/ui/smoke_operator_ui.py`: passed, including
+    `RUNE_SCALE_150` with 150 total nodes, 120 visible overview nodes,
+    103 pending edges, 103 approval work items, 47 finding work items,
+    and 9 orphan nodes
+  - Playwright CLI verified `Relationship Graph` with `layout=relationship`,
+    120 rendered relationship nodes, 73 rendered edges, 26 dense-mode labels,
+    node drag changing `Scaled architecture block 001` from its auto layout
+    position to a pinned position, edge rerender preservation, and `Reset View`
+    restoring the auto layout position
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `220 passed, 3 skipped`
+- 2026-05-16 production-readiness local gate check:
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+    failed overall as expected for this workstation because production/staging
+    environment variables are unset and Docker Desktop Linux engine is not
+    running
+  - Non-Docker local gates in the readiness run passed, including ruff, mypy,
+    pytest, masking rehearsal, release blocker coverage, source boundary
+    validation, source adapter smoke, source-skill export rehearsal, model
+    gateway smoke, Helm chart validation, observability asset validation,
+    PostgreSQL migration rollback validation, PostgreSQL typed mirror
+    validation, evidence example validation, CI gate coverage validation, UI
+    smoke, and feedback eval rehearsal
+  - Docker-backed `ops/integration/run_backend_integration.py` and
+    `ops/rehearsal/run_full_stack_rehearsal.py` failed in this shell because
+    Docker reported `failed to connect to the docker API at
+    npipe:////./pipe/dockerDesktopLinuxEngine`
 - `uv run pytest tests/unit/api/test_runtime_state.py tests/unit/debug/test_trace_recorder.py tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   `20 passed`
 - `uv run python ops/observability/validate_observability_assets.py`: passed
@@ -388,10 +428,21 @@ blocking:
 
 The overall production objective is not complete yet. The current repo is a
 validated local/dummy, persistence-foundation, backend-interface, source-adapter,
-debuggability, runtime-metrics, trace-context propagation, disposable backend
-integration, full-stack rehearsal, and operations-rehearsal stage. The next concrete completion gate requires
-company/staging PostgreSQL, Neo4j, Qdrant, JIRA/Confluence, SSO/OIDC proxy,
-OpenTelemetry collector, Prometheus/Grafana dashboard import, and a real sandbox
-model endpoint so integration, replay, backup, restore, load, live-source,
-live-provider, and observability validation can run against real organization
-dependencies.
+debuggability, runtime-metrics, trace-context propagation, dashboard/workbench,
+relationship graph, and operations-rehearsal stage. The latest deterministic
+non-Docker local gates and GitHub Actions CI pass on `0e438b0`.
+
+Two categories remain outside the evidence that can be completed in the current
+shell:
+
+- Docker-backed disposable backend/full-stack rehearsals require a running
+  Docker Desktop Linux engine or an equivalent Ubuntu/Docker host. The scripts
+  and CI omission validator are present, but the latest local execution failed
+  because this workstation could not connect to
+  `npipe:////./pipe/dockerDesktopLinuxEngine`.
+- Company/staging readiness requires PostgreSQL, Neo4j, Qdrant,
+  JIRA/Confluence, SSO/OIDC proxy, OpenTelemetry collector,
+  Prometheus/Grafana dashboard import, backup/restore/load evidence, approved
+  decision/email export data, and a real sandbox model endpoint so integration,
+  replay, backup, restore, load, live-source, live-provider, and observability
+  validation can run against real organization dependencies.

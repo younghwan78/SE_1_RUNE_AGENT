@@ -42,8 +42,8 @@ Concrete deliverables:
 | Feedback/eval/improvement loop | `ops/evals/run_feedback_eval_rehearsal.py` | Complete |
 | Debug and replay workbench | debug/replay contract tests | Complete |
 | Persistence foundation | SQLite/PostgreSQL tests and migration validators | Complete |
-| Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete locally |
-| Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete locally |
+| Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete when Docker-backed local services are available; latest 2026-05-16 workstation run failed because Docker Desktop Linux engine was not running |
+| Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete when Docker-backed local services are available; latest 2026-05-16 workstation run failed because Docker Desktop Linux engine was not running |
 | Release blocker gate | `ops/security/check_release_blockers.py` | Complete locally |
 | Readiness template | `ops/rehearsal/check_production_readiness.py --write-evidence-template -` | Complete |
 | CI gate coverage | `.github/workflows/ci.yml`, `ops/rehearsal/validate_ci_gate_coverage.py` | Complete |
@@ -82,6 +82,11 @@ uv run python ops/rehearsal/run_full_stack_rehearsal.py
 The GitHub CI intentionally runs deterministic local gates and omits the
 Docker-backed integration/full-stack gates where documented by
 `ops/rehearsal/validate_ci_gate_coverage.py`.
+
+On a Windows workstation, start Docker Desktop with the Linux engine before
+running these two Docker-backed gates. If Docker is unavailable, treat these as
+environment-blocked verification gates rather than evidence of application
+logic failure.
 
 ## 4. Company/Staging Gates
 
@@ -145,6 +150,9 @@ The current repository should be treated as:
 - complete for local/dummy production-shaped foundation
 - complete for source-skill/export handoff rehearsal
 - complete for deterministic CI/local release gates
+- complete for Docker-backed disposable backend and full-stack rehearsal scripts,
+  but the current workstation must have Docker Desktop Linux engine running to
+  produce fresh local pass evidence
 - incomplete for company/staging production readiness until reviewed external
   evidence is attached
 

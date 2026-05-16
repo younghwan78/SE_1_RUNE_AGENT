@@ -229,3 +229,55 @@ E:\51_Codex_MBSE_Agent에서 dashboard local implementation은 완료된 기준�
 company/staging evidence가 필요한 항목과 로컬에서 추가 보강 가능한 항목을 분리해줘.
 CI browser screenshot smoke는 계속 skip하고, React/React Flow는 아직 결정하지 마.
 ```
+
+## 2026-05-16 Relationship Graph and Completion Audit Snapshot
+
+Latest pushed commit:
+
+- `0e438b0 Add relationship graph workbench interactions`
+
+GitHub verification:
+
+- GitHub Actions `CI` run `25929814655`: success for
+  `0e438b05d8b26daf6cec37836563fc39ff631a5a`
+
+Graph UI status:
+
+- `docs/implementation/11_GRAPH_RELATIONSHIP_VIEW_PLAN.md` is added.
+- `Traceability Workbench` now separates projection mode from layout mode:
+  - `Ontology Lane`
+  - `Relationship Graph`
+- `Relationship Graph` uses component-aware layout for large graphs.
+- Dense 100+ node view reduces labels to representative component labels.
+- Relationship nodes can be dragged to temporary pinned positions.
+- Dragging rerenders related edges.
+- `Reset View` clears zoom/pan and pinned node positions.
+
+Latest validation evidence:
+
+- `node --check src/req_tracker/ui/graph_workbench.js`: passed
+- `uv run pytest tests/contract/test_ui_route.py tests/unit/ops/test_operator_ui_smoke.py`: `6 passed`
+- `uv run python ops/ui/smoke_operator_ui.py`: passed
+- Playwright CLI verified `Relationship Graph` with 120 relationship nodes,
+  73 edges, 26 dense-mode labels, node drag/pin, edge preservation, and reset
+  restoring the auto layout.
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `220 passed, 3 skipped`
+
+Production readiness audit update:
+
+- `docs/implementation/08_CURRENT_STATE_AND_COMPLETION_AUDIT.md` and
+  `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` are updated to reflect
+  the latest graph UI work, CI success, and current gate status.
+- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`
+  was executed on 2026-05-16. Non-Docker local gates passed, but the overall
+  readiness report failed because production/staging env vars are unset and
+  Docker Desktop Linux engine is not running.
+- Docker-backed gates currently blocked on this workstation:
+  - `uv run python ops/integration/run_backend_integration.py`
+  - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`
+- Remaining production gates still require company/staging evidence:
+  PostgreSQL, Neo4j, Qdrant, JIRA/Confluence sandbox, trusted proxy SSO/OIDC,
+  real model gateway sandbox, OpenTelemetry collector, Prometheus/Grafana,
+  backup/restore/load, and approved decision/email export validation.
