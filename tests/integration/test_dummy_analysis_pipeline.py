@@ -13,21 +13,34 @@ from req_tracker.vector.memory_backend import MemoryVectorBackend
 from req_tracker.workflows.analysis_graph import LocalAnalysisWorkflow
 
 
-def _workflow(tmp_path) -> tuple[LocalAnalysisWorkflow, MemoryGraphBackend, ApprovalService]:  # type: ignore[no-untyped-def]
+class TrackingVectorBackend(MemoryVectorBackend):
+    def __init__(self) -> None:
+        super().__init__()
+        self.search_queries: list[tuple[str, str, int]] = []
+
+    def search(self, query: str, *, project_key: str, limit: int = 5):  # type: ignore[no-untyped-def]
+        self.search_queries.append((query, project_key, limit))
+        return super().search(query, project_key=project_key, limit=limit)
+
+
+def _workflow(  # type: ignore[no-untyped-def]
+    tmp_path,
+) -> tuple[LocalAnalysisWorkflow, MemoryGraphBackend, ApprovalService, TrackingVectorBackend]:
     graph = MemoryGraphBackend()
     approvals = ApprovalService()
+    vector = TrackingVectorBackend()
     workflow = LocalAnalysisWorkflow(
         traces=InMemoryTraceRepository(),
         artifact_store=LocalArtifactStore(tmp_path),
         graph=graph,
-        vector=MemoryVectorBackend(),
+        vector=vector,
         approvals=approvals,
     )
-    return workflow, graph, approvals
+    return workflow, graph, approvals, vector
 
 
 def test_dummy_analysis_creates_findings_and_approvals(tmp_path) -> None:  # type: ignore[no-untyped-def]
-    workflow, graph, approvals = _workflow(tmp_path)
+    workflow, graph, approvals, vector = _workflow(tmp_path)
     result = workflow.run(run_id="run_it_001", project_key="RUNE_CAM_ALPHA")
 
     assert result.run.status == "succeeded"
@@ -62,6 +75,12 @@ def test_dummy_analysis_creates_findings_and_approvals(tmp_path) -> None:  # typ
     llm_step = next(
         step for step in result.steps if step.stage_name == "llm_assisted_reasoning"
     )
+    assert vector.search_queries
+    assert llm_step.retrieval_context_ref is not None
+    assert llm_step.retrieval_context_ref.endswith("edge_retrieval_context.json")
+    retrieval_context = workflow.artifact_store.read_json(llm_step.retrieval_context_ref)
+    assert retrieval_context["query"]
+    assert retrieval_context["retrieved_chunk_ids"]
     assert llm_step.validation_result["status"] == "passed"
 
     first = result.approvals[0]
@@ -77,7 +96,7 @@ def test_dummy_analysis_creates_findings_and_approvals(tmp_path) -> None:  # typ
 
 
 def test_multi_source_dummy_analysis_keeps_source_types(tmp_path) -> None:  # type: ignore[no-untyped-def]
-    workflow, _graph, _approvals = _workflow(tmp_path)
+    workflow, _graph, _approvals, _vector = _workflow(tmp_path)
 
     result = workflow.run(
         run_id="run_it_multi_001",

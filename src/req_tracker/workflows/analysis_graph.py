@@ -240,6 +240,16 @@ class LocalAnalysisWorkflow:
                 "evidence_attached": all(edge.evidence for edge in edges),
             },
         )
+        edge_retrieval_context = self._edge_retrieval_context(
+            project_key=project_key,
+            nodes=nodes,
+            edges=edges,
+        )
+        edge_retrieval_ref = self.artifact_store.write_json(
+            run_id,
+            "edge_retrieval_context",
+            edge_retrieval_context,
+        )
 
         llm_step = self.traces.start_step(
             step_id=f"step_{run_id}_llm_reason_edges",
@@ -249,14 +259,16 @@ class LocalAnalysisWorkflow:
                 "candidate_edge_ids": [edge.edge_id for edge in edges],
                 "model_profile_id": "dummy-local",
                 "prompt_version_id": "pv_edge_linking_v1",
+                "retrieved_chunk_ids": edge_retrieval_context["retrieved_chunk_ids"],
             },
-            retrieval_context_ref="candidate_edges",
+            retrieval_context_ref=edge_retrieval_ref.artifact_ref,
         )
         llm_reasoning, llm_validation = self._run_llm_edge_reasoning(
             run_id=run_id,
             step_id=llm_step.step_id,
             nodes=nodes,
             edges=edges,
+            retrieval_context=edge_retrieval_context,
         )
         self.traces.finish_step(
             step_id=llm_step.step_id,
@@ -550,6 +562,7 @@ class LocalAnalysisWorkflow:
         step_id: str,
         nodes: list[OntologyNode],
         edges: list[TraceabilityEdge],
+        retrieval_context: dict[str, object],
     ) -> tuple[EdgeReasoningOutput, StructuredValidationResult]:
         """Run a deterministic dummy model-gateway call for traceable LLM reasoning."""
         profile = ModelProfile(
@@ -605,6 +618,7 @@ class LocalAnalysisWorkflow:
                 "fixture_name": "edge_reasoning",
                 "node_ids": [node.node_id for node in nodes],
                 "candidate_edge_ids": [edge.edge_id for edge in edges],
+                "retrieval_context": retrieval_context,
             },
             data_classification="restricted",
             masking_applied=True,
@@ -624,6 +638,33 @@ class LocalAnalysisWorkflow:
         if parsed is None:
             raise RuntimeError(f"dummy LLM edge reasoning failed validation: {validation}")
         return parsed, validation
+
+    def _edge_retrieval_context(
+        self,
+        *,
+        project_key: str,
+        nodes: list[OntologyNode],
+        edges: list[TraceabilityEdge],
+    ) -> dict[str, object]:
+        """Build deterministic vector retrieval context for edge reasoning."""
+        node_by_id = {node.node_id: node for node in nodes}
+        query_terms: list[str] = []
+        for edge in edges[:5]:
+            for node_id in (edge.source_node_id, edge.target_node_id):
+                node = node_by_id.get(node_id)
+                if node is not None:
+                    query_terms.append(node.name)
+        query = " ".join(query_terms) or "traceability evidence"
+        retrieved = self.vector.search(query, project_key=project_key, limit=5)
+        return {
+            "query": query,
+            "retrieval_policy_id": "ret_dummy_v1",
+            "retrieved_chunk_ids": [chunk.chunk_id for chunk in retrieved],
+            "retrieved_artifact_ids": list(
+                dict.fromkeys(chunk.artifact_id for chunk in retrieved)
+            ),
+            "candidate_edge_ids": [edge.edge_id for edge in edges],
+        }
 
     def _run_llm_node_extraction_review(
         self,

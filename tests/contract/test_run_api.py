@@ -116,7 +116,7 @@ def test_analyze_run_and_approve_edge(client: TestClient) -> None:
     llm_step = next(
         step for step in step_payload if step["stage_name"] == "llm_assisted_reasoning"
     )
-    assert llm_step["retrieval_context_ref"] == "candidate_edges"
+    assert llm_step["retrieval_context_ref"].endswith("edge_retrieval_context.json")
     assert llm_step["validation_status"] == "passed"
     assert llm_step["validation_result"]["schema_version"] == "v1"
     chunk_step = next(step for step in step_payload if step["stage_name"] == "mask_chunk")

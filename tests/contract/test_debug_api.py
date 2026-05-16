@@ -38,7 +38,7 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
         for step in payload["steps"]
         if step["stage_name"] == "llm_assisted_reasoning"
     )
-    assert llm_step["retrieval_context_ref"] == "candidate_edges"
+    assert llm_step["retrieval_context_ref"].endswith("edge_retrieval_context.json")
     assert llm_step["validation_status"] == "passed"
     assert llm_step["validation_result"]["status"] == "passed"
 

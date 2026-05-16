@@ -271,6 +271,7 @@ Current local implementation:
 - local model-gateway smoke harness for HTTP fallback and trace validation
 - model-gateway comparison helper for same-input model/prompt candidate diffs
 - traceable dummy model-gateway calls for node extraction, edge linking, and finding reasoning
+- vector-backed retrieval context artifact for edge-linking LLM reasoning
 - in-memory graph/vector backends
 - deterministic critical-impact rule for issues affecting P0/critical requirements
 - deterministic architecture verification-path rule for architecture blocks with no direct

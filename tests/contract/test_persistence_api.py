@@ -216,7 +216,9 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     restored_llm_step = next(
         step for step in steps.json() if step["stage_name"] == "llm_assisted_reasoning"
     )
-    assert restored_llm_step["retrieval_context_ref"] == "candidate_edges"
+    assert restored_llm_step["retrieval_context_ref"].endswith(
+        "edge_retrieval_context.json"
+    )
     assert restored_llm_step["validation_result"]["status"] == "passed"
     assert replay_steps.status_code == 200
     assert any(

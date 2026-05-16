@@ -30,6 +30,8 @@ Do not use or recreate removed planning files:
 - The local workflow records dummy model-gateway traces for node extraction,
   edge linking, and finding reasoning using `pv_node_extraction_v1`,
   `pv_edge_linking_v1`, and `pv_finding_reasoning_v1`.
+- Edge-linking LLM reasoning uses a vector-backed retrieval context artifact
+  (`edge_retrieval_context.json`) with retrieved chunk and source artifact ids.
 - Masking policy violations stop analysis before node extraction/LLM reasoning,
   mark the mask/chunk step failed, persist a security-review debug artifact
   reference, and fail the run with `MASKING_POLICY_VIOLATION`.
@@ -191,6 +193,23 @@ Do not mark the overall production goal complete until a completion audit verifi
   dummy model profiles without a live provider.
 - Verification:
   - `uv run pytest tests/unit/model_gateway -q`: `16 passed`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `240 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
+
+## 2026-05-17 Vector-Backed Edge Retrieval Context
+
+- Edge-linking LLM reasoning now calls the configured vector backend before
+  model-gateway execution.
+- The workflow writes `edge_retrieval_context.json` and uses it as the
+  `llm_assisted_reasoning` step `retrieval_context_ref`.
+- The model payload includes the retrieval context, including query,
+  `ret_dummy_v1`, retrieved chunk ids, source artifact ids, and candidate edge
+  ids.
+- Verification:
+  - `uv run pytest tests/integration/test_dummy_analysis_pipeline.py::test_dummy_analysis_creates_findings_and_approvals -q`: passed
+  - `uv run pytest tests/integration/test_dummy_analysis_pipeline.py tests/contract/test_debug_api.py tests/contract/test_run_api.py tests/contract/test_persistence_api.py tests/contract/test_replay_feedback_api.py -q`: `33 passed`
   - `uv run ruff check .`: passed
   - `uv run mypy src`: passed
   - `uv run pytest`: `240 passed, 3 skipped`
