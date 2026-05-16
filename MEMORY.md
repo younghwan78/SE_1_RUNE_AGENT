@@ -800,6 +800,14 @@ Validation evidence:
   `manual_required=10`, `passed=2`, `warning=0`
 - Committed and pushed `f16b991 Accept manual evidence in goal audit`.
   GitHub Actions CI run `25969313834` passed all deterministic release gates.
+- Updated GitHub Actions JavaScript actions from `actions/checkout@v4` and
+  `actions/setup-python@v5` to their `v6` Node 24-backed tags, removing the
+  temporary `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` compatibility env.
+- `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+  `ci_command_count=23`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `256 passed, 3 skipped`
 
 Remaining production gap is unchanged:
 
