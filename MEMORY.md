@@ -47,7 +47,8 @@ Do not use or recreate removed planning files:
 - PostgreSQL state store, typed core/operation mirrors, migrations, rollback validation, audit archive/prune, idempotency restore, replay restore, improvement decision restore, failed run persistence.
 - Neo4j graph backend and Qdrant vector backend foundations.
 - Docker-backed backend integration runner and full-stack rehearsal.
-- Scheduler API/UI/runbook path plus PostgreSQL scheduler lease support for Ubuntu multi-worker deployments.
+- Scheduler API/UI/runbook path, restart-safe schedule configuration persistence,
+  and PostgreSQL scheduler lease support for Ubuntu multi-worker deployments.
 - Graph view scalability plan and implementation: larger graph view, zoom/pan/reset, projection modes, 150-node dummy graph smoke validation.
 - Dashboard production uplift:
   - `docs/implementation/10_DASHBOARD_PRODUCTION_PLAN.md`
@@ -92,8 +93,11 @@ Do not use or recreate removed planning files:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-
-- `uv run pytest`: `217 passed, 3 skipped`
+- `uv run pytest`: `242 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+  local regression gates passed; overall readiness remains incomplete with
+  `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because
+  company/staging variables and reviewed evidence are unset.
 - `uv run pytest tests/contract/test_dashboard_api.py tests/unit/dashboard/test_summary_service.py tests/unit/ops/test_operator_ui_smoke.py tests/contract/test_openapi_surface.py`: `10 passed`
 - `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`: `19 passed`
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`: `33 passed`
@@ -103,7 +107,7 @@ Do not use or recreate removed planning files:
 - `uv run python ops/source/validate_source_boundaries.py`: passed
 - `uv run python ops/security/check_release_blockers.py`: passed
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed
-- GitHub Actions CI for `fee8aad`: success
+- Latest GitHub Actions CI for `4934186`: success (`25968077139`)
 
 ## Current Status
 
