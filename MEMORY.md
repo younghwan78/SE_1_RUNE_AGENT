@@ -789,10 +789,17 @@ Validation evidence:
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
 - `uv run pytest`: `256 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --run-local-gates`:
+  passed, reporting `goal_complete=false`, `remaining_blocker_count=21`,
+  `release_scope_passed=true`, `release_scope_ready=false`, and local
+  regression gates passed; remaining blockers are company/staging environment
+  configuration and manual evidence.
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
   local regression gates passed with release-scope and goal-completion audits included;
   overall readiness failed as expected with summary `failed=7`,
   `manual_required=10`, `passed=2`, `warning=0`
+- Committed and pushed `f16b991 Accept manual evidence in goal audit`.
+  GitHub Actions CI run `25969313834` passed all deterministic release gates.
 
 Remaining production gap is unchanged:
 

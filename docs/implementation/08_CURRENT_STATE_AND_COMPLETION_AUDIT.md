@@ -249,6 +249,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed with `release_ready=false`, `missing_artifacts=0`, `audit_coverage_missing=0`, status counts `local_complete=11`, `company_evidence_required=4`, and `plan_requirements` aligned to `PRODUCTION_EXECUTION_PLAN.md` first-release required-scope bullets
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete`: passed, reporting `goal_complete=false`, `remaining_blocker_count=22`, `release_scope_passed=true`, `release_scope_ready=false`, and `production_readiness_passed=false`
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: passed, reporting `goal_complete=false` while applying 11 example manual-evidence entries that remain failed TODO placeholders by design
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --run-local-gates`: passed, reporting `goal_complete=false`, `remaining_blocker_count=21`, local regression gates passed, and remaining blockers limited to company/staging environment configuration and manual evidence
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown`: passed, producing a masked command/evidence collection plan for unresolved company/staging gates without printing secret values
 - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`: passed after first verifying the new staging evidence plan CI smoke requirement failed when absent
@@ -261,6 +262,8 @@ Latest local verification:
 
 Latest implementation GitHub Actions verification:
 
+- GitHub Actions `CI` run `25969313834` for implementation commit `f16b991`
+  (`Accept manual evidence in goal audit`): completed successfully
 - GitHub Actions `CI` run `25968150339` for documentation commit `ee3dea2`
   (`docs/api/README.md` scheduler persistence update): completed successfully
 - GitHub Actions `CI` run `25968077139` for handoff commit `4934186`:
