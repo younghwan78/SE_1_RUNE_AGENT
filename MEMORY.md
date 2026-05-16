@@ -779,9 +779,16 @@ Validation evidence:
   passed, reporting `goal_complete=false`, `remaining_blocker_count=22`,
   `release_scope_passed=true`, `release_scope_ready=false`, and
   `production_readiness_passed=false`
+- Added `--evidence-file` support to `ops/rehearsal/check_goal_completion.py`
+  so the top-level goal audit can apply the same reviewed manual evidence file
+  used by `check_production_readiness.py`.
+- `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`: `3 passed`
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --evidence-file ops/rehearsal/production_readiness_evidence.example.json`:
+  passed, reporting `goal_complete=false` while applying 11 example manual
+  evidence entries that remain failed TODO placeholders by design
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `255 passed, 3 skipped`
+- `uv run pytest`: `256 passed, 3 skipped`
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
   local regression gates passed with release-scope and goal-completion audits included;
   overall readiness failed as expected with summary `failed=7`,

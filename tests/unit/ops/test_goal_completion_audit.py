@@ -37,3 +37,43 @@ def test_goal_completion_audit_lists_concrete_success_criteria() -> None:
         "company_staging_readiness",
         "ci_release_gates",
     }
+
+
+def test_goal_completion_audit_applies_manual_evidence() -> None:
+    namespace = run_path("ops/rehearsal/check_goal_completion.py")
+    evidence = [
+        namespace["READINESS_MODULE"].ManualEvidence(
+            check_id="company_postgres_rehearsal",
+            status="passed",
+            summary="Staging PostgreSQL rehearsal passed.",
+            evidence=["staging-ci:postgres:run-1"],
+        )
+    ]
+
+    report = namespace["build_goal_completion_audit"](
+        {
+            "STATE_STORE": "postgres",
+            "POSTGRES_DSN": "postgresql://rune:secret@db/rune_agent",
+            "GRAPH_BACKEND": "neo4j",
+            "NEO4J_URI": "bolt://neo4j:7687",
+            "NEO4J_USERNAME": "neo4j",
+            "NEO4J_PASSWORD": "secret",
+            "VECTOR_BACKEND": "qdrant",
+            "QDRANT_URL": "http://qdrant:6333",
+            "QDRANT_COLLECTION": "rune_chunks",
+            "MODEL_GATEWAY_MODE": "http_json",
+            "MODEL_GATEWAY_ENDPOINT_URL": "https://models.example.test/v1/complete",
+            "AUTH_MODE": "trusted_proxy",
+            "TRUSTED_PROXY_SECRET": "secret",
+            "TRUSTED_GROUP_ROLE_MAP": '{"rune-admins":"admin"}',
+            "ARTIFACT_ROOT": "/var/lib/rune-agent/artifacts",
+            "OTEL_ENABLED": "true",
+            "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4317",
+        },
+        manual_evidence=evidence,
+    )
+
+    blocker_ids = {blocker["blocker_id"] for blocker in report["remaining_blockers"]}
+    assert "production_readiness:company_postgres_rehearsal" not in blocker_ids
+    assert "production_readiness:company_neo4j_rehearsal" in blocker_ids
+    assert report["production_readiness"]["manual_evidence_count"] == 1

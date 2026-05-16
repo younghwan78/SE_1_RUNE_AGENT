@@ -69,12 +69,14 @@ def build_goal_completion_audit(
     env: Mapping[str, str],
     *,
     run_local_gates: bool = False,
+    manual_evidence: Any = (),
 ) -> dict[str, Any]:
     """Build a concrete goal-completion audit without mutating state."""
     release_scope = RELEASE_SCOPE_MODULE.build_release_scope_report()
     production_readiness = READINESS_MODULE.build_readiness_report(
         env,
         run_local_gates=run_local_gates,
+        manual_evidence=manual_evidence,
     )
     remaining_blockers = [
         *_release_scope_blockers(release_scope),
@@ -104,6 +106,7 @@ def build_goal_completion_audit(
         "production_readiness": {
             "passed": production_readiness["passed"],
             "summary": production_readiness["summary"],
+            "manual_evidence_count": production_readiness["manual_evidence_count"],
         },
         "remaining_blockers": remaining_blockers,
     }
@@ -168,8 +171,23 @@ def main() -> int:
         action="store_true",
         help="Return success when the audit is structurally valid but the goal is not complete.",
     )
+    parser.add_argument(
+        "--evidence-file",
+        type=Path,
+        default=None,
+        help="Optional reviewed manual-gate evidence JSON file.",
+    )
     args = parser.parse_args()
-    report = build_goal_completion_audit(dict(os.environ), run_local_gates=args.run_local_gates)
+    manual_evidence = (
+        READINESS_MODULE.load_manual_evidence(args.evidence_file)
+        if args.evidence_file
+        else []
+    )
+    report = build_goal_completion_audit(
+        dict(os.environ),
+        run_local_gates=args.run_local_gates,
+        manual_evidence=manual_evidence,
+    )
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["goal_complete"] or args.allow_incomplete else 1
 
