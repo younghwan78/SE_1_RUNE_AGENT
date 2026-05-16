@@ -145,11 +145,15 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 236 passed, 3 skipped
+- `uv run pytest`: 237 passed, 3 skipped
 - `uv run pytest tests/unit/adapters/test_jira_rest_adapter.py -q`:
   6 passed, validating JIRA REST pagination/retry/permission handling, link
   extraction, comment metadata preservation, and changelog history metadata
   preservation
+- `uv run pytest tests/unit/findings/test_rules.py tests/integration/test_dummy_analysis_pipeline.py tests/contract/test_dashboard_api.py::test_dashboard_summary_after_compact_analysis -q`:
+  6 passed, validating deterministic Confluence stale trace and
+  issue-affects-critical-requirement rules plus compact dashboard blocked-health
+  projection
 - `uv run pytest tests/unit/adapters/test_confluence_rest_adapter.py::test_confluence_rest_adapter_preserves_previous_version_metadata tests/unit/findings/test_rules.py::test_confluence_version_change_creates_stale_trace_finding tests/integration/test_dummy_analysis_pipeline.py::test_confluence_version_change_is_routed_to_stale_finding -q`:
   3 passed, validating Confluence previous-version metadata preservation,
   deterministic stale trace finding generation, and workflow routing into the
@@ -258,6 +262,7 @@ Latest implementation GitHub verification:
 | Graph backend | `GraphBackend` protocol, `MemoryGraphBackend`, `Neo4jGraphBackend`, graph projection, traceability chain APIs, optional `NEO4J_TEST_*` integration test, Docker integration runner | Neo4j foundation complete; disposable Docker Neo4j integration passed; company/staging graph rehearsal pending |
 | Vector backend | `VectorBackend` protocol, `MemoryVectorBackend`, `QdrantVectorBackend`, optional `QDRANT_TEST_URL` integration test, Docker integration runner | Qdrant foundation complete; disposable Docker Qdrant integration passed; company/staging vector rehearsal pending |
 | Approval workflow | approval queue, deterministic confidence/relation-based risk routing in `src/req_tracker/reasoning/scoring.py`, approve/reject/hold/modify path, expected-version/proposal-hash stale approval guard with blocked audit outcome, graph commit, developer/operator RBAC and project-scope checks | Complete for local and protected API paths |
+| Deterministic traceability rules | `src/req_tracker/findings/rules.py`, source metadata routed into `LocalAnalysisWorkflow`, `tests/unit/findings/test_rules.py`, compact/dashboard contract tests | Complete for requirement without implementation, requirement without verification, design without parent requirement, conflicting alternatives, Confluence page version stale trace, and issue affecting critical requirement; company data calibration still pending |
 | Feedback loop | feedback events, command-style feedback action/reason aliases normalized to canonical taxonomy, eval candidates, improvement candidates including few-shot-example and ontology-normalization candidate contracts, ontology-normalization candidates for wrong-node-type feedback, eval gate, controlled review/canary promotion, canary/active rollback, persisted and PostgreSQL-typed improvement decisions, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary/rollback rehearsal complete; real production feedback calibration pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, analysis/ingestion/replay run start/completion audit boundary events with trigger metadata, failed run status and failed completion audit events, blocked debug artifact read audit events, finding status change audit events, improvement activation/rollback audit events, model/prompt activation/rollback audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, `11_GRAPH_RELATIONSHIP_VIEW_PLAN.md`, SVG graph controls, projection API, relationship/component layout, relationship node drag/pin/reset interaction, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, truncation metadata, Relationship Graph layout, component grouping, dense-label reduction, node drag, edge rerender, and reset-to-auto-layout are locally validated; React Flow decision remains pending after real graph shape validation |

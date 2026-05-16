@@ -270,6 +270,7 @@ Current local implementation:
 - generic HTTP JSON model provider with file-backed model/prompt registry
 - local model-gateway smoke harness for HTTP fallback and trace validation
 - in-memory graph/vector backends
+- deterministic critical-impact rule for issues affecting P0/critical requirements
 - approval queue, graph commit, feedback capture
 - audit event capture for approval, feedback, debug artifact, scheduler, and run completion
 - replay diff and eval candidate grouping

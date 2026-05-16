@@ -20,7 +20,9 @@ def test_dashboard_service_empty_health_is_unknown(tmp_path: Path) -> None:
     assert summary.last_run is None
 
 
-def test_dashboard_work_queue_prioritizes_high_findings_before_approvals(tmp_path: Path) -> None:
+def test_dashboard_work_queue_prioritizes_critical_findings_before_approvals(
+    tmp_path: Path,
+) -> None:
     app = create_app(Settings(artifact_root=tmp_path / "artifacts"))
     with TestClient(app) as client:
         response = client.post(
@@ -36,8 +38,8 @@ def test_dashboard_work_queue_prioritizes_high_findings_before_approvals(tmp_pat
 
     queue = DashboardService(runtime).work_queue("RUNE_CAM_ALPHA", limit=20)
 
-    assert queue.counts.finding == 5
+    assert queue.counts.finding == 6
+    assert queue.counts.critical == 1
     assert queue.counts.approval == 7
-    assert queue.items[0].priority == "high"
+    assert queue.items[0].priority == "critical"
     assert queue.items[0].item_type == "finding"
-

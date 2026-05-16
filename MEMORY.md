@@ -27,6 +27,7 @@ Do not use or recreate removed planning files:
 - FastAPI API skeleton and OpenAPI surface guard.
 - Pydantic contracts for ontology, debug traces, approvals, feedback, audit, source adapter contracts, and source sync cursor snapshots.
 - Local deterministic analysis workflow with ingestion, masking, chunking, evidence spans, node extraction, edge linking, findings, approval staging, LLM-assisted reasoning trace, and replay diff.
+- Deterministic finding rules include missing implementation, missing verification, orphan design, conflicting alternatives, Confluence stale trace, and issue-affects-critical-requirement.
 - Model gateway abstraction with dummy provider, HTTP JSON provider foundation, registry activation/rollback records, structured validation, retry/fallback traces, and token/cost metadata.
 - Approval workflow with pending graph proposals separated from approved graph state.
 - Approval actions: approve, reject, hold, modify.
@@ -158,6 +159,23 @@ Do not mark the overall production goal complete until a completion audit verifi
   - `uv run ruff check .`: passed
   - `uv run mypy src`: passed
   - `uv run pytest`: `236 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
+
+## 2026-05-17 Deterministic Critical Impact Rule
+
+- Added deterministic `ISSUE_AFFECTS_CRITICAL_REQUIREMENT` finding rule.
+- The rule creates a `cross_domain_hidden` critical finding when an Issue/Risk
+  node has an `affects` edge to a Requirement whose source artifact priority or
+  labels indicate `P0`, `critical`, or `blocker`.
+- The compact dummy dashboard now reports `blocked` health with one critical
+  finding for `CAM-ISS-060 -> CAM-REQ-001`, matching
+  `PRODUCTION_EXECUTION_PLAN.md` Step 7's `issue affects critical requirement`
+  rule.
+- Validation:
+  - `uv run pytest tests/unit/findings/test_rules.py tests/integration/test_dummy_analysis_pipeline.py tests/contract/test_dashboard_api.py::test_dashboard_summary_after_compact_analysis -q`: `6 passed`
+  - `uv run ruff check src/req_tracker/findings/rules.py tests/unit/findings/test_rules.py tests/contract/test_dashboard_api.py`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `237 passed, 3 skipped`
   - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
 
 ## Remaining Production Gates

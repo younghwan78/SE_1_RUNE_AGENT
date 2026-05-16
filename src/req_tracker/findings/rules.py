@@ -85,6 +85,13 @@ def analyze_findings(
             evidence_by_external_id=evidence_by_external_id or {},
         )
     )
+    findings.extend(
+        _issue_affects_critical_requirement_findings(
+            nodes=nodes,
+            edges=edges,
+            source_artifacts=source_artifacts or [],
+        )
+    )
     return findings
 
 
@@ -154,6 +161,65 @@ def _confluence_stale_trace_findings(
             )
         )
     return findings
+
+
+def _issue_affects_critical_requirement_findings(
+    *,
+    nodes: list[OntologyNode],
+    edges: list[TraceabilityEdge],
+    source_artifacts: list[RawSourceArtifact],
+) -> list[Finding]:
+    nodes_by_id = {node.node_id: node for node in nodes}
+    artifacts_by_external_id = {artifact.external_id: artifact for artifact in source_artifacts}
+    findings: list[Finding] = []
+    for edge in edges:
+        if edge.relation != "affects":
+            continue
+        source = nodes_by_id.get(edge.source_node_id)
+        target = nodes_by_id.get(edge.target_node_id)
+        if source is None or target is None:
+            continue
+        if source.node_type not in {"Issue", "Risk"} or target.node_type != "Requirement":
+            continue
+        target_artifact = artifacts_by_external_id.get(_external_id_from_node(target))
+        if target_artifact is None or not _is_critical_requirement(target_artifact):
+            continue
+        finding_hash = stable_hash(
+            {
+                "rule": "ISSUE_AFFECTS_CRITICAL_REQUIREMENT",
+                "edge": edge.edge_id,
+                "source": source.node_id,
+                "target": target.node_id,
+            }
+        )
+        findings.append(
+            Finding(
+                finding_id=f"fdg_{finding_hash[:16]}",
+                finding_type="cross_domain_hidden",
+                severity="critical",
+                affected_node_ids=[source.node_id, target.node_id],
+                affected_edge_ids=[edge.edge_id],
+                description=(
+                    f"{source.node_id} affects critical requirement {target.node_id}."
+                ),
+                suggested_action=(
+                    "Escalate the affected critical requirement and review release risk, "
+                    "verification coverage, and mitigation owner."
+                ),
+                evidence=edge.evidence,
+                detection_method="rule",
+                rule_id="ISSUE_AFFECTS_CRITICAL_REQUIREMENT",
+            )
+        )
+    return findings
+
+
+def _is_critical_requirement(artifact: RawSourceArtifact) -> bool:
+    priority = str(artifact.metadata.get("priority", "")).strip().lower()
+    labels = {label.strip().lower() for label in artifact.labels}
+    return priority in {"p0", "critical", "blocker"} or bool(
+        labels & {"p0", "critical", "blocker"}
+    )
 
 
 def _metadata_int(value: object) -> int | None:

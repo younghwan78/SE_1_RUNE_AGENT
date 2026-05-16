@@ -37,17 +37,18 @@ def test_dashboard_summary_after_compact_analysis(client: TestClient) -> None:
 
     assert summary.status_code == 200
     payload = summary.json()
-    assert payload["traceability_health"] == "attention_required"
+    assert payload["traceability_health"] == "blocked"
     assert payload["last_run"]["run_id"] == "run_dashboard_alpha"
     assert payload["counts"]["total_nodes"] == 10
     assert payload["counts"]["pending_edges"] == 7
     assert payload["counts"]["pending_approvals"] == 7
-    assert payload["counts"]["open_findings"] == 5
+    assert payload["counts"]["open_findings"] == 6
+    assert payload["counts"]["critical_findings"] == 1
     assert payload["source_freshness"]["dummy"] == "fresh"
 
     assert queue.status_code == 200
     queue_payload = queue.json()
-    assert queue_payload["counts"]["finding"] == 5
+    assert queue_payload["counts"]["finding"] == 6
     assert queue_payload["counts"]["approval"] == 7
     assert queue_payload["items"][0]["priority"] in {"critical", "high"}
     assert queue_payload["items"][0]["actions"]
