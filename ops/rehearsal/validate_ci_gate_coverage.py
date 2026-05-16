@@ -21,6 +21,7 @@ ALLOWED_CI_OMISSIONS = {
 
 REQUIRED_CI_EXTRA_COMMANDS = {
     "uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -",
+    "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown",
 }
 
 

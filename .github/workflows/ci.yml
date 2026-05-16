@@ -70,6 +70,9 @@ jobs:
       - name: Readiness evidence template smoke
         run: uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -
 
+      - name: Staging evidence plan smoke
+        run: uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown
+
       - name: Readiness example safety validation
         run: uv run python ops/rehearsal/validate_evidence_example.py
 

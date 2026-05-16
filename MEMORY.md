@@ -136,12 +136,15 @@ Purpose:
 - Help the company/staging phase collect reviewed evidence for PostgreSQL,
   Neo4j, Qdrant, model gateway, JIRA, Confluence, decision/email export,
   trusted proxy RBAC, observability, backup/restore/load, and optional Helm.
+- The same Markdown smoke command is now required by
+  `ops/rehearsal/validate_ci_gate_coverage.py` and runs in GitHub Actions `CI`.
 
 Validation:
 
 - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`: `3 passed`
 - `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py tests/unit/ops/test_staging_evidence_plan.py`: passed
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown`: passed
+- RED/GREEN: `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q` failed before adding the CI requirement and passed after adding it.
 
 ## 2026-05-17 Confluence Stale Trace Local Hardening
 
