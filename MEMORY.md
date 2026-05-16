@@ -232,14 +232,18 @@ CI browser screenshot smoke는 계속 skip하고, React/React Flow는 아직 결
 
 ## 2026-05-16 Relationship Graph and Completion Audit Snapshot
 
-Latest pushed commit:
+Latest pushed commits:
 
 - `0e438b0 Add relationship graph workbench interactions`
+- `67eeb22 Refresh production completion audit`
+- `4f96977 Classify unavailable Docker readiness gates`
 
 GitHub verification:
 
 - GitHub Actions `CI` run `25929814655`: success for
   `0e438b05d8b26daf6cec37836563fc39ff631a5a`
+- GitHub Actions `CI` run `25964404814`: success for
+  `4f96977b654a95b2e931d575ce6f46ae2a70221d`
 
 Graph UI status:
 
@@ -271,13 +275,15 @@ Production readiness audit update:
   `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` are updated to reflect
   the latest graph UI work, CI success, and current gate status.
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`
-  was executed on 2026-05-16. Non-Docker local gates passed. The checker now
-  classifies Docker-backed gate failures caused by Docker daemon unavailability
-  as `manual_required` with `docker_unavailable` evidence instead of treating
-  them as application failures. The overall readiness report still fails
-  because production/staging env vars are unset.
-- Docker-backed gates currently blocked on this workstation until Docker
-  Desktop Linux engine or an Ubuntu/Docker host is available:
+  was executed on 2026-05-16. After starting Docker Desktop Linux engine, all
+  local regression gates passed. The overall readiness report still fails
+  because production/staging env vars and manual evidence are unset.
+- The checker now classifies Docker-backed gate failures caused by Docker daemon
+  unavailability as `manual_required` with `docker_unavailable` evidence instead
+  of treating them as application failures, while mixed non-Docker local gate
+  failures still fail the local gate summary.
+- Docker-backed gates passed locally after Docker Desktop Linux engine was
+  started:
   - `uv run python ops/integration/run_backend_integration.py`
   - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`
 - Remaining production gates still require company/staging evidence:

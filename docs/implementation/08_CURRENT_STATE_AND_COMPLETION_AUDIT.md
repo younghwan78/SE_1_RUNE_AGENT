@@ -10,6 +10,8 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed commits:
 
+- `4f96977 Classify unavailable Docker readiness gates`
+- `67eeb22 Refresh production completion audit`
 - `0e438b0 Add relationship graph workbench interactions`
 - `9135b84 Add production dashboard workbench`
 - `5cb3edb Add local handoff completion gates`
@@ -140,7 +142,7 @@ Latest local verification:
 - `uv run mypy src`: passed
 - `uv run pytest`: 222 passed, 3 skipped
 - `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`:
-  19 passed, validating source-skill export dry-run and readiness gate coverage
+  21 passed, validating source-skill export dry-run and readiness gate coverage
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`:
   33 passed, validating datasource factory settings, skill/export adapter
   workflow injection, dummy defaults, debug cursor exposure, and persistence
@@ -200,14 +202,14 @@ Latest local verification:
 - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed, validating that GitHub Actions covers deterministic local release gates and only omits the documented Docker-backed integration/full-stack rehearsals
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected because the committed example evidence uses `failed` TODO placeholders and production env checks are unset; fake `run-123*` and `status: passed` examples are not present in the committed template
-- `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 18 passed, including manual evidence file loading, duplicate check-id rejection, TODO-placeholder rejection for passed evidence, reviewer metadata enforcement for passed evidence, schema-version and non-empty evidence enforcement for passed evidence, ISO-8601 UTC `reviewed_at` enforcement, failed TODO template loading, non-passable example evidence, review-safe evidence template generation, complete env/evidence pass behavior, unknown evidence warning blocking, and Kubernetes Helm evidence gating
+- `uv run pytest tests/unit/ops/test_production_readiness_check.py`: 20 passed, including manual evidence file loading, duplicate check-id rejection, TODO-placeholder rejection for passed evidence, reviewer metadata enforcement for passed evidence, schema-version and non-empty evidence enforcement for passed evidence, ISO-8601 UTC `reviewed_at` enforcement, failed TODO template loading, non-passable example evidence, review-safe evidence template generation, complete env/evidence pass behavior, unknown evidence warning blocking, Kubernetes Helm evidence gating, and Docker-unavailable local gate classification
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment
 
 Latest GitHub verification:
 
-- GitHub Actions `CI` run `25929814655` for `0e438b0`: completed successfully
+- GitHub Actions `CI` run `25964404814` for `4f96977`: completed successfully
 
 ## 2. Prompt-to-Artifact Checklist
 
@@ -385,11 +387,18 @@ blocking:
   - `uv run mypy src`: passed
   - `uv run pytest`: `222 passed, 3 skipped`
 - 2026-05-16 production-readiness local gate check:
+  - Commit `4f96977 Classify unavailable Docker readiness gates` pushed to
+    `origin/main`
+  - GitHub Actions `CI` run `25964404814`: success
   - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
     failed overall as expected for this workstation because production/staging
-    environment variables are unset; Docker-backed local gates are now
-    classified as `manual_required` with `docker_unavailable` evidence when
-    Docker Desktop Linux engine is not running
+    environment variables are unset; local regression gates passed after
+    Docker Desktop Linux engine was started
+  - `uv run pytest tests/unit/ops/test_production_readiness_check.py`:
+    `20 passed`, including coverage that Docker daemon unavailability is
+    reported as `manual_required`/`docker_unavailable` only when the remaining
+    local gates pass, and that mixed non-Docker failures still fail the local
+    gate summary
   - Non-Docker local gates in the readiness run passed, including ruff, mypy,
     pytest, masking rehearsal, release blocker coverage, source boundary
     validation, source adapter smoke, source-skill export rehearsal, model
@@ -397,11 +406,12 @@ blocking:
     PostgreSQL migration rollback validation, PostgreSQL typed mirror
     validation, evidence example validation, CI gate coverage validation, UI
     smoke, and feedback eval rehearsal
-  - Docker-backed `ops/integration/run_backend_integration.py` and
-    `ops/rehearsal/run_full_stack_rehearsal.py` were reported as
-    `docker_unavailable` in this shell because Docker reported
-    `failed to connect to the docker API at
-    npipe:////./pipe/dockerDesktopLinuxEngine`
+  - `uv run python ops/integration/run_backend_integration.py`: passed with
+    disposable PostgreSQL, Neo4j, and Qdrant containers (`3 passed`)
+  - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed with
+    disposable PostgreSQL, Neo4j, and Qdrant containers, API restart restore,
+    `audit_total_events=3`, metrics surface check, and smoke-load p95 under
+    the 5 second local rehearsal threshold
 - `uv run pytest tests/unit/api/test_runtime_state.py tests/unit/debug/test_trace_recorder.py tests/contract/test_audit_api.py tests/contract/test_persistence_api.py tests/contract/test_run_api.py`:
   `20 passed`
 - `uv run python ops/observability/validate_observability_assets.py`: passed
@@ -424,7 +434,8 @@ blocking:
   expected because company/staging PostgreSQL, Neo4j, Qdrant, model gateway,
   trusted proxy, artifact storage, OpenTelemetry collector, source,
   Prometheus/Grafana dashboard, backup/restore, and load-test evidence variables
-  are not configured in the local workstation environment.
+  are not configured in the local workstation environment. The readiness
+  summary was `failed=7`, `manual_required=10`, `passed=2`.
 
 ## 5. Completion Gate
 
@@ -432,16 +443,12 @@ The overall production objective is not complete yet. The current repo is a
 validated local/dummy, persistence-foundation, backend-interface, source-adapter,
 debuggability, runtime-metrics, trace-context propagation, dashboard/workbench,
 relationship graph, and operations-rehearsal stage. The latest deterministic
-non-Docker local gates and GitHub Actions CI pass on `0e438b0`.
+local gates, Docker-backed disposable rehearsals, and GitHub Actions CI pass on
+`4f96977`.
 
-Two categories remain outside the evidence that can be completed in the current
+One category remains outside the evidence that can be completed in the current
 shell:
 
-- Docker-backed disposable backend/full-stack rehearsals require a running
-  Docker Desktop Linux engine or an equivalent Ubuntu/Docker host. The scripts
-  and CI omission validator are present, but the latest local execution failed
-  because this workstation could not connect to
-  `npipe:////./pipe/dockerDesktopLinuxEngine`.
 - Company/staging readiness requires PostgreSQL, Neo4j, Qdrant,
   JIRA/Confluence, SSO/OIDC proxy, OpenTelemetry collector,
   Prometheus/Grafana dashboard import, backup/restore/load evidence, approved

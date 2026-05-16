@@ -42,8 +42,8 @@ Concrete deliverables:
 | Feedback/eval/improvement loop | `ops/evals/run_feedback_eval_rehearsal.py` | Complete |
 | Debug and replay workbench | debug/replay contract tests | Complete |
 | Persistence foundation | SQLite/PostgreSQL tests and migration validators | Complete |
-| Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete when Docker-backed local services are available; latest 2026-05-16 workstation run failed because Docker Desktop Linux engine was not running |
-| Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete when Docker-backed local services are available; latest 2026-05-16 workstation run failed because Docker Desktop Linux engine was not running |
+| Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete; latest 2026-05-16 workstation run passed after Docker Desktop Linux engine was started |
+| Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete; latest 2026-05-16 workstation run passed after Docker Desktop Linux engine was started |
 | Release blocker gate | `ops/security/check_release_blockers.py` | Complete locally |
 | Readiness template | `ops/rehearsal/check_production_readiness.py --write-evidence-template -` | Complete |
 | CI gate coverage | `.github/workflows/ci.yml`, `ops/rehearsal/validate_ci_gate_coverage.py` | Complete |
@@ -88,6 +88,18 @@ running these two Docker-backed gates. If Docker is unavailable, treat these as
 environment-blocked verification gates rather than evidence of application
 logic failure. `check_production_readiness.py --run-local-gates` reports this
 case as `manual_required` with `docker_unavailable` evidence.
+
+Latest 2026-05-16 local evidence after starting Docker Desktop Linux engine:
+
+- `uv run python ops/integration/run_backend_integration.py`: passed with
+  disposable PostgreSQL, Neo4j, and Qdrant containers.
+- `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed with API
+  restart restore, metrics surface check, audit event persistence, and local
+  smoke-load threshold coverage.
+- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+  local regression gates passed; overall readiness still failed because
+  company/staging environment variables and manual evidence are not configured
+  on this workstation.
 
 ## 4. Company/Staging Gates
 
@@ -152,8 +164,8 @@ The current repository should be treated as:
 - complete for source-skill/export handoff rehearsal
 - complete for deterministic CI/local release gates
 - complete for Docker-backed disposable backend and full-stack rehearsal scripts,
-  but the current workstation must have Docker Desktop Linux engine running to
-  produce fresh local pass evidence
+  with latest 2026-05-16 local pass evidence after Docker Desktop Linux engine
+  was started
 - incomplete for company/staging production readiness until reviewed external
   evidence is attached
 
