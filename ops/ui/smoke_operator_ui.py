@@ -181,6 +181,17 @@ def run_operator_ui_smoke() -> dict[str, Any]:
                 "rune.workQueue.assignments.v1",
             ]
         ),
+        "feedback_reason_controls_present": all(
+            snippet in module_responses["/ui/work_queue.js"].text
+            for snippet in [
+                "review-feedback-reason",
+                "feedbackReasonCodes",
+                "wrong_relation",
+                "weak_evidence",
+                "security_concern",
+                "hold",
+            ]
+        ),
         "scale_run_succeeded": run.status_code == 200,
         "dashboard_summary_contract": (
             dashboard.status_code == 200

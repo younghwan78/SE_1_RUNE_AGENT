@@ -17,6 +17,16 @@ let decisionHandler = null;
 const FILTER_STORAGE_KEY = "rune.workQueue.filters.v1";
 const ASSIGNMENT_STORAGE_KEY = "rune.workQueue.assignments.v1";
 const LOCAL_USER_ID = "local_reviewer";
+const feedbackReasonCodes = [
+  "wrong_relation",
+  "weak_evidence",
+  "wrong_node_type",
+  "duplicate",
+  "missing_context",
+  "wrong_severity",
+  "security_concern",
+  "other",
+];
 const defaultFilters = {
   itemType: "all",
   priority: "all",
@@ -361,7 +371,22 @@ export const renderWorkQueueDetail = (item) => {
     item.item_type === "eval_gate" ? "open_eval" : null,
     item.related_approval_id ? "approve" : null,
     item.related_approval_id ? "reject" : null,
+    item.related_approval_id ? "hold" : null,
   ].filter(Boolean);
+  const reviewControls = item.related_approval_id
+    ? `
+      <div class="review-feedback-controls">
+        <label>
+          <span>Reason</span>
+          <select id="review-feedback-reason">
+            ${feedbackReasonCodes
+              .map((reason) => `<option value="${escapeHtml(reason)}">${escapeHtml(reason)}</option>`)
+              .join("")}
+          </select>
+        </label>
+      </div>
+    `
+    : "";
   target.innerHTML = `
     <div>
       <h3>${escapeHtml(item.title)}</h3>
@@ -393,6 +418,7 @@ export const renderWorkQueueDetail = (item) => {
           : "<span>none</span>"
       }</div>
     </div>
+    ${reviewControls}
     <div class="review-actions">
       <button data-queue-action="assign_to_me" type="button">Assign to me</button>
       <button data-queue-action="clear_assignment" type="button">Clear assignment</button>
@@ -440,7 +466,8 @@ export const handleQueueAction = async (action) => {
     navigateTo("eval");
     return;
   }
-  if ((action === "approve" || action === "reject") && item.related_approval_id && decisionHandler) {
-    await decisionHandler(item.related_approval_id, action);
+  if (["approve", "reject", "hold"].includes(action) && item.related_approval_id && decisionHandler) {
+    const reason = el("review-feedback-reason")?.value || null;
+    await decisionHandler(item.related_approval_id, action, reason);
   }
 };

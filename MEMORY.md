@@ -59,6 +59,7 @@ Do not use or recreate removed planning files:
   - `/api/v1/dashboard/recent-activity`
   - dashboard-first local operator UI command center
   - work queue, source health, run health, risk snapshot, recent activity, and compact graph preview panels
+  - approval feedback reason-code controls in work queue detail
   - contract/unit/UI smoke coverage for empty state, `RUNE_CAM_ALPHA`, `RUNE_SCALE_150`, approval count update, source export health, RBAC, and dashboard UI hooks
 - Debug workbench: run summaries, artifact read, LLM payload diff panes, graph delta preview, approval lineage, replay diff, source cursor debug API.
 - Audit trail: run_started/run_completed boundaries for analysis/ingestion/replay, failed completion audit, blocked debug read audit, finding status audit, improvement/model/prompt activation and rollback audit, archive/prune idempotency.
@@ -406,6 +407,33 @@ Latest validation evidence:
 - `uv run python ops/ui/smoke_operator_ui.py`: passed
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
+
+## 2026-05-17 Work Queue Feedback Reason Controls
+
+Implemented approval feedback controls in the dashboard work queue detail view.
+
+Changed:
+
+- Added canonical feedback reason-code selection for approval-related work queue
+  items.
+- Routed work queue approve/reject/hold actions through the shared approval
+  decision handler with the selected reason code.
+- Kept reject fallback behavior as `wrong_relation` when a reason is not
+  supplied.
+- Extended operator UI smoke coverage for the feedback selector, key canonical
+  reason codes, and hold action wiring.
+- Updated `README.md` and
+  `docs/implementation/08_CURRENT_STATE_AND_COMPLETION_AUDIT.md`.
+
+Validation evidence:
+
+- `node --check src/req_tracker/ui/work_queue.js`: passed
+- `node --check src/req_tracker/ui/app.js`: passed
+- `uv run pytest tests/contract/test_run_api.py::test_analyze_run_and_approve_edge tests/contract/test_run_api.py::test_modify_approval_commits_corrected_edge_and_feedback tests/contract/test_replay_feedback_api.py::test_feedback_api_normalizes_command_style_actions tests/unit/ops/test_operator_ui_smoke.py -q`: `4 passed`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `240 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
 
 ## 2026-05-16 Dashboard PostgreSQL State and RBAC Snapshot
 

@@ -228,8 +228,8 @@ const runAnalysis = async () => {
   await refresh();
 };
 
-const decideApproval = async (approvalId, action) => {
-  const reason = action === "reject" ? "wrong_relation" : null;
+const decideApproval = async (approvalId, action, reasonCode = null) => {
+  const reason = reasonCode || (action === "reject" ? "wrong_relation" : null);
   await api(`/approvals/${approvalId}/decision`, {
     method: "POST",
     body: JSON.stringify({

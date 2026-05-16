@@ -283,6 +283,7 @@ Current local implementation:
 - replay diff and eval candidate grouping
 - controlled feedback improvement promotion through eval, review, canary, and active states
 - static local operator UI with dashboard-first command center
+- work queue approval feedback reason-code controls
 - dashboard read APIs for summary, work queue, source health, run health, risk summary, and recent activity
 - ontology graph view with pending/approved edge projection
 - traceability chain, run debug workbench, and audit events panel
