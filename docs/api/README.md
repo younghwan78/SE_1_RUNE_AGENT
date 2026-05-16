@@ -31,7 +31,9 @@ Implemented route groups:
 - run ingestion, analysis execution, and replay
 - finding list, detail, and status triage
 - project list, graph node/edge lists, graph projection, and traceability chain
-- dashboard summary, work queue, source health, run health, risk summary, and recent activity read models
+- dashboard summary, work queue, backend work queue preferences, backend work
+  queue assignments, source health, run health, risk summary, and recent
+  activity read models
 - approvals and graph commit
 - feedback, eval candidates, improvement candidates, and improvement rollback
 - admin model profile and prompt version activation/rollback records
@@ -78,3 +80,15 @@ Feedback API inputs accept command-style aliases such as `approve`, `reject`,
 such as `approved`, `rejected`, `modified`, `commented`, and
 `marked_low_quality`. Reason codes are stored with underscores, while
 human-readable aliases such as `wrong relation` are accepted at the API boundary.
+
+Dashboard work queue preferences and assignments are backend-backed:
+
+- `GET /api/v1/dashboard/work-queue/preferences`
+- `PUT /api/v1/dashboard/work-queue/preferences`
+- `GET /api/v1/dashboard/work-queue/assignments`
+- `POST /api/v1/dashboard/work-queue/assignments/{queue_id}`
+
+These endpoints use the same project RBAC boundary as the work queue. Assignment
+writes support `Idempotency-Key`/`X-Idempotency-Key`, record audit events, and
+persist through the configured state store so reviewer queue ownership survives
+API restarts.

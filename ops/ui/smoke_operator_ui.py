@@ -47,6 +47,12 @@ def run_operator_ui_smoke() -> dict[str, Any]:
             )
             dashboard = client.get("/api/v1/dashboard/summary")
             work_queue = client.get("/api/v1/dashboard/work-queue?limit=200")
+            work_queue_preferences = client.get("/api/v1/dashboard/work-queue/preferences")
+            work_queue_assignment = client.post(
+                "/api/v1/dashboard/work-queue/assignments/q_operator_smoke",
+                json={"project_key": "RUNE_CAM_ALPHA", "action": "assign"},
+            )
+            work_queue_assignments = client.get("/api/v1/dashboard/work-queue/assignments")
             source_health = client.get("/api/v1/dashboard/source-health")
             pending = client.get(
                 "/api/v1/graph/projection?mode=pending&edge_filter=pending&limit_nodes=200"
@@ -58,6 +64,15 @@ def run_operator_ui_smoke() -> dict[str, Any]:
     overview_payload = overview.json() if overview.status_code == 200 else {}
     dashboard_payload = dashboard.json() if dashboard.status_code == 200 else {}
     work_queue_payload = work_queue.json() if work_queue.status_code == 200 else {}
+    work_queue_preferences_payload = (
+        work_queue_preferences.json() if work_queue_preferences.status_code == 200 else {}
+    )
+    work_queue_assignment_payload = (
+        work_queue_assignment.json() if work_queue_assignment.status_code == 200 else {}
+    )
+    work_queue_assignments_payload = (
+        work_queue_assignments.json() if work_queue_assignments.status_code == 200 else {}
+    )
     source_health_payload = source_health.json() if source_health.status_code == 200 else {}
     pending_payload = pending.json() if pending.status_code == 200 else {}
     orphans_payload = orphans.json() if orphans.status_code == 200 else {}
@@ -156,6 +171,8 @@ def run_operator_ui_smoke() -> dict[str, Any]:
         "saved_filter_assignment_present": all(
             snippet in module_responses["/ui/work_queue.js"].text
             for snippet in [
+                "/dashboard/work-queue/preferences",
+                "/dashboard/work-queue/assignments",
                 "localStorage",
                 "applyWorkQueueFilters",
                 "saveCurrentFilter",
@@ -174,6 +191,18 @@ def run_operator_ui_smoke() -> dict[str, Any]:
             work_queue.status_code == 200
             and work_queue_payload.get("counts", {}).get("approval") == 103
             and work_queue_payload.get("counts", {}).get("finding") == 47
+        ),
+        "dashboard_work_queue_preference_contract": (
+            work_queue_preferences.status_code == 200
+            and work_queue_preferences_payload.get("project_key") == "RUNE_CAM_ALPHA"
+            and isinstance(work_queue_preferences_payload.get("saved_filters"), dict)
+        ),
+        "dashboard_work_queue_assignment_contract": (
+            work_queue_assignment.status_code == 200
+            and work_queue_assignment_payload.get("queue_id") == "q_operator_smoke"
+            and work_queue_assignment_payload.get("assigned_to") == "local"
+            and work_queue_assignments.status_code == 200
+            and len(work_queue_assignments_payload.get("assignments", [])) == 1
         ),
         "dashboard_source_health_contract": (
             source_health.status_code == 200

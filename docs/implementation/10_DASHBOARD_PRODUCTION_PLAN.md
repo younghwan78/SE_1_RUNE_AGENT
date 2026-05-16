@@ -809,10 +809,12 @@ Implemented:
 - work queue detail panel with item metadata, related run/approval/finding/node
   identifiers, evidence refs, available action display, graph/debug/source/eval
   routing, and approval approve/reject routing where applicable
-- Work Queue local operator controls:
+- Work Queue operator controls:
   - type, priority, owner, and text filters
-  - saved filter presets stored in browser `localStorage`
-  - local assignment state stored in browser `localStorage`
+  - saved filter presets stored through backend user preference API with
+    browser `localStorage` fallback
+  - assignment state stored through backend work queue assignment API with
+    browser `localStorage` fallback
   - assign-to-me and clear-assignment actions in the queue detail panel
   - filtered count display for the full queue view
 - static JS split into focused browser modules:
@@ -856,6 +858,11 @@ Validated:
   entrypoint imports
 - work queue static contract tests validate saved filter and local assignment
   hooks
+- backend work queue preference and assignment API contract tests validate
+  project/user scoping, idempotent assignment writes, assignment clearing, and
+  SQLite restart restore
+- operator UI smoke validates backend preference/assignment routes and UI
+  module hooks
 - Playwright CLI screenshot validates that `#work-queue?item=...` opens the
   selected work item detail view in a browser
 - Playwright CLI screenshot validates that the dashboard view renders in a real
@@ -865,7 +872,5 @@ Next implementation slices:
 
 1. Add browser screenshot smoke to CI once the local browser dependency policy is
    settled.
-2. Replace localStorage saved filters and local assignments with backend user
-   preference/assignment APIs after auth/user contracts are stable.
-3. Reassess React + React Flow after real graph shape and reviewer workflow
+2. Reassess React + React Flow after real graph shape and reviewer workflow
    complexity are known.

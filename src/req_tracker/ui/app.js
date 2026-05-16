@@ -21,6 +21,7 @@ import {
 } from "./graph_workbench.js";
 import {
   handleQueueAction,
+  hydrateWorkQueueBackendState,
   initWorkQueueControls,
   setWorkQueueDecisionHandler,
 } from "./work_queue.js";
@@ -158,6 +159,8 @@ const refresh = async () => {
     runHealth,
     riskSummary,
     recentActivity,
+    workQueuePreferences,
+    workQueueAssignments,
   ] = await Promise.all([
     api(`/graph/projection?${query.toString()}`),
     api("/approvals"),
@@ -181,9 +184,12 @@ const refresh = async () => {
     safeApi("/dashboard/run-health", { recent_runs: [], total_runs: 0, failed_runs: 0 }),
     safeApi("/dashboard/risk-summary", { risk_by_severity: {}, top_findings: [] }),
     safeApi("/dashboard/recent-activity?limit=20", { items: [] }),
+    safeApi("/dashboard/work-queue/preferences", { saved_filters: {} }),
+    safeApi("/dashboard/work-queue/assignments", { assignments: [] }),
   ]);
   void feedbackSummary;
   state.graphProjection = projection;
+  hydrateWorkQueueBackendState(workQueuePreferences, workQueueAssignments);
   renderDashboard({
     summary: dashboardSummary,
     workQueue: dashboardWorkQueue,

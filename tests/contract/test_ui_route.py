@@ -97,6 +97,8 @@ def test_work_queue_module_supports_saved_filters_and_local_assignment(
     assert "applyWorkQueueFilters" in response.text
     assert "saveCurrentFilter" in response.text
     assert "assignSelectedWorkItem" in response.text
+    assert "/dashboard/work-queue/preferences" in response.text
+    assert "/dashboard/work-queue/assignments" in response.text
     assert "rune.workQueue.filters.v1" in response.text
     assert "rune.workQueue.assignments.v1" in response.text
 

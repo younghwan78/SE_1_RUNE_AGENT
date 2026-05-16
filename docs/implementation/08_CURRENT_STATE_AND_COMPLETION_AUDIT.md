@@ -140,7 +140,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 222 passed, 3 skipped
+- `uv run pytest`: 224 passed, 3 skipped
 - `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`:
   21 passed, validating source-skill export dry-run and readiness gate coverage
 - `uv run pytest tests/contract/test_backend_settings_api.py tests/contract/test_health_api.py tests/contract/test_run_api.py tests/contract/test_debug_api.py tests/contract/test_persistence_api.py`:
@@ -242,7 +242,7 @@ Latest GitHub verification:
 | Feedback loop | feedback events, command-style feedback action/reason aliases normalized to canonical taxonomy, eval candidates, improvement candidates including few-shot-example and ontology-normalization candidate contracts, ontology-normalization candidates for wrong-node-type feedback, eval gate, controlled review/canary promotion, canary/active rollback, persisted improvement decisions, feedback/eval/improvement RBAC, `ops/evals/run_feedback_eval_rehearsal.py` | Local feedback/eval/canary/rollback rehearsal complete; real production feedback calibration pending |
 | Audit trail | `AuditService`, `/api/v1/audit/events`, `/api/v1/audit/retention`, `/api/v1/audit/retention/archive-prune`, local JSONL archive writer, PostgreSQL archive batch writer, UI audit panel, persistence, API-key RBAC/project-scope foundation, trusted SSO/OIDC proxy auth foundation, `ops/security/rehearse_trusted_proxy_auth.py`, approval/query/scheduler/debug/run-step/replay/finding-status RBAC, analysis/ingestion/replay run start/completion audit boundary events with trigger metadata, failed run status and failed completion audit events, blocked debug artifact read audit events, finding status change audit events, improvement activation/rollback audit events, model/prompt activation/rollback audit events | Local and PostgreSQL archive/prune foundations plus trusted-proxy rehearsal entrypoint complete; direct company IdP validation pending |
 | Graph view scalability | `07_GRAPH_VIEW_SCALABILITY_PLAN.md`, `11_GRAPH_RELATIONSHIP_VIEW_PLAN.md`, SVG graph controls, projection API, relationship/component layout, relationship node drag/pin/reset interaction, `ops/ui/smoke_operator_ui.py`, `tests/unit/ops/test_operator_ui_smoke.py` | Dummy 150-node path, graph controls, SVG renderer hooks, overview/pending/orphan modes, truncation metadata, Relationship Graph layout, component grouping, dense-label reduction, node drag, edge rerender, and reset-to-auto-layout are locally validated; React Flow decision remains pending after real graph shape validation |
-| Dashboard production uplift | `10_DASHBOARD_PRODUCTION_PLAN.md`, `src/req_tracker/dashboard/*`, `/api/v1/dashboard/summary`, `/api/v1/dashboard/work-queue`, `/api/v1/dashboard/source-health`, `/api/v1/dashboard/run-health`, `/api/v1/dashboard/risk-summary`, `/api/v1/dashboard/recent-activity`, dashboard-first static UI, split UI modules under `src/req_tracker/ui`, `tests/contract/test_dashboard_api.py`, `tests/unit/dashboard/test_summary_service.py`, `ops/ui/smoke_operator_ui.py` | Local dashboard read model and production-shaped UI complete for empty state, compact 10-node fixture, 150-node fixture, approval count update, source export health, RBAC, view split, work queue detail, source/run health detail, hash deep links, local saved filters, local assignment, UI module split, and operator smoke; CI browser screenshot smoke is intentionally skipped, backend user preference/assignment APIs remain pending until auth/user contracts are stable, and React/React Flow remains a future decision after real graph shape validation |
+| Dashboard production uplift | `10_DASHBOARD_PRODUCTION_PLAN.md`, `src/req_tracker/dashboard/*`, `/api/v1/dashboard/summary`, `/api/v1/dashboard/work-queue`, `/api/v1/dashboard/work-queue/preferences`, `/api/v1/dashboard/work-queue/assignments`, `/api/v1/dashboard/source-health`, `/api/v1/dashboard/run-health`, `/api/v1/dashboard/risk-summary`, `/api/v1/dashboard/recent-activity`, dashboard-first static UI, split UI modules under `src/req_tracker/ui`, `tests/contract/test_dashboard_api.py`, `tests/contract/test_persistence_api.py`, `tests/unit/dashboard/test_summary_service.py`, `ops/ui/smoke_operator_ui.py` | Local dashboard read model and production-shaped UI complete for empty state, compact 10-node fixture, 150-node fixture, approval count update, source export health, RBAC, view split, work queue detail, source/run health detail, hash deep links, backend-backed saved filters, backend-backed work queue assignment, idempotent assignment writes, SQLite restart restore for preferences/assignments, UI module split, and operator smoke; CI browser screenshot smoke is intentionally skipped, and React/React Flow remains a future decision after real graph shape validation |
 | Scheduler | `RunScheduler`, API/UI/runbook, viewer/operator RBAC and audit actor capture, PostgreSQL `scheduler_leases` table, lease acquire/release tests, Ubuntu multi-replica note | Periodic run path complete for single-process and PostgreSQL lease-backed multi-worker deployments; external orchestration/Kubernetes CronJob remains an optional platform decision |
 | Ubuntu runbook | `README_ubuntu.md`, `docs/runbooks/BACKUP_RESTORE.md`, `ops/backup/verify_backup_set.py`, `ops/load/smoke_load.py`, `ops/integration/run_backend_integration.py`, `ops/rehearsal/run_full_stack_rehearsal.py`, `ops/rehearsal/check_production_readiness.py`, `ops/rehearsal/validate_postgres_migration_rollbacks.py`, `ops/rehearsal/validate_postgres_typed_mirrors.py`, `ops/rehearsal/validate_evidence_example.py`, `ops/rehearsal/production_readiness_evidence.example.json` | Local/server scaffold, readiness checks, backup-set verification, disposable full-stack rehearsal, API restart restore check, smoke-load pass, production-readiness gate reporting, PostgreSQL migration rollback validation, PostgreSQL typed mirror drift validation, observability dashboard manual evidence gate, review-safe manual-evidence template generation, non-passable committed evidence example validation, reviewer metadata, schema-version, non-empty evidence, unique check-id, and UTC review timestamp enforcement for passed manual evidence, reviewed manual-evidence input path, and strict no-failed/no-warning/no-manual release gate complete; company/staging environment rehearsal pending |
 | Migration and Helm operation tracks | packaged migrations under `src/req_tracker/storage/migrations/postgres`, `ops/migrations/README.md`, `ops/helm/rune-agent`, `ops/helm/validate_chart.py`, `tests/unit/ops/test_helm_chart.py` | Migration foundation and production-shaped Helm scaffold complete with local structural validation; target-cluster `helm lint/template` and platform-specific values remain pending until Kubernetes environment details are available |
@@ -436,6 +436,22 @@ blocking:
   Prometheus/Grafana dashboard, backup/restore, and load-test evidence variables
   are not configured in the local workstation environment. The readiness
   summary was `failed=7`, `manual_required=10`, `passed=2`.
+- 2026-05-16 dashboard backend preference/assignment verification:
+  - `uv run pytest tests/contract/test_dashboard_api.py tests/contract/test_persistence_api.py tests/contract/test_openapi_surface.py -q`:
+    `15 passed`
+  - `uv run pytest tests/contract/test_ui_route.py tests/unit/ops/test_operator_ui_smoke.py tests/contract/test_dashboard_api.py tests/contract/test_persistence_api.py tests/contract/test_openapi_surface.py -q`:
+    `21 passed`
+  - `node --check src/req_tracker/ui/app.js` and
+    `node --check src/req_tracker/ui/work_queue.js`: passed
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `224 passed, 3 skipped`
+  - `uv run python ops/ui/smoke_operator_ui.py`: passed, including backend
+    work queue preference and assignment contracts
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+    local regression gates passed; overall readiness still failed as expected
+    because company/staging environment variables and reviewed manual evidence
+    are unset
 
 ## 5. Completion Gate
 
@@ -443,8 +459,9 @@ The overall production objective is not complete yet. The current repo is a
 validated local/dummy, persistence-foundation, backend-interface, source-adapter,
 debuggability, runtime-metrics, trace-context propagation, dashboard/workbench,
 relationship graph, and operations-rehearsal stage. The latest deterministic
-local gates, Docker-backed disposable rehearsals, and GitHub Actions CI pass on
-`4f96977`.
+local gates and Docker-backed disposable rehearsals pass in the current local
+workspace. The latest pushed GitHub Actions CI is tracked in the verified
+baseline section above.
 
 One category remains outside the evidence that can be completed in the current
 shell:

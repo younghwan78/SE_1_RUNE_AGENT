@@ -1,4 +1,5 @@
 import {
+  api,
   badge,
   el,
   emptyRow,
@@ -49,6 +50,54 @@ const writeStorageJson = (key, value) => {
 };
 
 const assignedUser = (queueId) => queueAssignments[queueId] || null;
+
+const fromBackendFilter = (preset) => ({
+  itemType: preset.item_type || preset.itemType || "all",
+  priority: preset.priority || "all",
+  owner: preset.owner || "all",
+  search: preset.search || "",
+});
+
+const toBackendFilter = (preset) => ({
+  item_type: preset.itemType || "all",
+  priority: preset.priority || "all",
+  owner: preset.owner || "all",
+  search: preset.search || "",
+});
+
+const persistSavedFilters = async () => {
+  const payload = {
+    saved_filters: Object.fromEntries(
+      Object.entries(savedFilters).map(([name, preset]) => [name, toBackendFilter(preset)]),
+    ),
+  };
+  try {
+    await api("/dashboard/work-queue/preferences", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    console.warn("work queue backend preferences write failed", error);
+  }
+};
+
+export const hydrateWorkQueueBackendState = (preferences, assignments) => {
+  if (preferences?.saved_filters) {
+    savedFilters = Object.fromEntries(
+      Object.entries(preferences.saved_filters).map(([name, preset]) => [name, fromBackendFilter(preset)]),
+    );
+    writeStorageJson(FILTER_STORAGE_KEY, savedFilters);
+    syncFilterControls();
+  }
+  if (Array.isArray(assignments?.assignments)) {
+    queueAssignments = Object.fromEntries(
+      assignments.assignments
+        .filter((assignment) => assignment.assigned_to)
+        .map((assignment) => [assignment.queue_id, assignment.assigned_to]),
+    );
+    writeStorageJson(ASSIGNMENT_STORAGE_KEY, queueAssignments);
+  }
+};
 
 export const applyWorkQueueFilters = (items) => {
   const query = activeFilters.search.trim().toLowerCase();
@@ -117,6 +166,7 @@ export const saveCurrentFilter = () => {
     [name]: { ...activeFilters },
   };
   writeStorageJson(FILTER_STORAGE_KEY, savedFilters);
+  void persistSavedFilters();
   el("queue-filter-save-name").value = "";
   syncFilterControls();
 };
@@ -136,8 +186,23 @@ const renderFilteredQueue = () => {
   text("work-queue-full-count", `${applyWorkQueueFilters(items).length}/${items.length} visible`);
 };
 
-export const assignSelectedWorkItem = (assignee = LOCAL_USER_ID) => {
+export const assignSelectedWorkItem = async (assignee = LOCAL_USER_ID) => {
   if (!state.selectedWorkItem) return;
+  try {
+    const assignment = await api(`/dashboard/work-queue/assignments/${state.selectedWorkItem.queue_id}`, {
+      method: "POST",
+      body: JSON.stringify({
+        project_key: state.latestWorkQueue.project_key || "RUNE_CAM_ALPHA",
+        action: "assign",
+        assignee_id: assignee,
+      }),
+    });
+    if (assignment.assigned_to) {
+      assignee = assignment.assigned_to;
+    }
+  } catch (error) {
+    console.warn("work queue backend assignment write failed", error);
+  }
   queueAssignments = {
     ...queueAssignments,
     [state.selectedWorkItem.queue_id]: assignee,
@@ -146,8 +211,19 @@ export const assignSelectedWorkItem = (assignee = LOCAL_USER_ID) => {
   renderWorkQueue(state.latestWorkQueue);
 };
 
-const clearSelectedAssignment = () => {
+const clearSelectedAssignment = async () => {
   if (!state.selectedWorkItem) return;
+  try {
+    await api(`/dashboard/work-queue/assignments/${state.selectedWorkItem.queue_id}`, {
+      method: "POST",
+      body: JSON.stringify({
+        project_key: state.latestWorkQueue.project_key || "RUNE_CAM_ALPHA",
+        action: "clear",
+      }),
+    });
+  } catch (error) {
+    console.warn("work queue backend assignment clear failed", error);
+  }
   const next = { ...queueAssignments };
   delete next[state.selectedWorkItem.queue_id];
   queueAssignments = next;
@@ -342,11 +418,11 @@ export const handleQueueAction = async (action) => {
     return;
   }
   if (action === "assign_to_me") {
-    assignSelectedWorkItem();
+    await assignSelectedWorkItem();
     return;
   }
   if (action === "clear_assignment") {
-    clearSelectedAssignment();
+    await clearSelectedAssignment();
     return;
   }
   if (action === "open_debug") {

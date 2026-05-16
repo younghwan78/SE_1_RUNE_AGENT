@@ -17,6 +17,7 @@ QueueItemType = Literal[
     "eval_gate",
 ]
 QueuePriority = Literal["critical", "high", "medium", "low", "info"]
+QueueAssignmentAction = Literal["assign", "clear"]
 
 
 class DashboardModel(BaseModel):
@@ -126,6 +127,58 @@ class WorkQueueResponse(DashboardModel):
     project_key: str
     items: list[WorkQueueItem]
     counts: WorkQueueCounts
+
+
+class WorkQueueFilterPreset(DashboardModel):
+    """Persisted work queue filter preset for one user."""
+
+    item_type: str = "all"
+    priority: str = "all"
+    owner: str = "all"
+    search: str = Field(default="", max_length=200)
+
+
+class WorkQueuePreferencesUpdate(DashboardModel):
+    """Update payload for backend-backed work queue preferences."""
+
+    saved_filters: dict[str, WorkQueueFilterPreset] = Field(default_factory=dict)
+
+
+class WorkQueuePreferences(DashboardModel):
+    """Backend-backed work queue preferences for one project user."""
+
+    schema_version: str = SCHEMA_VERSION
+    project_key: str
+    user_id: str
+    saved_filters: dict[str, WorkQueueFilterPreset] = Field(default_factory=dict)
+    updated_at: datetime
+
+
+class WorkQueueAssignmentRequest(DashboardModel):
+    """Assign or clear one work queue item."""
+
+    project_key: str = "RUNE_CAM_ALPHA"
+    action: QueueAssignmentAction = "assign"
+    assignee_id: str | None = None
+
+
+class WorkQueueAssignment(DashboardModel):
+    """Backend-backed work queue assignment state."""
+
+    schema_version: str = SCHEMA_VERSION
+    project_key: str
+    queue_id: str
+    assigned_to: str | None = None
+    assigned_by: str
+    updated_at: datetime
+
+
+class WorkQueueAssignmentsResponse(DashboardModel):
+    """Current backend-backed assignment state for a project."""
+
+    schema_version: str = SCHEMA_VERSION
+    project_key: str
+    assignments: list[WorkQueueAssignment]
 
 
 class SourceHealthItem(DashboardModel):

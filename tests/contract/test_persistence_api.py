@@ -54,6 +54,57 @@ def test_sqlite_state_store_persists_runtime_outputs(tmp_path) -> None:  # type:
     assert counts["graph_edges"] == 1
 
 
+def test_sqlite_state_store_restores_dashboard_preferences_and_assignments(
+    tmp_path,
+) -> None:  # type: ignore[no-untyped-def]
+    db_path = tmp_path / "runtime.sqlite3"
+    settings = Settings(
+        artifact_root=tmp_path / "artifacts",
+        state_store="sqlite",
+        sqlite_state_path=db_path,
+    )
+    headers = {"x-rune-user": "reviewer_1", "x-rune-role": "developer"}
+    first_app = create_app(settings)
+    with TestClient(first_app) as client:
+        preference = client.put(
+            "/api/v1/dashboard/work-queue/preferences?project_key=RUNE_CAM_ALPHA",
+            headers=headers,
+            json={
+                "saved_filters": {
+                    "Mine": {
+                        "item_type": "approval",
+                        "priority": "high",
+                        "owner": "assigned_to_me",
+                    }
+                }
+            },
+        )
+        assignment = client.post(
+            "/api/v1/dashboard/work-queue/assignments/q_restore_001",
+            headers={**headers, "Idempotency-Key": "idem-dashboard-assignment-restore"},
+            json={"project_key": "RUNE_CAM_ALPHA", "action": "assign"},
+        )
+
+    assert preference.status_code == 200
+    assert assignment.status_code == 200
+
+    second_app = create_app(settings)
+    with TestClient(second_app) as client:
+        restored_preference = client.get(
+            "/api/v1/dashboard/work-queue/preferences?project_key=RUNE_CAM_ALPHA",
+            headers=headers,
+        )
+        restored_assignments = client.get(
+            "/api/v1/dashboard/work-queue/assignments?project_key=RUNE_CAM_ALPHA",
+            headers=headers,
+        )
+
+    assert restored_preference.status_code == 200
+    assert restored_preference.json()["saved_filters"]["Mine"]["priority"] == "high"
+    assert restored_assignments.status_code == 200
+    assert restored_assignments.json()["assignments"][0]["queue_id"] == "q_restore_001"
+
+
 def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  # type: ignore[no-untyped-def]
     db_path = tmp_path / "runtime.sqlite3"
     artifact_root = tmp_path / "artifacts"

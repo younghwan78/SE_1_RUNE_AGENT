@@ -182,3 +182,75 @@ def test_dashboard_rbac_project_filtering(tmp_path: Path) -> None:
 
     assert denied.status_code == 403
     assert developer_only.status_code == 403
+
+
+def test_dashboard_work_queue_preferences_and_assignments_are_backend_backed(
+    client: TestClient,
+) -> None:
+    headers = {"x-rune-user": "reviewer_1", "x-rune-role": "developer"}
+
+    preferences = client.put(
+        "/api/v1/dashboard/work-queue/preferences?project_key=RUNE_CAM_ALPHA",
+        headers=headers,
+        json={
+            "saved_filters": {
+                "High approvals": {
+                    "item_type": "approval",
+                    "priority": "high",
+                    "owner": "assigned_to_me",
+                    "search": "CAM-REQ",
+                }
+            }
+        },
+    )
+
+    assert preferences.status_code == 200
+    pref_payload = preferences.json()
+    assert pref_payload["user_id"] == "reviewer_1"
+    assert pref_payload["saved_filters"]["High approvals"]["priority"] == "high"
+
+    restored_preferences = client.get(
+        "/api/v1/dashboard/work-queue/preferences?project_key=RUNE_CAM_ALPHA",
+        headers=headers,
+    )
+    assert restored_preferences.status_code == 200
+    assert restored_preferences.json() == pref_payload
+
+    assigned = client.post(
+        "/api/v1/dashboard/work-queue/assignments/q_finding_001",
+        headers={**headers, "Idempotency-Key": "idem-queue-assignment-1"},
+        json={"project_key": "RUNE_CAM_ALPHA", "action": "assign"},
+    )
+    repeated = client.post(
+        "/api/v1/dashboard/work-queue/assignments/q_finding_001",
+        headers={**headers, "Idempotency-Key": "idem-queue-assignment-1"},
+        json={"project_key": "RUNE_CAM_ALPHA", "action": "assign"},
+    )
+
+    assert assigned.status_code == 200
+    assert repeated.status_code == 200
+    assignment_payload = assigned.json()
+    assert repeated.json() == assignment_payload
+    assert assignment_payload["assigned_to"] == "reviewer_1"
+    assert assignment_payload["assigned_by"] == "reviewer_1"
+
+    listed = client.get(
+        "/api/v1/dashboard/work-queue/assignments?project_key=RUNE_CAM_ALPHA",
+        headers=headers,
+    )
+    assert listed.status_code == 200
+    assert listed.json()["assignments"] == [assignment_payload]
+
+    cleared = client.post(
+        "/api/v1/dashboard/work-queue/assignments/q_finding_001",
+        headers={**headers, "Idempotency-Key": "idem-queue-assignment-clear-1"},
+        json={"project_key": "RUNE_CAM_ALPHA", "action": "clear"},
+    )
+    listed_after_clear = client.get(
+        "/api/v1/dashboard/work-queue/assignments?project_key=RUNE_CAM_ALPHA",
+        headers=headers,
+    )
+    assert cleared.status_code == 200
+    assert cleared.json()["assigned_to"] is None
+    assert listed_after_clear.status_code == 200
+    assert listed_after_clear.json()["assignments"] == []

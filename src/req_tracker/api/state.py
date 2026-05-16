@@ -48,6 +48,8 @@ class RuntimeState(BaseModel):
     ingestions: dict[str, IngestionResult]
     findings: dict[str, Finding]
     replays: dict[str, ReplayResult]
+    dashboard_preferences: dict[str, dict[str, Any]]
+    dashboard_assignments: dict[str, dict[str, Any]]
     source_sync_cursors: dict[str, SourceSyncCursorState]
     idempotency_results: dict[str, dict[str, Any]]
     registry_activations: dict[str, dict[str, Any]]
@@ -83,6 +85,8 @@ class RuntimeState(BaseModel):
             ingestions={},
             findings={},
             replays={},
+            dashboard_preferences={},
+            dashboard_assignments={},
             source_sync_cursors={},
             idempotency_results={},
             registry_activations={},
@@ -607,6 +611,42 @@ class RuntimeState(BaseModel):
             payload=decision,
         )
 
+    def record_dashboard_preference(
+        self,
+        *,
+        preference_id: str,
+        project_key: str,
+        preference: dict[str, Any],
+    ) -> None:
+        """Persist backend-backed dashboard user preferences."""
+        self.dashboard_preferences[preference_id] = preference
+        if self.state_store is None:
+            return
+        self.state_store.upsert(
+            collection="dashboard_preferences",
+            entity_id=preference_id,
+            project_key=project_key,
+            payload=preference,
+        )
+
+    def record_dashboard_assignment(
+        self,
+        *,
+        assignment_id: str,
+        project_key: str,
+        assignment: dict[str, Any],
+    ) -> None:
+        """Persist backend-backed dashboard work queue assignment state."""
+        self.dashboard_assignments[assignment_id] = assignment
+        if self.state_store is None:
+            return
+        self.state_store.upsert(
+            collection="dashboard_assignments",
+            entity_id=assignment_id,
+            project_key=project_key,
+            payload=assignment,
+        )
+
     def archive_and_prune_audit(self) -> dict[str, object]:
         """Archive/prune audit events and mirror pruned rows into the state store."""
         result = self.audit.archive_and_prune(archive_writer=self.audit_archive_store)
@@ -650,6 +690,14 @@ class RuntimeState(BaseModel):
             candidate_id = payload.get("candidate_id")
             if isinstance(candidate_id, str):
                 self.improvement_decisions[candidate_id] = payload
+        for payload in self.state_store.list("dashboard_preferences"):
+            preference_id = payload.get("preference_id")
+            if isinstance(preference_id, str):
+                self.dashboard_preferences[preference_id] = payload
+        for payload in self.state_store.list("dashboard_assignments"):
+            assignment_id = payload.get("assignment_id")
+            if isinstance(assignment_id, str):
+                self.dashboard_assignments[assignment_id] = payload
         for payload in self.state_store.list("approval_items"):
             approval = ApprovalItem.model_validate(payload)
             self.approvals.items[approval.approval_id] = approval

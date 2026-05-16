@@ -187,8 +187,10 @@ Current dashboard status:
   - graph/debug/source/eval deep-link actions
   - approval approve/reject routing where applicable
   - type, priority, owner, and search filters
-  - saved filter presets in browser `localStorage`
-  - local assignment state in browser `localStorage`
+  - saved filter presets through backend preference API with browser
+    `localStorage` fallback
+  - assignment state through backend assignment API with browser `localStorage`
+    fallback
   - `Assign to me` and `Clear assignment`
 - Static JS has been split into focused browser modules:
   - `core.js`
@@ -217,7 +219,8 @@ Latest validation evidence:
 Remaining dashboard-specific items:
 
 - CI browser screenshot smoke: intentionally skipped for now.
-- Replace localStorage saved filters and local assignments with backend user preference/assignment APIs after auth/user contracts are stable.
+- Backend user preference and assignment APIs are now implemented; keep
+  localStorage only as a browser fallback.
 - Reassess React + React Flow only after real graph shape and reviewer workflow complexity justify it.
 - Optional future UX backlog: SLA/age thresholds, dashboard trend history, source drill-down pages, graph clustering/grouping API, accessibility pass, keyboard navigation, and bulk review.
 
@@ -290,3 +293,33 @@ Production readiness audit update:
   PostgreSQL, Neo4j, Qdrant, JIRA/Confluence sandbox, trusted proxy SSO/OIDC,
   real model gateway sandbox, OpenTelemetry collector, Prometheus/Grafana,
   backup/restore/load, and approved decision/email export validation.
+
+## 2026-05-16 Dashboard Backend Preference and Assignment Snapshot
+
+Implemented local production-quality dashboard backend state for work queue
+operator controls.
+
+Changed:
+
+- Added backend-backed work queue preference contracts and routes:
+  - `GET /api/v1/dashboard/work-queue/preferences`
+  - `PUT /api/v1/dashboard/work-queue/preferences`
+- Added backend-backed work queue assignment contracts and routes:
+  - `GET /api/v1/dashboard/work-queue/assignments`
+  - `POST /api/v1/dashboard/work-queue/assignments/{queue_id}`
+- Work queue assignment writes use existing command idempotency helpers.
+- Preference and assignment state persist through the configured state store and
+  restore through SQLite restart tests.
+- Dashboard UI now hydrates saved filters and assignments from backend APIs and
+  keeps localStorage as a fallback.
+- Operator UI smoke now validates backend preference/assignment routes.
+
+Validation evidence:
+
+- `uv run pytest tests/contract/test_dashboard_api.py tests/contract/test_persistence_api.py tests/contract/test_openapi_surface.py`: passed
+- `uv run pytest tests/contract/test_ui_route.py tests/unit/ops/test_operator_ui_smoke.py tests/contract/test_dashboard_api.py tests/contract/test_persistence_api.py tests/contract/test_openapi_surface.py -q`: `21 passed`
+- `node --check src/req_tracker/ui/app.js`: passed
+- `node --check src/req_tracker/ui/work_queue.js`: passed
+- `uv run python ops/ui/smoke_operator_ui.py`: passed
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
