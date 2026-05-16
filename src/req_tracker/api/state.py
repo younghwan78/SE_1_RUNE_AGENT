@@ -647,6 +647,21 @@ class RuntimeState(BaseModel):
             payload=assignment,
         )
 
+    def record_schedule_config(self) -> None:
+        """Persist the active scheduler configuration."""
+        if self.state_store is None:
+            return
+        payload = {
+            "config_id": "default",
+            **self.scheduler.config.model_dump(mode="json"),
+        }
+        self.state_store.upsert(
+            collection="schedule_configs",
+            entity_id="default",
+            project_key=self.scheduler.config.project_key,
+            payload=payload,
+        )
+
     def archive_and_prune_audit(self) -> dict[str, object]:
         """Archive/prune audit events and mirror pruned rows into the state store."""
         result = self.audit.archive_and_prune(archive_writer=self.audit_archive_store)
@@ -698,6 +713,12 @@ class RuntimeState(BaseModel):
             assignment_id = payload.get("assignment_id")
             if isinstance(assignment_id, str):
                 self.dashboard_assignments[assignment_id] = payload
+        schedule_configs = self.state_store.list("schedule_configs")
+        if schedule_configs:
+            latest = schedule_configs[-1]
+            self.scheduler.config = ScheduleConfig.model_validate(
+                {key: value for key, value in latest.items() if key != "config_id"}
+            )
         for payload in self.state_store.list("approval_items"):
             approval = ApprovalItem.model_validate(payload)
             self.approvals.items[approval.approval_id] = approval

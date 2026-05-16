@@ -435,6 +435,38 @@ Validation evidence:
 - `uv run pytest`: `240 passed, 3 skipped`
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
 
+## 2026-05-17 Persisted Schedule Configuration
+
+Implemented restart-safe scheduler configuration persistence for Ubuntu/server
+operation.
+
+Changed:
+
+- Added `RuntimeState.record_schedule_config()` and call it from
+  `PUT /api/v1/schedule`.
+- Restored saved `ScheduleConfig` from the configured state store during
+  runtime startup before the scheduler lifespan starts.
+- Added PostgreSQL typed mirror migration/rollback
+  `010_schedule_config_state_tables` for `schedule_configs`.
+- Added `schedule_configs` to the PostgreSQL typed collection specs and drift
+  validators.
+- Updated `README.md` and
+  `docs/implementation/08_CURRENT_STATE_AND_COMPLETION_AUDIT.md`.
+
+Validation evidence:
+
+- RED: `uv run pytest tests/contract/test_persistence_api.py::test_sqlite_state_store_restores_schedule_configuration -q` failed with restored `interval_seconds` still `3600`.
+- GREEN: same test passed after persisting/restoring schedule config.
+- `uv run pytest tests/unit/storage/test_postgres_store.py::test_postgres_store_typed_schedule_config_table tests/unit/storage/test_postgres_store.py::test_load_postgres_migrations_returns_ordered_state_schema tests/unit/storage/test_postgres_store.py::test_load_postgres_rollbacks_returns_versioned_scripts -q`: `3 passed`
+- `uv run pytest tests/contract/test_schedule_api.py tests/contract/test_persistence_api.py tests/unit/storage/test_postgres_store.py tests/unit/ops/test_postgres_migration_rollback_validator.py tests/unit/ops/test_postgres_typed_mirror_validator.py -q`: `26 passed`
+- `uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py`: passed with `010:schedule_configs`
+- `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed with `schedule_configs`
+- `uv run ruff check src/req_tracker/api/state.py src/req_tracker/api/routes/runs.py src/req_tracker/storage/postgres_store.py tests/contract/test_persistence_api.py tests/unit/storage/test_postgres_store.py`: passed
+- `uv run mypy src`: passed
+- `uv run ruff check .`: passed
+- `uv run pytest`: `242 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
+
 ## 2026-05-16 Dashboard PostgreSQL State and RBAC Snapshot
 
 Implemented and verified the remaining local dashboard backend state hardening.

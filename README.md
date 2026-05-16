@@ -257,7 +257,7 @@ Current local implementation:
 - dummy/local runtime settings and FastAPI endpoints
 - local artifact store
 - optional SQLite state store for production-shaped persistence validation
-- PostgreSQL state repository with package migrations and audit archive batches
+- PostgreSQL state repository with package migrations, audit archive batches, and typed operation-state mirrors
 - in-memory trace recorder
 - dummy source adapter and fixture-backed analysis workflow
 - JIRA, Confluence, and restricted decision/email export-file adapters
@@ -299,7 +299,7 @@ Current local implementation:
 - full-stack API rehearsal against PostgreSQL, Neo4j, and Qdrant
 - runtime state restore from persisted state after API restart
 - readiness API for non-destructive backend checks
-- periodic analysis scheduler for server operation
+- periodic analysis scheduler for server operation with persisted schedule configuration
 
 Enable local SQLite persistence:
 

@@ -258,6 +258,21 @@ TYPED_COLLECTIONS: dict[str, TypedCollectionSpec] = {
             ("schema_version", "schema_version"),
         ),
     ),
+    "schedule_configs": TypedCollectionSpec(
+        table="schedule_configs",
+        id_column="config_id",
+        columns=(
+            ("config_id", "config_id"),
+            ("project_key", "project_key"),
+            ("enabled", "enabled"),
+            ("interval_seconds", "interval_seconds"),
+            ("scenario", "scenario"),
+            ("run_id_prefix", "run_id_prefix"),
+            ("lease_name", "lease_name"),
+            ("lease_ttl_seconds", "lease_ttl_seconds"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
     "source_sync_cursors": TypedCollectionSpec(
         table="source_sync_cursors",
         id_column="cursor_id",

@@ -105,6 +105,44 @@ def test_sqlite_state_store_restores_dashboard_preferences_and_assignments(
     assert restored_assignments.json()["assignments"][0]["queue_id"] == "q_restore_001"
 
 
+def test_sqlite_state_store_restores_schedule_configuration(
+    tmp_path,
+) -> None:  # type: ignore[no-untyped-def]
+    db_path = tmp_path / "runtime.sqlite3"
+    settings = Settings(
+        artifact_root=tmp_path / "artifacts",
+        state_store="sqlite",
+        sqlite_state_path=db_path,
+    )
+    first_app = create_app(settings)
+    with TestClient(first_app) as client:
+        configured = client.put(
+            "/api/v1/schedule",
+            json={
+                "enabled": False,
+                "interval_seconds": 17,
+                "project_key": "RUNE_CAM_ALPHA",
+                "scenario": "RUNE_SCALE_150",
+                "run_id_prefix": "restore_sched",
+                "lease_name": "restore-lease",
+                "lease_ttl_seconds": 90,
+            },
+        )
+
+    assert configured.status_code == 200
+    assert configured.json()["scenario"] == "RUNE_SCALE_150"
+
+    second_app = create_app(settings)
+    with TestClient(second_app) as client:
+        restored = client.get("/api/v1/schedule")
+
+    assert restored.status_code == 200
+    body = restored.json()
+    assert body["interval_seconds"] == 17
+    assert body["scenario"] == "RUNE_SCALE_150"
+    assert body["lease_name"] == "restore-lease"
+
+
 def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  # type: ignore[no-untyped-def]
     db_path = tmp_path / "runtime.sqlite3"
     artifact_root = tmp_path / "artifacts"

@@ -476,6 +476,7 @@ async def configure_schedule(request: Request, payload: ScheduleConfig) -> dict[
         target_id="default",
         metadata=payload.model_dump(mode="json"),
     )
+    runtime.record_schedule_config()
     runtime.persist_approval_state()
     result: dict[str, Any] = status.model_dump(mode="json")
     record_idempotency_response(
