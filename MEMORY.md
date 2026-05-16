@@ -287,13 +287,19 @@ Follow-up production persistence hardening:
 - Added typed PostgreSQL mirror spec for `source_sync_cursors`, keeping the
   full payload JSON and promoting source type, project key, scenario, run id,
   cursor counters, failure state, and update metadata into typed columns.
+- Added PostgreSQL migration `008_debug_replay_state_tables.sql` and rollback
+  for `llm_call_traces` and `replay_results`.
+- Added typed PostgreSQL mirror specs for `llm_call_traces` and
+  `replay_results`, keeping full payload JSON and promoting debug/replay lookup
+  fields into typed columns.
 - Validation:
-  - `uv run pytest tests/unit/storage/test_postgres_store.py -q`: `9 passed`
+  - `uv run pytest tests/unit/storage/test_postgres_store.py -q`: `10 passed`
   - `uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py`:
-    passed with versions `001` through `007`
+    passed with versions `001` through `008`
   - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed
-    including dashboard preference/assignment and source sync cursor mirrors
-  - `uv run pytest`: `227 passed, 3 skipped`
+    including dashboard preference/assignment, source sync cursor, LLM call
+    trace, and replay result mirrors
+  - `uv run pytest`: `228 passed, 3 skipped`
 - `uv run pytest`: `219 passed, 3 skipped`
 - Playwright CLI screenshot smoke was run manually for dashboard/work-queue rendering and deep-link behavior, but it is intentionally not added to CI per user direction.
 

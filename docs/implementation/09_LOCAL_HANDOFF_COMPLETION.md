@@ -41,7 +41,7 @@ Concrete deliverables:
 | Approval and graph commit safety | approval contract/security tests | Complete |
 | Feedback/eval/improvement loop | `ops/evals/run_feedback_eval_rehearsal.py` | Complete |
 | Debug and replay workbench | debug/replay contract tests | Complete |
-| Persistence foundation | SQLite/PostgreSQL tests and migration validators, including dashboard preference/assignment and source sync cursor typed mirrors | Complete |
+| Persistence foundation | SQLite/PostgreSQL tests and migration validators, including dashboard preference/assignment, source sync cursor, LLM call trace, and replay result typed mirrors | Complete |
 | Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete; latest 2026-05-17 workstation run passed with Docker Desktop Linux engine available |
 | Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete; latest 2026-05-17 workstation run passed with Docker Desktop Linux engine available |
 | Release blocker gate | `ops/security/check_release_blockers.py` | Complete locally |
@@ -106,8 +106,8 @@ Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
   regression tests for dashboard work queue preferences/assignments; GitHub
   Actions `CI` run `25965051096` passed.
 - Latest pushed GitHub Actions `CI` run `25965178615` for `d9126b0` passed.
-- Latest full local regression after that commit: `uv run pytest` reported
-  `227 passed, 3 skipped`.
+- Latest full local regression after debug/replay typed-state hardening:
+  `uv run pytest` reported `228 passed, 3 skipped`.
 
 ## 4. Company/Staging Gates
 

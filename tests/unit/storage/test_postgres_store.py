@@ -79,6 +79,8 @@ class FakePostgresConnection:
             or sql.startswith("insert into dashboard_preferences")
             or sql.startswith("insert into dashboard_assignments")
             or sql.startswith("insert into source_sync_cursors")
+            or sql.startswith("insert into llm_call_traces")
+            or sql.startswith("insert into replay_results")
         ):
             table = sql.split(" ", maxsplit=3)[2]
             entity_id = str(_params(params)[0])
@@ -167,6 +169,14 @@ class FakePostgresConnection:
             cursor_id = str(_params(params)[0])
             row = self.typed_entities.get(("source_sync_cursors", cursor_id))
             return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith("select payload_json from llm_call_traces where llm_call_id"):
+            llm_call_id = str(_params(params)[0])
+            row = self.typed_entities.get(("llm_call_traces", llm_call_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith("select payload_json from replay_results where replay_run_id"):
+            replay_run_id = str(_params(params)[0])
+            row = self.typed_entities.get(("replay_results", replay_run_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
         if sql.startswith("select payload_json from agent_runs"):
             rows = [
                 {"payload_json": row["payload_json"]}
@@ -180,6 +190,20 @@ class FakePostgresConnection:
                 for (_table, _entity_id), row in sorted(self.typed_entities.items())
                 if _table == "source_sync_cursors"
                 and (not _params(params) or row["project_key"] == _params(params)[0])
+            ]
+            return FakeCursor(many=rows)
+        if sql.startswith("select payload_json from llm_call_traces"):
+            rows = [
+                {"payload_json": row["payload_json"]}
+                for (_table, _entity_id), row in sorted(self.typed_entities.items())
+                if _table == "llm_call_traces"
+            ]
+            return FakeCursor(many=rows)
+        if sql.startswith("select payload_json from replay_results"):
+            rows = [
+                {"payload_json": row["payload_json"]}
+                for (_table, _entity_id), row in sorted(self.typed_entities.items())
+                if _table == "replay_results"
             ]
             return FakeCursor(many=rows)
         if "select payload_json from state_entities" in sql and "order by entity_id" not in sql:
@@ -221,6 +245,7 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
         "005",
         "006",
         "007",
+        "008",
     ]
     assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
     assert "JSONB" in migrations[0].sql
@@ -233,18 +258,31 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     assert "CREATE TABLE IF NOT EXISTS dashboard_preferences" in migrations[5].sql
     assert "CREATE TABLE IF NOT EXISTS dashboard_assignments" in migrations[5].sql
     assert "CREATE TABLE IF NOT EXISTS source_sync_cursors" in migrations[6].sql
+    assert "CREATE TABLE IF NOT EXISTS llm_call_traces" in migrations[7].sql
+    assert "CREATE TABLE IF NOT EXISTS replay_results" in migrations[7].sql
 
 
 def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
     rollbacks = load_postgres_rollbacks()
 
-    assert sorted(rollbacks) == ["001", "002", "003", "004", "005", "006", "007"]
+    assert sorted(rollbacks) == [
+        "001",
+        "002",
+        "003",
+        "004",
+        "005",
+        "006",
+        "007",
+        "008",
+    ]
     assert "DROP TABLE IF EXISTS agent_runs" in rollbacks["002"].sql
     assert "DROP TABLE IF EXISTS audit_archive_batches" in rollbacks["003"].sql
     assert "DROP TABLE IF EXISTS idempotency_results" in rollbacks["004"].sql
     assert "DROP TABLE IF EXISTS scheduler_leases" in rollbacks["005"].sql
     assert "DROP TABLE IF EXISTS dashboard_preferences" in rollbacks["006"].sql
     assert "DROP TABLE IF EXISTS source_sync_cursors" in rollbacks["007"].sql
+    assert "DROP TABLE IF EXISTS llm_call_traces" in rollbacks["008"].sql
+    assert "DROP TABLE IF EXISTS replay_results" in rollbacks["008"].sql
 
 
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
@@ -265,7 +303,7 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
         payload=run,
     )
 
-    assert fake.migrations == {"001", "002", "003", "004", "005", "006", "007"}
+    assert fake.migrations == {"001", "002", "003", "004", "005", "006", "007", "008"}
     assert any("insert into agent_runs" in sql for sql in fake.executed_sql)
     stored = store.get("agent_runs", run.run_id)
     assert stored is not None
@@ -380,6 +418,72 @@ def test_postgres_store_persists_source_sync_cursor_in_typed_table() -> None:
     assert stored["completed_cursor"]["offset"] == 10
     listed = store.list("source_sync_cursors", project_key="RUNE_CAM_ALPHA")
     assert listed[0]["cursor_id"] == cursor.cursor_id
+
+
+def test_postgres_store_typed_debug_replay_tables() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+    llm_call = {
+        "llm_call_id": "llm_call_run_debug_001",
+        "run_id": "run_debug_001",
+        "step_id": "step_reasoning_001",
+        "model_profile_id": "dummy-local",
+        "prompt_version_id": "finding_reasoning_v1",
+        "request_hash": "hash_request",
+        "response_hash": "hash_response",
+        "masked_payload_ref": "runs/run_debug_001/masked_payload.json",
+        "raw_response_ref": "runs/run_debug_001/raw_response.json",
+        "parsed_output_ref": "runs/run_debug_001/parsed_output.json",
+        "input_tokens": 42,
+        "output_tokens": 11,
+        "cost_usd": 0.0,
+        "latency_ms": 25,
+        "validation_status": "passed",
+        "retry_count": 0,
+        "error_message": None,
+        "schema_version": "v1",
+    }
+    replay = {
+        "source_run_id": "run_debug_001",
+        "replay_run_id": "replay_run_debug_001",
+        "replay_mode": "same_model_same_prompt",
+        "compared_model_profile_ids": ["dummy-local"],
+        "compared_prompt_version_ids": ["finding_reasoning_v1"],
+        "diff": {
+            "source_run_id": "run_debug_001",
+            "replay_run_id": "replay_run_debug_001",
+            "added_nodes": [],
+            "removed_nodes": [],
+            "changed_nodes": [],
+            "added_edges": [],
+            "removed_edges": [],
+            "changed_edges": [],
+            "added_findings": [],
+            "removed_findings": [],
+            "changed_findings": [],
+            "schema_version": "v1",
+        },
+    }
+
+    store.upsert(
+        collection="llm_call_traces",
+        entity_id=llm_call["llm_call_id"],
+        project_key="RUNE_CAM_ALPHA",
+        payload=llm_call,
+    )
+    store.upsert(
+        collection="replay_results",
+        entity_id=replay["replay_run_id"],
+        project_key="RUNE_CAM_ALPHA",
+        payload=replay,
+    )
+
+    assert any("insert into llm_call_traces" in sql for sql in fake.executed_sql)
+    assert any("insert into replay_results" in sql for sql in fake.executed_sql)
+    assert store.get("llm_call_traces", llm_call["llm_call_id"]) == llm_call
+    assert store.get("replay_results", replay["replay_run_id"]) == replay
+    assert store.list("llm_call_traces")[0]["llm_call_id"] == llm_call["llm_call_id"]
+    assert store.list("replay_results")[0]["replay_run_id"] == replay["replay_run_id"]
 
 
 def test_postgres_store_acquires_renews_and_releases_scheduler_lease() -> None:

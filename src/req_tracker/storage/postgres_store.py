@@ -276,6 +276,32 @@ TYPED_COLLECTIONS: dict[str, TypedCollectionSpec] = {
             ("schema_version", "schema_version"),
         ),
     ),
+    "llm_call_traces": TypedCollectionSpec(
+        table="llm_call_traces",
+        id_column="llm_call_id",
+        columns=(
+            ("llm_call_id", "llm_call_id"),
+            ("run_id", "run_id"),
+            ("step_id", "step_id"),
+            ("model_profile_id", "model_profile_id"),
+            ("prompt_version_id", "prompt_version_id"),
+            ("request_hash", "request_hash"),
+            ("response_hash", "response_hash"),
+            ("validation_status", "validation_status"),
+            ("retry_count", "retry_count"),
+            ("latency_ms", "latency_ms"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "replay_results": TypedCollectionSpec(
+        table="replay_results",
+        id_column="replay_run_id",
+        columns=(
+            ("replay_run_id", "replay_run_id"),
+            ("source_run_id", "source_run_id"),
+            ("replay_mode", "replay_mode"),
+        ),
+    ),
 }
 
 
