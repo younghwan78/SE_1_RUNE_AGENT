@@ -10,6 +10,7 @@ Packaged PostgreSQL migrations currently live with the storage implementation:
 - `src/req_tracker/storage/migrations/postgres/003_audit_archive_batches.sql`
 - `src/req_tracker/storage/migrations/postgres/004_operation_state_tables.sql`
 - `src/req_tracker/storage/migrations/postgres/005_scheduler_leases.sql`
+- `src/req_tracker/storage/migrations/postgres/006_dashboard_state_tables.sql`
 
 `PostgreSQLStateStore` applies these migrations on startup through the
 `schema_migrations` table. Keep executable migrations in the package so app

@@ -213,6 +213,20 @@ Latest validation evidence:
 - `uv run python ops/ui/smoke_operator_ui.py`: passed
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
+
+Follow-up production persistence hardening:
+
+- Added PostgreSQL migration `006_dashboard_state_tables.sql` and rollback for
+  backend dashboard preferences and assignments.
+- Added typed PostgreSQL mirror specs for `dashboard_preferences` and
+  `dashboard_assignments`.
+- Validation:
+  - `uv run pytest tests/unit/storage/test_postgres_store.py -q`: `9 passed`
+  - `uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py`:
+    passed with versions `001` through `006`
+  - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed
+    including dashboard preference/assignment mirrors
+  - `uv run pytest`: `225 passed, 3 skipped`
 - `uv run pytest`: `219 passed, 3 skipped`
 - Playwright CLI screenshot smoke was run manually for dashboard/work-queue rendering and deep-link behavior, but it is intentionally not added to CI per user direction.
 

@@ -76,6 +76,8 @@ class FakePostgresConnection:
             sql.startswith("insert into agent_runs")
             or sql.startswith("insert into idempotency_results")
             or sql.startswith("insert into registry_activations")
+            or sql.startswith("insert into dashboard_preferences")
+            or sql.startswith("insert into dashboard_assignments")
         ):
             table = sql.split(" ", maxsplit=3)[2]
             entity_id = str(_params(params)[0])
@@ -152,6 +154,14 @@ class FakePostgresConnection:
             activation_id = str(_params(params)[0])
             row = self.typed_entities.get(("registry_activations", activation_id))
             return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith("select payload_json from dashboard_preferences where preference_id"):
+            preference_id = str(_params(params)[0])
+            row = self.typed_entities.get(("dashboard_preferences", preference_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith("select payload_json from dashboard_assignments where assignment_id"):
+            assignment_id = str(_params(params)[0])
+            row = self.typed_entities.get(("dashboard_assignments", assignment_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
         if sql.startswith("select payload_json from agent_runs"):
             rows = [
                 {"payload_json": row["payload_json"]}
@@ -196,6 +206,7 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
         "003",
         "004",
         "005",
+        "006",
     ]
     assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
     assert "JSONB" in migrations[0].sql
@@ -205,16 +216,19 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     assert "CREATE TABLE IF NOT EXISTS idempotency_results" in migrations[3].sql
     assert "CREATE TABLE IF NOT EXISTS registry_activations" in migrations[3].sql
     assert "CREATE TABLE IF NOT EXISTS scheduler_leases" in migrations[4].sql
+    assert "CREATE TABLE IF NOT EXISTS dashboard_preferences" in migrations[5].sql
+    assert "CREATE TABLE IF NOT EXISTS dashboard_assignments" in migrations[5].sql
 
 
 def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
     rollbacks = load_postgres_rollbacks()
 
-    assert sorted(rollbacks) == ["001", "002", "003", "004", "005"]
+    assert sorted(rollbacks) == ["001", "002", "003", "004", "005", "006"]
     assert "DROP TABLE IF EXISTS agent_runs" in rollbacks["002"].sql
     assert "DROP TABLE IF EXISTS audit_archive_batches" in rollbacks["003"].sql
     assert "DROP TABLE IF EXISTS idempotency_results" in rollbacks["004"].sql
     assert "DROP TABLE IF EXISTS scheduler_leases" in rollbacks["005"].sql
+    assert "DROP TABLE IF EXISTS dashboard_preferences" in rollbacks["006"].sql
 
 
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
@@ -235,7 +249,7 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
         payload=run,
     )
 
-    assert fake.migrations == {"001", "002", "003", "004", "005"}
+    assert fake.migrations == {"001", "002", "003", "004", "005", "006"}
     assert any("insert into agent_runs" in sql for sql in fake.executed_sql)
     stored = store.get("agent_runs", run.run_id)
     assert stored is not None
@@ -280,6 +294,46 @@ def test_postgres_store_typed_operation_state_tables() -> None:
     assert any("insert into registry_activations" in sql for sql in fake.executed_sql)
     assert store.get("idempotency_results", idempotency["record_id"]) == idempotency
     assert store.get("registry_activations", activation["activation_id"]) == activation
+
+
+def test_postgres_store_typed_dashboard_state_tables() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+    preference = {
+        "preference_id": "work_queue_preferences:RUNE_CAM_ALPHA:reviewer_1",
+        "project_key": "RUNE_CAM_ALPHA",
+        "user_id": "reviewer_1",
+        "saved_filters": {"Mine": {"item_type": "approval", "priority": "high"}},
+        "updated_at": "2026-05-16T00:00:00Z",
+        "schema_version": "v1",
+    }
+    assignment = {
+        "assignment_id": "work_queue_assignment:RUNE_CAM_ALPHA:q_001",
+        "project_key": "RUNE_CAM_ALPHA",
+        "queue_id": "q_001",
+        "assigned_to": "reviewer_1",
+        "assigned_by": "reviewer_1",
+        "updated_at": "2026-05-16T00:00:00Z",
+        "schema_version": "v1",
+    }
+
+    store.upsert(
+        collection="dashboard_preferences",
+        entity_id=preference["preference_id"],
+        project_key="RUNE_CAM_ALPHA",
+        payload=preference,
+    )
+    store.upsert(
+        collection="dashboard_assignments",
+        entity_id=assignment["assignment_id"],
+        project_key="RUNE_CAM_ALPHA",
+        payload=assignment,
+    )
+
+    assert any("insert into dashboard_preferences" in sql for sql in fake.executed_sql)
+    assert any("insert into dashboard_assignments" in sql for sql in fake.executed_sql)
+    assert store.get("dashboard_preferences", preference["preference_id"]) == preference
+    assert store.get("dashboard_assignments", assignment["assignment_id"]) == assignment
 
 
 def test_postgres_store_persists_source_sync_cursor_in_state_entities() -> None:

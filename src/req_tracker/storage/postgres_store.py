@@ -234,6 +234,30 @@ TYPED_COLLECTIONS: dict[str, TypedCollectionSpec] = {
             ("activated_by", "activated_by"),
         ),
     ),
+    "dashboard_preferences": TypedCollectionSpec(
+        table="dashboard_preferences",
+        id_column="preference_id",
+        columns=(
+            ("preference_id", "preference_id"),
+            ("project_key", "project_key"),
+            ("user_id", "user_id"),
+            ("updated_at", "updated_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
+    "dashboard_assignments": TypedCollectionSpec(
+        table="dashboard_assignments",
+        id_column="assignment_id",
+        columns=(
+            ("assignment_id", "assignment_id"),
+            ("project_key", "project_key"),
+            ("queue_id", "queue_id"),
+            ("assigned_to", "assigned_to"),
+            ("assigned_by", "assigned_by"),
+            ("updated_at", "updated_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
 }
 
 
