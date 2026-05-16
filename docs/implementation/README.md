@@ -52,6 +52,7 @@ POC에서 그대로 가져오지 않을 것:
 | `docs/security/RBAC_MATRIX.md` | 역할/권한 matrix |
 | `docs/runbooks/BACKUP_RESTORE.md` | backup/restore runbook |
 | `docs/runbooks/MODEL_POLICY.md` | model profile, prompt promotion, replay/eval 정책 |
+| `docs/runbooks/INCIDENT_RESPONSE.md` | incident triage, rollback, evidence, and review runbook |
 | `ops/migrations/README.md` | packaged PostgreSQL migration 운영 기준 |
 | `ops/helm/README.md`, `ops/helm/rune-agent` | Kubernetes 배포 chart 기준과 target-cluster 검증 진입 조건 |
 | `tests/evals/README.md` | eval regression test 확장 위치 |

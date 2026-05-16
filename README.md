@@ -281,6 +281,7 @@ Current local implementation:
 - API-key project-scope authorization foundation with `x-rune-projects`
 - trusted SSO/OIDC proxy header auth foundation with group-to-role mapping
 - backup/restore rehearsal runbook and smoke load runner
+- incident response runbook for triage, rollback, evidence, and review
 - Docker Compose backend integration runner for PostgreSQL, Neo4j, and Qdrant
 - full-stack API rehearsal against PostgreSQL, Neo4j, and Qdrant
 - runtime state restore from persisted state after API restart

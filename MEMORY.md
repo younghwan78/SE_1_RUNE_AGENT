@@ -71,6 +71,7 @@ Do not use or recreate removed planning files:
   - `tests/unit/ops/test_skill_export_rehearsal.py`
   - CI/local gate coverage for source-skill export dry-run
 - Ubuntu/server docs, backup/restore/load rehearsal assets, observability assets, Prometheus/Grafana starter files, readiness evidence template, and validators are present.
+- Incident response runbook is present for severity, first response, run/source/model/approval/security triage, rollback, evidence preservation, and post-incident review.
 
 ## Latest Validation Evidence
 
@@ -305,7 +306,7 @@ Follow-up production persistence hardening:
   - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed
     including dashboard preference/assignment, source sync cursor, LLM call
     trace, replay result, and improvement decision mirrors
-  - `uv run pytest`: `229 passed, 3 skipped`
+  - `uv run pytest`: `230 passed, 3 skipped`
 - Playwright CLI screenshot smoke was run manually for dashboard/work-queue rendering and deep-link behavior, but it is intentionally not added to CI per user direction.
 
 Remaining dashboard-specific items:

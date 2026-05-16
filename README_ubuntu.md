@@ -390,3 +390,6 @@ artifact archive shape:
 ```bash
 uv run python ops/backup/verify_backup_set.py --backup-root "$BACKUP_ROOT"
 ```
+
+Incident response triage, rollback, evidence preservation, and post-incident
+review steps are in `docs/runbooks/INCIDENT_RESPONSE.md`.

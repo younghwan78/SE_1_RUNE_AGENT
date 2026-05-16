@@ -45,6 +45,7 @@ Concrete deliverables:
 | Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete; latest 2026-05-17 workstation run passed with Docker Desktop Linux engine available |
 | Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete; latest 2026-05-17 workstation run passed with Docker Desktop Linux engine available |
 | Release blocker gate | `ops/security/check_release_blockers.py` | Complete locally |
+| Incident response runbook | `docs/runbooks/INCIDENT_RESPONSE.md`, `tests/unit/ops/test_runbook_docs.py` | Complete locally |
 | Dashboard state RBAC | `docs/security/RBAC_MATRIX.md`, `tests/contract/test_dashboard_api.py` | Complete locally |
 | Readiness template | `ops/rehearsal/check_production_readiness.py --write-evidence-template -` | Complete |
 | CI gate coverage | `.github/workflows/ci.yml`, `ops/rehearsal/validate_ci_gate_coverage.py` | Complete |
@@ -106,8 +107,8 @@ Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
   regression tests for dashboard work queue preferences/assignments; GitHub
   Actions `CI` run `25965051096` passed.
 - Latest pushed GitHub Actions `CI` run `25965768329` for `c2004f2` passed.
-- Latest full local regression after improvement decision typed-state hardening:
-  `uv run pytest` reported `229 passed, 3 skipped`.
+- Latest full local regression after incident response runbook hardening:
+  `uv run pytest` reported `230 passed, 3 skipped`.
 
 ## 4. Company/Staging Gates
 
