@@ -766,12 +766,24 @@ Validation evidence:
   with `release_ready=false`, `audit_coverage_missing=0`, and
   `plan_requirements` aligned to the production plan
 - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
-  `ci_command_count=22`
+  `ci_command_count=23`
+- Added `ops/rehearsal/check_goal_completion.py`, a top-level completion audit
+  that combines release-scope artifact status and production-readiness status.
+  It reports `goal_complete=false` with concrete remaining blockers instead of
+  relying on manual interpretation.
+- Added the goal completion audit to local readiness gates and GitHub Actions
+  as `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete`.
+- `uv run pytest tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`:
+  `4 passed`
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete`:
+  passed, reporting `goal_complete=false`, `remaining_blocker_count=22`,
+  `release_scope_passed=true`, `release_scope_ready=false`, and
+  `production_readiness_passed=false`
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: `253 passed, 3 skipped`
+- `uv run pytest`: `255 passed, 3 skipped`
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
-  local regression gates passed with the release-scope verifier included;
+  local regression gates passed with release-scope and goal-completion audits included;
   overall readiness failed as expected with summary `failed=7`,
   `manual_required=10`, `passed=2`, `warning=0`
 
