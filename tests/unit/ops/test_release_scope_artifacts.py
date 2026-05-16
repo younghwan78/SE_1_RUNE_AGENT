@@ -32,6 +32,15 @@ def test_graph_ui_release_scope_is_resolved_locally() -> None:
     assert "ops/ui/smoke_operator_ui.py" in graph_item["verification_commands"][0]
 
 
+def test_release_scope_requirements_match_production_plan() -> None:
+    module = _load_module()
+
+    plan_requirements = module.load_first_release_requirements_from_plan()
+    verifier_requirements = [item.requirement for item in module.RELEASE_SCOPE_ITEMS]
+
+    assert verifier_requirements == plan_requirements
+
+
 def test_release_scope_artifact_report_flags_missing_paths() -> None:
     module = _load_module()
 

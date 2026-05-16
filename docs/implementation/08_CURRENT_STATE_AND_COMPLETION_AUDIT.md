@@ -150,7 +150,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 251 passed, 3 skipped
+- `uv run pytest`: 252 passed, 3 skipped
 - `uv run pytest tests/unit/model_gateway -q`: 16 passed, validating dummy
   provider calls, policy enforcement, structured validation retry, fallback
   trace recording, provider usage metadata, and same-input model/prompt
@@ -246,7 +246,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed, validating 21 PostgreSQL typed mirror tables against packaged migration DDL
 - `uv run python ops/rehearsal/validate_evidence_example.py`: passed, validating that the committed example evidence file has 11 non-passable manual gates, no passable placeholder entries, fake `run-123*` references, duplicate check IDs, missing evidence arrays, or missing top-level TODO metadata
 - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed, validating that GitHub Actions covers deterministic local release gates and only omits the documented Docker-backed integration/full-stack rehearsals
-- `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed with `release_ready=false`, `missing_artifacts=0`, and status counts `local_complete=11`, `company_evidence_required=4`
+- `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed with `release_ready=false`, `missing_artifacts=0`, status counts `local_complete=11`, `company_evidence_required=4`, and `plan_requirements` aligned to `PRODUCTION_EXECUTION_PLAN.md` first-release required-scope bullets
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness failed as expected because company/staging environment variables and manual evidence are unset
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown`: passed, producing a masked command/evidence collection plan for unresolved company/staging gates without printing secret values
 - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`: passed after first verifying the new staging evidence plan CI smoke requirement failed when absent
@@ -712,6 +712,14 @@ blocking:
   - RED/GREEN: `uv run pytest tests/unit/ops/test_release_scope_artifacts.py -q`
     failed while the verifier still reported `decision_pending=1`, then passed
     after the graph UI item moved to `local_complete`.
+  - Added a plan-alignment guard so
+    `ops/rehearsal/validate_release_scope_artifacts.py` parses the
+    `PRODUCTION_EXECUTION_PLAN.md` first-release required-scope bullets and
+    fails if verifier requirements drift from the plan.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_release_scope_artifacts.py::test_release_scope_requirements_match_production_plan -q`
+    failed before the plan parser existed and passed after adding it.
+  - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py -q`:
+    `5 passed`
 
 ## 5. Completion Gate
 

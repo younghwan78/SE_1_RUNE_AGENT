@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 ROOT = Path(__file__).resolve().parents[2]
+PRODUCTION_PLAN_PATH = ROOT / "PRODUCTION_EXECUTION_PLAN.md"
 
 ScopeStatus = Literal["local_complete", "company_evidence_required"]
 
@@ -256,6 +257,7 @@ RELEASE_SCOPE_ITEMS: tuple[ReleaseScopeItem, ...] = (
 def build_release_scope_report(
     *,
     items: Sequence[ReleaseScopeItem] = RELEASE_SCOPE_ITEMS,
+    validate_plan_alignment: bool = True,
 ) -> dict[str, Any]:
     """Build a first-release scope artifact report."""
     rendered_items = [_render_item(item) for item in items]
@@ -266,6 +268,12 @@ def build_release_scope_report(
             failures.append(f"{item['item_id']}:missing_verification_command")
         if not item["notes"]:
             failures.append(f"{item['item_id']}:missing_notes")
+    plan_requirements: list[str] = []
+    if validate_plan_alignment:
+        plan_requirements = load_first_release_requirements_from_plan()
+        item_requirements = [item["requirement"] for item in rendered_items]
+        if item_requirements != plan_requirements:
+            failures.append("first_release_scope:plan_verifier_requirement_mismatch")
     status_counts = Counter(item["status"] for item in rendered_items)
     missing_artifacts = sum(len(item["missing_paths"]) for item in rendered_items)
     release_ready = not failures and all(
@@ -280,9 +288,29 @@ def build_release_scope_report(
             "missing_artifacts": missing_artifacts,
             "status_counts": dict(sorted(status_counts.items())),
         },
+        "plan_requirements": plan_requirements,
         "items": rendered_items,
         "failures": failures,
     }
+
+
+def load_first_release_requirements_from_plan(
+    plan_path: Path = PRODUCTION_PLAN_PATH,
+) -> list[str]:
+    """Read the first-release required-scope bullets from the production plan."""
+    lines = plan_path.read_text(encoding="utf-8").splitlines()
+    in_required_scope = False
+    requirements: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped == "필수 포함:":
+            in_required_scope = True
+            continue
+        if in_required_scope and stripped == "첫 릴리스 제외:":
+            break
+        if in_required_scope and stripped.startswith("- "):
+            requirements.append(stripped.removeprefix("- ").strip())
+    return requirements
 
 
 def _render_item(item: ReleaseScopeItem) -> dict[str, Any]:
