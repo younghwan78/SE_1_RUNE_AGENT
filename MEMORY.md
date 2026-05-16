@@ -76,6 +76,7 @@ Do not use or recreate removed planning files:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
+
 - `uv run pytest`: `217 passed, 3 skipped`
 - `uv run pytest tests/contract/test_dashboard_api.py tests/unit/dashboard/test_summary_service.py tests/unit/ops/test_operator_ui_smoke.py tests/contract/test_openapi_surface.py`: `10 passed`
 - `uv run pytest tests/unit/ops/test_skill_export_rehearsal.py tests/unit/ops/test_production_readiness_check.py`: `19 passed`
@@ -213,6 +214,47 @@ Latest validation evidence:
 - `uv run python ops/ui/smoke_operator_ui.py`: passed
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
+
+## 2026-05-16 Dashboard PostgreSQL State and RBAC Snapshot
+
+Implemented and verified the remaining local dashboard backend state hardening.
+
+Changed:
+
+- Added PostgreSQL migration/rollback `006_dashboard_state_tables` for
+  `dashboard_preferences` and `dashboard_assignments`.
+- Added PostgreSQL typed mirror coverage for dashboard preference/assignment
+  state.
+- Updated dashboard state API RBAC documentation in
+  `docs/security/RBAC_MATRIX.md`.
+- Added regression coverage that dashboard work queue preference/assignment
+  routes require developer role and project access.
+- Added a documentation guard ensuring the RBAC matrix lists the dashboard state
+  routes.
+
+Validation evidence:
+
+- `uv run pytest tests/unit/storage/test_postgres_store.py -q`: `9 passed`
+- `uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py`:
+  passed for versions `001` through `006`
+- `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed
+- `uv run pytest tests/contract/test_dashboard_api.py tests/contract/test_security_api.py tests/contract/test_openapi_surface.py -q`:
+  `17 passed`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `git diff --check`: passed
+- `uv run pytest`: `227 passed, 3 skipped`
+- GitHub Actions `CI` run `25965051096` for commit
+  `6418677 Document dashboard state RBAC`: success
+
+Current status:
+
+- Local/dashboard production-shaped implementation remains complete for the
+  current non-company scope.
+- Overall production readiness is still not complete until company/staging
+  evidence is provided for PostgreSQL, Neo4j, Qdrant, JIRA/Confluence,
+  trusted proxy SSO/OIDC, real model gateway, observability,
+  backup/restore/load, and approved decision/email export validation.
 
 Follow-up production persistence hardening:
 

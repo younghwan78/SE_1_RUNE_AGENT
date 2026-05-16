@@ -41,10 +41,11 @@ Concrete deliverables:
 | Approval and graph commit safety | approval contract/security tests | Complete |
 | Feedback/eval/improvement loop | `ops/evals/run_feedback_eval_rehearsal.py` | Complete |
 | Debug and replay workbench | debug/replay contract tests | Complete |
-| Persistence foundation | SQLite/PostgreSQL tests and migration validators | Complete |
+| Persistence foundation | SQLite/PostgreSQL tests and migration validators, including dashboard preference/assignment typed mirrors | Complete |
 | Disposable backend integration | `ops/integration/run_backend_integration.py` | Complete; latest 2026-05-16 workstation run passed after Docker Desktop Linux engine was started |
 | Full-stack rehearsal | `ops/rehearsal/run_full_stack_rehearsal.py` | Complete; latest 2026-05-16 workstation run passed after Docker Desktop Linux engine was started |
 | Release blocker gate | `ops/security/check_release_blockers.py` | Complete locally |
+| Dashboard state RBAC | `docs/security/RBAC_MATRIX.md`, `tests/contract/test_dashboard_api.py` | Complete locally |
 | Readiness template | `ops/rehearsal/check_production_readiness.py --write-evidence-template -` | Complete |
 | CI gate coverage | `.github/workflows/ci.yml`, `ops/rehearsal/validate_ci_gate_coverage.py` | Complete |
 
@@ -100,6 +101,11 @@ Latest 2026-05-16 local evidence after starting Docker Desktop Linux engine:
   local regression gates passed; overall readiness still failed because
   company/staging environment variables and manual evidence are not configured
   on this workstation.
+- Commit `6418677 Document dashboard state RBAC` added RBAC matrix coverage and
+  regression tests for dashboard work queue preferences/assignments; GitHub
+  Actions `CI` run `25965051096` passed.
+- Latest full local regression after that commit: `uv run pytest` reported
+  `227 passed, 3 skipped`.
 
 ## 4. Company/Staging Gates
 
