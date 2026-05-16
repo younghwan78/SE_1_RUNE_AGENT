@@ -128,16 +128,26 @@ class InMemoryTraceRepository:
         step_id: str,
         error_class: str,
         error_message: str,
+        output_payload: object | None = None,
+        output_ref: str | None = None,
+        validation_status: ValidationStatus = "failed",
+        validation_result: dict[str, Any] | None = None,
     ) -> AgentStepTrace:
         """Mark a step as failed."""
         current = self.steps[step_id]
+        update_payload: dict[str, Any] = {
+            "status": "failed",
+            "output_ref": output_ref,
+            "validation_status": validation_status,
+            "validation_result": validation_result or {},
+            "error_class": error_class,
+            "error_message": error_message,
+            "completed_at": datetime.now(UTC),
+        }
+        if output_payload is not None:
+            update_payload["output_hash"] = stable_hash(output_payload)
         updated = current.model_copy(
-            update={
-                "status": "failed",
-                "error_class": error_class,
-                "error_message": error_message,
-                "completed_at": datetime.now(UTC),
-            }
+            update=update_payload
         )
         self.steps[step_id] = updated
         return updated

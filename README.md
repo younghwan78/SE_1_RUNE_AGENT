@@ -273,6 +273,8 @@ Current local implementation:
 - deterministic critical-impact rule for issues affecting P0/critical requirements
 - deterministic architecture verification-path rule for architecture blocks with no direct
   or linked verification coverage
+- masking policy violation block that stops analysis and records a security review
+  reference when source-specific forbidden patterns remain visible
 - approval queue, graph commit, feedback capture
 - audit event capture for approval, feedback, debug artifact, scheduler, and run completion
 - replay diff and eval candidate grouping

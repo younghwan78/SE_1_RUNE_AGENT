@@ -46,6 +46,14 @@ REQUIRED_COVERAGE: tuple[ReleaseBlockerCoverage, ...] = (
                 path="tests/unit/ingestion/test_masking_chunking.py",
                 snippets=("owner@example.com", "SN-IMX789-SECRET", "not in result.text"),
             ),
+            EvidenceFile(
+                path="tests/integration/test_dummy_analysis_pipeline.py",
+                snippets=(
+                    "MaskingPolicyViolationError",
+                    "security_review_required",
+                    "extract_nodes\" not in steps",
+                ),
+            ),
         ),
     ),
     ReleaseBlockerCoverage(

@@ -21,7 +21,11 @@ from req_tracker.evidence.spans import build_artifact_evidence
 from req_tracker.findings.rules import analyze_findings
 from req_tracker.graph.base import GraphBackend
 from req_tracker.ingestion.chunking import chunk_artifact
-from req_tracker.ingestion.masking import mask_text
+from req_tracker.ingestion.masking import (
+    MaskingPolicyViolationError,
+    find_masking_violations,
+    mask_text,
+)
 from req_tracker.ingestion.normalization import normalize_raw_artifact
 from req_tracker.model_gateway.client import ModelGatewayClient
 from req_tracker.model_gateway.dummy_provider import DummyModelProvider
@@ -378,6 +382,48 @@ class LocalAnalysisWorkflow:
         chunks: list[ArtifactChunk] = []
         for raw, artifact in zip(fetch.artifacts, artifacts, strict=True):
             masked = mask_text(raw.body_text)
+            violations = find_masking_violations(
+                masked.text,
+                forbidden_patterns=raw.metadata.get("forbidden_patterns"),
+            )
+            if violations:
+                violation_payload = {
+                    "artifact_id": artifact.artifact_id,
+                    "external_id": raw.external_id,
+                    "violation_labels": violations,
+                    "security_review_required": True,
+                }
+                violation_ref = self.artifact_store.write_json(
+                    run_id,
+                    "masking_policy_violation",
+                    violation_payload,
+                )
+                error = MaskingPolicyViolationError(
+                    artifact_id=artifact.artifact_id,
+                    violation_labels=violations,
+                    security_review_ref=violation_ref.artifact_ref,
+                )
+                self.traces.fail_step(
+                    step_id=chunk_step.step_id,
+                    error_class=error.failure_code,
+                    error_message=str(error),
+                    output_payload=violation_payload,
+                    output_ref=violation_ref.artifact_ref,
+                    validation_status="failed",
+                    validation_result={
+                        "artifact_id": artifact.artifact_id,
+                        "external_id": raw.external_id,
+                        "violation_labels": violations,
+                        "security_review_required": True,
+                    },
+                )
+                self.traces.complete_run(
+                    run_id,
+                    status="failed",
+                    failure_code=error.failure_code,
+                    failure_message=str(error),
+                )
+                raise error
             chunks.extend(
                 chunk_artifact(artifact, masked.text, evidence_by_external[raw.external_id])
             )

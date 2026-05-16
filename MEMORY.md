@@ -27,6 +27,9 @@ Do not use or recreate removed planning files:
 - FastAPI API skeleton and OpenAPI surface guard.
 - Pydantic contracts for ontology, debug traces, approvals, feedback, audit, source adapter contracts, and source sync cursor snapshots.
 - Local deterministic analysis workflow with ingestion, masking, chunking, evidence spans, node extraction, edge linking, findings, approval staging, LLM-assisted reasoning trace, and replay diff.
+- Masking policy violations stop analysis before node extraction/LLM reasoning,
+  mark the mask/chunk step failed, persist a security-review debug artifact
+  reference, and fail the run with `MASKING_POLICY_VIOLATION`.
 - Deterministic finding rules include missing implementation, missing verification, orphan design, conflicting alternatives, Confluence stale trace, issue-affects-critical-requirement, and architecture-without-verification-path.
 - Model gateway abstraction with dummy provider, HTTP JSON provider foundation, registry activation/rollback records, structured validation, retry/fallback traces, and token/cost metadata.
 - Approval workflow with pending graph proposals separated from approved graph state.
@@ -121,6 +124,28 @@ Do not mark the overall production goal complete until a completion audit verifi
   - `uv run ruff check .`: passed
   - `uv run mypy src`: passed
   - `uv run pytest`: `236 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
+
+## 2026-05-17 Masking Policy Violation Workflow Block
+
+- Added workflow-level masking policy enforcement for source-specific
+  `metadata.forbidden_patterns`.
+- If forbidden text remains after masking, `LocalAnalysisWorkflow` now writes a
+  `masking_policy_violation` debug artifact, fails the `mask_chunk` step with
+  `validation_status=failed`, marks `security_review_required=true`, completes
+  the run as failed with `MASKING_POLICY_VIOLATION`, and raises
+  `MaskingPolicyViolationError` before graph extraction or LLM reasoning.
+- Runtime failure recording now preserves explicit exception `failure_code`
+  values, so API/audit state can distinguish masking policy violations from
+  generic runtime errors.
+- Focused verification:
+  - `uv run pytest tests/integration/test_dummy_analysis_pipeline.py::test_masking_policy_violation_blocks_analysis_and_routes_security_review -q`: passed
+  - `uv run pytest tests/unit/ingestion/test_masking_chunking.py tests/integration/test_dummy_analysis_pipeline.py tests/unit/api/test_runtime_state.py tests/contract/test_run_api.py tests/unit/debug/test_trace_recorder.py -q`: `20 passed`
+  - `uv run pytest tests/unit/ops/test_release_blocker_checker.py tests/integration/test_dummy_analysis_pipeline.py::test_masking_policy_violation_blocks_analysis_and_routes_security_review -q`: `3 passed`
+  - `uv run python ops/security/check_release_blockers.py`: passed, now including the workflow-level masking block integration evidence
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `239 passed, 3 skipped`
   - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
 
 ## 2026-05-17 Decision/Email Manual Review Local Hardening

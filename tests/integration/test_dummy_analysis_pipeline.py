@@ -1,11 +1,14 @@
 """Dummy analysis pipeline integration tests."""
 
+import pytest
+
 from req_tracker.adapters.base import RawSourceArtifact, SourceFetchResult, SourceScope, SyncCursor
 from req_tracker.approvals.models import ApprovalDecision
 from req_tracker.approvals.service import ApprovalService
 from req_tracker.debug.artifacts import LocalArtifactStore
 from req_tracker.debug.traces import InMemoryTraceRepository
 from req_tracker.graph.memory_backend import MemoryGraphBackend
+from req_tracker.ingestion.masking import MaskingPolicyViolationError
 from req_tracker.vector.memory_backend import MemoryVectorBackend
 from req_tracker.workflows.analysis_graph import LocalAnalysisWorkflow
 
@@ -105,6 +108,35 @@ def test_confluence_version_change_is_routed_to_stale_finding(tmp_path) -> None:
     assert "version 3 to 4" in stale[0].description
 
 
+def test_masking_policy_violation_blocks_analysis_and_routes_security_review(
+    tmp_path,
+) -> None:  # type: ignore[no-untyped-def]
+    graph = MemoryGraphBackend()
+    workflow = LocalAnalysisWorkflow(
+        traces=InMemoryTraceRepository(),
+        artifact_store=LocalArtifactStore(tmp_path),
+        graph=graph,
+        vector=MemoryVectorBackend(),
+        approvals=ApprovalService(),
+        source_adapter=_ForbiddenPatternAdapter(),
+    )
+
+    with pytest.raises(MaskingPolicyViolationError, match="MASKING_POLICY_VIOLATION"):
+        workflow.run(run_id="run_it_masking_violation", project_key="RUNE_CAM_ALPHA")
+
+    run = workflow.traces.runs["run_it_masking_violation"]
+    assert run.status == "failed"
+    assert run.failure_code == "MASKING_POLICY_VIOLATION"
+    assert run.failure_message is not None
+    assert "security review" in run.failure_message
+    steps = {step.stage_name: step for step in workflow.traces.list_steps(run.run_id)}
+    assert steps["mask_chunk"].status == "failed"
+    assert steps["mask_chunk"].validation_status == "failed"
+    assert steps["mask_chunk"].validation_result["security_review_required"] is True
+    assert "extract_nodes" not in steps
+    assert graph.nodes == {}
+
+
 class _ChangedConfluenceAdapter:
     source_type = "confluence"
 
@@ -130,6 +162,37 @@ class _ChangedConfluenceAdapter:
                         "mbse_type": "Design_Spec",
                         "version_number": 4,
                         "previous_version_number": 3,
+                    },
+                )
+            ],
+            next_cursor=None,
+        )
+
+
+class _ForbiddenPatternAdapter:
+    source_type = "dummy"
+
+    def fetch_incremental(
+        self,
+        scope: SourceScope,
+        cursor: SyncCursor | None = None,
+    ) -> SourceFetchResult:
+        if cursor is not None:
+            return SourceFetchResult(artifacts=[], next_cursor=None)
+        return SourceFetchResult(
+            artifacts=[
+                RawSourceArtifact(
+                    external_id="SEC-BLOCK-1",
+                    source_type="dummy",
+                    source_url="dummy://security/SEC-BLOCK-1",
+                    project_key=scope.project_key,
+                    title="Unmasked source-specific secret",
+                    body_text="Requirement text includes PROJECT-SECRET-123 before review.",
+                    created_at="2026-01-01T00:00:00Z",
+                    updated_at="2026-01-02T00:00:00Z",
+                    metadata={
+                        "mbse_type": "Requirement",
+                        "forbidden_patterns": [r"PROJECT-SECRET-\d+"],
                     },
                 )
             ],

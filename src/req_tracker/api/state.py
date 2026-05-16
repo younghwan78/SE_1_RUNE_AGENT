@@ -265,7 +265,7 @@ class RuntimeState(BaseModel):
         exc: Exception,
     ) -> None:
         """Record failed run state and audit evidence before re-raising."""
-        failure_code = type(exc).__name__
+        failure_code = str(getattr(exc, "failure_code", type(exc).__name__))
         failure_message = str(exc)
         if run_id in self.traces.runs:
             self.traces.complete_run(
