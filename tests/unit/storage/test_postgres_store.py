@@ -81,6 +81,7 @@ class FakePostgresConnection:
             or sql.startswith("insert into source_sync_cursors")
             or sql.startswith("insert into llm_call_traces")
             or sql.startswith("insert into replay_results")
+            or sql.startswith("insert into improvement_decisions")
         ):
             table = sql.split(" ", maxsplit=3)[2]
             entity_id = str(_params(params)[0])
@@ -177,6 +178,10 @@ class FakePostgresConnection:
             replay_run_id = str(_params(params)[0])
             row = self.typed_entities.get(("replay_results", replay_run_id))
             return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith("select payload_json from improvement_decisions where candidate_id"):
+            candidate_id = str(_params(params)[0])
+            row = self.typed_entities.get(("improvement_decisions", candidate_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
         if sql.startswith("select payload_json from agent_runs"):
             rows = [
                 {"payload_json": row["payload_json"]}
@@ -204,6 +209,13 @@ class FakePostgresConnection:
                 {"payload_json": row["payload_json"]}
                 for (_table, _entity_id), row in sorted(self.typed_entities.items())
                 if _table == "replay_results"
+            ]
+            return FakeCursor(many=rows)
+        if sql.startswith("select payload_json from improvement_decisions"):
+            rows = [
+                {"payload_json": row["payload_json"]}
+                for (_table, _entity_id), row in sorted(self.typed_entities.items())
+                if _table == "improvement_decisions"
             ]
             return FakeCursor(many=rows)
         if "select payload_json from state_entities" in sql and "order by entity_id" not in sql:
@@ -246,6 +258,7 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
         "006",
         "007",
         "008",
+        "009",
     ]
     assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
     assert "JSONB" in migrations[0].sql
@@ -260,6 +273,7 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     assert "CREATE TABLE IF NOT EXISTS source_sync_cursors" in migrations[6].sql
     assert "CREATE TABLE IF NOT EXISTS llm_call_traces" in migrations[7].sql
     assert "CREATE TABLE IF NOT EXISTS replay_results" in migrations[7].sql
+    assert "CREATE TABLE IF NOT EXISTS improvement_decisions" in migrations[8].sql
 
 
 def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
@@ -274,6 +288,7 @@ def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
         "006",
         "007",
         "008",
+        "009",
     ]
     assert "DROP TABLE IF EXISTS agent_runs" in rollbacks["002"].sql
     assert "DROP TABLE IF EXISTS audit_archive_batches" in rollbacks["003"].sql
@@ -283,6 +298,7 @@ def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
     assert "DROP TABLE IF EXISTS source_sync_cursors" in rollbacks["007"].sql
     assert "DROP TABLE IF EXISTS llm_call_traces" in rollbacks["008"].sql
     assert "DROP TABLE IF EXISTS replay_results" in rollbacks["008"].sql
+    assert "DROP TABLE IF EXISTS improvement_decisions" in rollbacks["009"].sql
 
 
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
@@ -303,7 +319,7 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
         payload=run,
     )
 
-    assert fake.migrations == {"001", "002", "003", "004", "005", "006", "007", "008"}
+    assert fake.migrations == {"001", "002", "003", "004", "005", "006", "007", "008", "009"}
     assert any("insert into agent_runs" in sql for sql in fake.executed_sql)
     stored = store.get("agent_runs", run.run_id)
     assert stored is not None
@@ -484,6 +500,37 @@ def test_postgres_store_typed_debug_replay_tables() -> None:
     assert store.get("replay_results", replay["replay_run_id"]) == replay
     assert store.list("llm_call_traces")[0]["llm_call_id"] == llm_call["llm_call_id"]
     assert store.list("replay_results")[0]["replay_run_id"] == replay["replay_run_id"]
+
+
+def test_postgres_store_typed_improvement_decision_table() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+    decision = {
+        "candidate_id": "impr_wrong_relation_prompt",
+        "candidate_type": "prompt",
+        "source_feedback_ids": ["fb_001", "fb_002"],
+        "proposed_change_summary": "Add counter examples for wrong relation feedback.",
+        "before_version_id": "edge_linking_v1",
+        "after_version_ref": "candidate://impr_wrong_relation_prompt",
+        "eval_run_id": "eval_001",
+        "status": "canary",
+        "created_at": "2026-05-17T00:00:00Z",
+        "reviewed_by": "admin@example.com",
+        "promotion_status": "canary_required",
+        "decision_type": "activation",
+        "previous_status": "review_ready",
+        "schema_version": "v1",
+    }
+
+    store.upsert(
+        collection="improvement_decisions",
+        entity_id=decision["candidate_id"],
+        payload=decision,
+    )
+
+    assert any("insert into improvement_decisions" in sql for sql in fake.executed_sql)
+    assert store.get("improvement_decisions", decision["candidate_id"]) == decision
+    assert store.list("improvement_decisions")[0]["candidate_id"] == decision["candidate_id"]
 
 
 def test_postgres_store_acquires_renews_and_releases_scheduler_lease() -> None:

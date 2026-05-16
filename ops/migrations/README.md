@@ -13,6 +13,7 @@ Packaged PostgreSQL migrations currently live with the storage implementation:
 - `src/req_tracker/storage/migrations/postgres/006_dashboard_state_tables.sql`
 - `src/req_tracker/storage/migrations/postgres/007_source_cursor_state_tables.sql`
 - `src/req_tracker/storage/migrations/postgres/008_debug_replay_state_tables.sql`
+- `src/req_tracker/storage/migrations/postgres/009_improvement_decision_state_tables.sql`
 
 `PostgreSQLStateStore` applies these migrations on startup through the
 `schema_migrations` table. Keep executable migrations in the package so app

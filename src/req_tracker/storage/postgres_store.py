@@ -302,6 +302,22 @@ TYPED_COLLECTIONS: dict[str, TypedCollectionSpec] = {
             ("replay_mode", "replay_mode"),
         ),
     ),
+    "improvement_decisions": TypedCollectionSpec(
+        table="improvement_decisions",
+        id_column="candidate_id",
+        columns=(
+            ("candidate_id", "candidate_id"),
+            ("candidate_type", "candidate_type"),
+            ("status", "status"),
+            ("decision_type", "decision_type"),
+            ("previous_status", "previous_status"),
+            ("promotion_status", "promotion_status"),
+            ("eval_run_id", "eval_run_id"),
+            ("reviewed_by", "reviewed_by"),
+            ("created_at", "created_at"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
 }
 
 

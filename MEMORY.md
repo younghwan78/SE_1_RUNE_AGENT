@@ -33,7 +33,7 @@ Do not use or recreate removed planning files:
 - Approval safety: idempotency, version/proposal-hash stale checks, RBAC, audit.
 - Feedback/eval/improvement loop with feedback taxonomy, eval candidates, improvement candidates, review/canary/active/rollback flow, and security-blocked eval path.
 - SQLite persistence and restore.
-- PostgreSQL state store, typed core/operation mirrors, migrations, rollback validation, audit archive/prune, idempotency restore, replay restore, failed run persistence.
+- PostgreSQL state store, typed core/operation mirrors, migrations, rollback validation, audit archive/prune, idempotency restore, replay restore, improvement decision restore, failed run persistence.
 - Neo4j graph backend and Qdrant vector backend foundations.
 - Docker-backed backend integration runner and full-stack rehearsal.
 - Scheduler API/UI/runbook path plus PostgreSQL scheduler lease support for Ubuntu multi-worker deployments.
@@ -292,15 +292,20 @@ Follow-up production persistence hardening:
 - Added typed PostgreSQL mirror specs for `llm_call_traces` and
   `replay_results`, keeping full payload JSON and promoting debug/replay lookup
   fields into typed columns.
+- Added PostgreSQL migration `009_improvement_decision_state_tables.sql` and
+  rollback for `improvement_decisions`.
+- Added typed PostgreSQL mirror spec for controlled improvement activation and
+  rollback decisions, keeping full payload JSON and promoting candidate id,
+  status, decision type, eval run, reviewer, and version fields into typed
+  columns.
 - Validation:
-  - `uv run pytest tests/unit/storage/test_postgres_store.py -q`: `10 passed`
+  - `uv run pytest tests/unit/storage/test_postgres_store.py -q`: `11 passed`
   - `uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py`:
-    passed with versions `001` through `008`
+    passed with versions `001` through `009`
   - `uv run python ops/rehearsal/validate_postgres_typed_mirrors.py`: passed
     including dashboard preference/assignment, source sync cursor, LLM call
-    trace, and replay result mirrors
-  - `uv run pytest`: `228 passed, 3 skipped`
-- `uv run pytest`: `219 passed, 3 skipped`
+    trace, replay result, and improvement decision mirrors
+  - `uv run pytest`: `229 passed, 3 skipped`
 - Playwright CLI screenshot smoke was run manually for dashboard/work-queue rendering and deep-link behavior, but it is intentionally not added to CI per user direction.
 
 Remaining dashboard-specific items:
