@@ -148,6 +148,7 @@ Validation:
 - RED/GREEN: `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q` failed before adding the CI requirement and passed after adding it.
 - RED/GREEN: `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q` failed before adding the local gate command and passed after adding it.
 - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local gates passed with staging evidence plan smoke included; overall readiness remains blocked by company/staging evidence.
+- RED/GREEN: `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_guides_every_unresolved_gate -q` failed before Neo4j/Qdrant staging docs guidance was added and passed after adding it.
 
 ## 2026-05-17 Confluence Stale Trace Local Hardening
 

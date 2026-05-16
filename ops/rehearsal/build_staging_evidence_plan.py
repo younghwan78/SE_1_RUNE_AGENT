@@ -93,6 +93,7 @@ GATE_GUIDANCE: dict[str, GateGuidance] = {
             "uv run python ops/rehearsal/run_full_stack_rehearsal.py",
         ),
         required_evidence=("reviewed staging Neo4j test run id or JSON artifact",),
+        docs=("README_ubuntu.md#production-readiness", "docs/runbooks/BACKUP_RESTORE.md"),
     ),
     "company_qdrant_rehearsal": GateGuidance(
         required_env=("QDRANT_TEST_URL or QDRANT_URL", "QDRANT_COLLECTION"),
@@ -101,6 +102,7 @@ GATE_GUIDANCE: dict[str, GateGuidance] = {
             "uv run python ops/rehearsal/run_full_stack_rehearsal.py",
         ),
         required_evidence=("reviewed staging Qdrant test run id or JSON artifact",),
+        docs=("README_ubuntu.md#production-readiness", "docs/runbooks/BACKUP_RESTORE.md"),
     ),
     "company_model_gateway_rehearsal": GateGuidance(
         required_env=("MODEL_GATEWAY_ENDPOINT_URL", "MODEL_GATEWAY_API_KEY if required"),

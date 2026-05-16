@@ -57,6 +57,17 @@ def test_staging_evidence_plan_markdown_is_operator_readable() -> None:
     assert "TODO" not in markdown
 
 
+def test_staging_evidence_plan_guides_every_unresolved_gate() -> None:
+    module = _load_module()
+
+    plan = module.build_staging_evidence_plan({})
+
+    for gate in plan["gates"]:
+        assert gate["commands"], gate["check_id"]
+        assert gate["required_evidence"], gate["check_id"]
+        assert gate["docs"], gate["check_id"]
+
+
 def _load_module() -> ModuleType:
     module_path = Path("ops/rehearsal/build_staging_evidence_plan.py")
     spec = importlib.util.spec_from_file_location("build_staging_evidence_plan", module_path)

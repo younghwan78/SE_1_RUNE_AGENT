@@ -680,6 +680,9 @@ blocking:
     `ops/rehearsal/check_production_readiness.py` `LOCAL_GATE_COMMANDS`.
   - RED/GREEN: `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q` failed before the local gate list was updated and passed after adding it.
   - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed with the staging evidence plan smoke included; overall readiness still failed as expected with summary `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
+  - Added a guard that every unresolved staging evidence gate has command,
+    evidence, and docs guidance; filled Neo4j/Qdrant staging doc references.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_guides_every_unresolved_gate -q` failed before Neo4j/Qdrant doc guidance was added and passed after adding it.
 
 ## 5. Completion Gate
 
