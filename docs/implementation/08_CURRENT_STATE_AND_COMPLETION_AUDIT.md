@@ -244,9 +244,9 @@ Latest local verification:
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment
 
-Latest implementation GitHub verification:
+Latest implementation GitHub Actions verification:
 
-- Latest pushed GitHub Actions `CI` run `25967338344` for `360b68e`: completed
+- GitHub Actions `CI` run `25967338344` for implementation commit `360b68e`: completed
   successfully
 - GitHub Actions `CI` run `25967125938` for `e964e3b`: completed successfully
 - GitHub Actions `CI` run `25966865346` for `9aa1c22`: completed successfully
