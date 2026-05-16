@@ -87,6 +87,28 @@ class EdgeReasoningOutput(BaseModel):
     counter_evidence_refs: list[str] = Field(default_factory=list)
 
 
+class NodeExtractionReasoningOutput(BaseModel):
+    """Structured local LLM trace for node extraction review."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    extracted_node_count: int = Field(ge=0)
+    confidence_score: float = Field(ge=0.0, le=1.0)
+    rationale: str
+    counter_evidence_refs: list[str] = Field(default_factory=list)
+
+
+class FindingReasoningOutput(BaseModel):
+    """Structured local LLM trace for finding reasoning review."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    finding_count: int = Field(ge=0)
+    confidence_score: float = Field(ge=0.0, le=1.0)
+    rationale: str
+    counter_evidence_refs: list[str] = Field(default_factory=list)
+
+
 class LocalAnalysisWorkflow:
     """Local workflow using dummy source and in-memory backends."""
 
@@ -181,6 +203,12 @@ class LocalAnalysisWorkflow:
             for raw, artifact in zip(fetch.artifacts, artifacts, strict=True)
         ]
         self.graph.stage_baseline_nodes(nodes)
+        node_reasoning, node_validation = self._run_llm_node_extraction_review(
+            run_id=run_id,
+            step_id=extract_step.step_id,
+            nodes=nodes,
+            chunks=chunks,
+        )
         self.traces.finish_step(
             step_id=extract_step.step_id,
             output_payload=[node.model_dump(mode="json") for node in nodes],
@@ -190,6 +218,8 @@ class LocalAnalysisWorkflow:
                 "node_count": len(nodes),
                 "evidence_required": True,
                 "evidence_attached": all(node.evidence for node in nodes),
+                "llm_review": node_reasoning.model_dump(mode="json"),
+                "llm_validation_status": node_validation.status,
             },
         )
 
@@ -247,11 +277,22 @@ class LocalAnalysisWorkflow:
             source_artifacts=fetch.artifacts,
             evidence_by_external_id=evidence_by_external,
         )
+        finding_reasoning, finding_validation = self._run_llm_finding_reasoning_review(
+            run_id=run_id,
+            step_id=finding_step.step_id,
+            findings=findings,
+            nodes=nodes,
+            edges=edges,
+        )
         self.traces.finish_step(
             step_id=finding_step.step_id,
             output_payload=[finding.model_dump(mode="json") for finding in findings],
             validation_status="passed",
-            validation_result={"finding_count": len(findings)},
+            validation_result={
+                "finding_count": len(findings),
+                "llm_review": finding_reasoning.model_dump(mode="json"),
+                "llm_validation_status": finding_validation.status,
+            },
         )
 
         approval_step = self.traces.start_step(
@@ -584,6 +625,140 @@ class LocalAnalysisWorkflow:
             raise RuntimeError(f"dummy LLM edge reasoning failed validation: {validation}")
         return parsed, validation
 
+    def _run_llm_node_extraction_review(
+        self,
+        *,
+        run_id: str,
+        step_id: str,
+        nodes: list[OntologyNode],
+        chunks: list[ArtifactChunk],
+    ) -> tuple[NodeExtractionReasoningOutput, StructuredValidationResult]:
+        """Record traceable local LLM review metadata for node extraction."""
+        profile = _dummy_model_profile()
+        prompt = PromptVersion(
+            prompt_version_id="pv_node_extraction_v1",
+            task_name="node_extraction",
+            template="Extract MBSE ontology nodes from masked source evidence.",
+            schema_version_ref="ontology.v1.node_extraction",
+            retrieval_policy_id="ret_dummy_v1",
+            created_by="system",
+            status="active",
+        )
+        provider = DummyModelProvider(
+            fixtures={
+                "node_extraction": {
+                    "extracted_node_count": len(nodes),
+                    "confidence_score": 0.9 if nodes else 0.0,
+                    "rationale": (
+                        "Deterministic dummy LLM reviewed extracted ontology nodes "
+                        "behind the model gateway."
+                    ),
+                    "counter_evidence_refs": [],
+                }
+            }
+        )
+        client = ModelGatewayClient(
+            provider=provider,
+            profile=profile,
+            prompt=prompt,
+            trace_repo=self.traces,
+            artifact_store=self.artifact_store,
+        )
+        request = ModelRequest(
+            model_profile_id=profile.model_profile_id,
+            prompt_version_id=prompt.prompt_version_id,
+            payload={
+                "fixture_name": "node_extraction",
+                "chunk_ids": [chunk.chunk_id for chunk in chunks],
+                "node_ids": [node.node_id for node in nodes],
+            },
+            data_classification="restricted",
+            masking_applied=True,
+            access_checked=True,
+        )
+        _response, parsed, validation = client.complete(
+            run_id=run_id,
+            step_id=step_id,
+            request=request,
+            response_model=NodeExtractionReasoningOutput,
+        )
+        self._record_model_metadata(
+            run_id=run_id,
+            model_profile_id=profile.model_profile_id,
+            prompt_version_id=prompt.prompt_version_id,
+        )
+        if parsed is None:
+            raise RuntimeError(f"dummy LLM node extraction failed validation: {validation}")
+        return parsed, validation
+
+    def _run_llm_finding_reasoning_review(
+        self,
+        *,
+        run_id: str,
+        step_id: str,
+        findings: list[Finding],
+        nodes: list[OntologyNode],
+        edges: list[TraceabilityEdge],
+    ) -> tuple[FindingReasoningOutput, StructuredValidationResult]:
+        """Record traceable local LLM review metadata for finding reasoning."""
+        profile = _dummy_model_profile()
+        prompt = PromptVersion(
+            prompt_version_id="pv_finding_reasoning_v1",
+            task_name="finding_reasoning",
+            template="Explain deterministic findings using supplied graph evidence.",
+            schema_version_ref="ontology.v1.finding_reasoning",
+            retrieval_policy_id="ret_dummy_v1",
+            created_by="system",
+            status="active",
+        )
+        provider = DummyModelProvider(
+            fixtures={
+                "finding_reasoning": {
+                    "finding_count": len(findings),
+                    "confidence_score": 0.87 if findings else 0.0,
+                    "rationale": (
+                        "Deterministic dummy LLM reviewed findings behind the model "
+                        "gateway for debug trace completeness."
+                    ),
+                    "counter_evidence_refs": [],
+                }
+            }
+        )
+        client = ModelGatewayClient(
+            provider=provider,
+            profile=profile,
+            prompt=prompt,
+            trace_repo=self.traces,
+            artifact_store=self.artifact_store,
+        )
+        request = ModelRequest(
+            model_profile_id=profile.model_profile_id,
+            prompt_version_id=prompt.prompt_version_id,
+            payload={
+                "fixture_name": "finding_reasoning",
+                "finding_ids": [finding.finding_id for finding in findings],
+                "node_ids": [node.node_id for node in nodes],
+                "candidate_edge_ids": [edge.edge_id for edge in edges],
+            },
+            data_classification="restricted",
+            masking_applied=True,
+            access_checked=True,
+        )
+        _response, parsed, validation = client.complete(
+            run_id=run_id,
+            step_id=step_id,
+            request=request,
+            response_model=FindingReasoningOutput,
+        )
+        self._record_model_metadata(
+            run_id=run_id,
+            model_profile_id=profile.model_profile_id,
+            prompt_version_id=prompt.prompt_version_id,
+        )
+        if parsed is None:
+            raise RuntimeError(f"dummy LLM finding reasoning failed validation: {validation}")
+        return parsed, validation
+
     def _record_model_metadata(
         self,
         *,
@@ -605,3 +780,24 @@ class LocalAnalysisWorkflow:
         self.traces.runs[run_id] = run.model_copy(
             update={"input_snapshot_ids": list(dict.fromkeys(input_snapshot_ids))}
         )
+
+
+def _dummy_model_profile() -> ModelProfile:
+    """Return the deterministic local model profile used by workflow trace probes."""
+    return ModelProfile(
+        model_profile_id="dummy-local",
+        provider="dummy",
+        model_name="deterministic-dummy",
+        endpoint_alias="local-fixture",
+        allowed_data_classes=[
+            "public_internal",
+            "restricted",
+            "confidential",
+            "no_external_llm",
+        ],
+        supports_json_schema=True,
+        supports_tool_calling=False,
+        max_context_tokens=8192,
+        default_temperature=0.0,
+        timeout_seconds=30,
+    )

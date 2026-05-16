@@ -71,7 +71,7 @@ class ModelGatewayClient:
             self._policy.assert_allowed(attempt_request, profile)
             masked_payload_ref = self._write_artifact(
                 run_id,
-                f"masked_payload_{retry_count}",
+                f"{step_id}_masked_payload_{retry_count}",
                 attempt_request.payload,
             )
             try:
@@ -97,7 +97,7 @@ class ModelGatewayClient:
 
             raw_response_ref = self._write_artifact(
                 run_id,
-                f"raw_response_{retry_count}",
+                f"{step_id}_raw_response_{retry_count}",
                 response.output,
             )
             parsed: TModel | None = None
@@ -113,7 +113,7 @@ class ModelGatewayClient:
                 )
                 parsed_output_ref = self._write_artifact(
                     run_id,
-                    f"parsed_output_{retry_count}",
+                    f"{step_id}_parsed_output_{retry_count}",
                     parsed_payload,
                 )
             response = response.model_copy(

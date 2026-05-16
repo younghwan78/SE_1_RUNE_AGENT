@@ -46,7 +46,7 @@ def test_sqlite_state_store_persists_runtime_outputs(tmp_path) -> None:  # type:
     counts = store.counts_by_collection()
     assert counts["agent_runs"] == 1
     assert counts["agent_step_traces"] >= 8
-    assert counts["llm_call_traces"] == 1
+    assert counts["llm_call_traces"] == 3
     assert counts["source_artifacts"] == 10
     assert counts["source_sync_cursors"] == 1
     assert counts["graph_nodes"] == 10
@@ -204,7 +204,14 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     assert approvals.status_code == 200
     assert any(item["status"] == "approved" for item in approvals.json())
     assert llm_calls.status_code == 200
-    assert llm_calls.json()[0]["model_profile_id"] == "dummy-local"
+    restored_llm_calls = llm_calls.json()
+    assert len(restored_llm_calls) == 3
+    assert {call["model_profile_id"] for call in restored_llm_calls} == {"dummy-local"}
+    assert {call["prompt_version_id"] for call in restored_llm_calls} == {
+        "pv_node_extraction_v1",
+        "pv_edge_linking_v1",
+        "pv_finding_reasoning_v1",
+    }
     assert steps.status_code == 200
     restored_llm_step = next(
         step for step in steps.json() if step["stage_name"] == "llm_assisted_reasoning"
@@ -219,7 +226,11 @@ def test_sqlite_state_store_restores_runtime_after_restart(tmp_path) -> None:  #
     assert replay_diff.json()["source_run_id"] == "run_restore_1"
     assert replay_diff.json()["replay_run_id"] == "replay_restore_1"
     assert replay_diff.json()["compared_model_profile_ids"] == ["dummy-local"]
-    assert replay_diff.json()["compared_prompt_version_ids"] == ["pv_edge_linking_v1"]
+    assert replay_diff.json()["compared_prompt_version_ids"] == [
+        "pv_node_extraction_v1",
+        "pv_edge_linking_v1",
+        "pv_finding_reasoning_v1",
+    ]
     runtime = second_app.state.runtime
     restored_cursor = runtime.source_sync_cursors[
         "src_cursor_dummy_RUNE_CAM_ALPHA_RUNE_CAM_ALPHA"

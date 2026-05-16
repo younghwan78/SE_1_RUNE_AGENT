@@ -116,7 +116,7 @@ def test_metrics_summary_reports_http_and_runtime_counts(client: TestClient) -> 
     }
     assert body["runtime"]["runs"]["total"] == 1
     assert body["runtime"]["steps"]["total"] >= 1
-    assert body["runtime"]["llm_calls"]["total"] == 1
+    assert body["runtime"]["llm_calls"]["total"] == 3
     assert "input_tokens_total" in body["runtime"]["llm_calls"]
     assert "output_tokens_total" in body["runtime"]["llm_calls"]
     assert "cost_usd_total" in body["runtime"]["llm_calls"]

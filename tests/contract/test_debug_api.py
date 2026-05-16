@@ -45,10 +45,14 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
     llm_calls = client.get("/api/v1/runs/run_debug_1/llm-calls")
     assert llm_calls.status_code == 200
     llm_payload = llm_calls.json()
-    assert len(llm_payload) == 1
-    assert llm_payload[0]["model_profile_id"] == "dummy-local"
-    assert llm_payload[0]["prompt_version_id"] == "pv_edge_linking_v1"
-    assert llm_payload[0]["validation_status"] == "passed"
+    assert len(llm_payload) == 3
+    assert {call["model_profile_id"] for call in llm_payload} == {"dummy-local"}
+    assert {call["prompt_version_id"] for call in llm_payload} == {
+        "pv_node_extraction_v1",
+        "pv_edge_linking_v1",
+        "pv_finding_reasoning_v1",
+    }
+    assert {call["validation_status"] for call in llm_payload} == {"passed"}
 
     artifacts = client.get("/api/v1/runs/run_debug_1/artifacts")
     assert artifacts.status_code == 200
@@ -70,11 +74,14 @@ def test_debug_run_summary_and_artifact_read(client: TestClient) -> None:
     assert diff_payload["counts"]["graph_delta_previews"] >= 1
     assert diff_payload["graph_delta_previews"][0]["left"]["label"] == "approved_graph_edges"
     assert diff_payload["graph_delta_previews"][0]["right"]["operations"]
-    assert diff_payload["counts"]["llm_payload_pairs"] == 1
-    assert diff_payload["llm_payload_pairs"][0]["parsed"]["payload"]["candidate_edge_count"] >= 1
-    assert diff_payload["llm_payload_pairs"][0]["parsed"]["payload"][
-        "counter_evidence_refs"
-    ] == []
+    assert diff_payload["counts"]["llm_payload_pairs"] == 3
+    edge_pair = next(
+        pair
+        for pair in diff_payload["llm_payload_pairs"]
+        if pair["prompt_version_id"] == "pv_edge_linking_v1"
+    )
+    assert edge_pair["parsed"]["payload"]["candidate_edge_count"] >= 1
+    assert edge_pair["parsed"]["payload"]["counter_evidence_refs"] == []
 
 
 def test_debug_run_summary_requires_existing_run(client: TestClient) -> None:

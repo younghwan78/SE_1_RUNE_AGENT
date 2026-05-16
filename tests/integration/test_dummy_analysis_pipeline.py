@@ -43,11 +43,22 @@ def test_dummy_analysis_creates_findings_and_approvals(tmp_path) -> None:  # typ
     }
     assert graph.approved_edges() == []
     assert result.run.model_profile_id == "dummy-local"
-    assert result.run.prompt_version_ids == ["pv_edge_linking_v1"]
+    assert result.run.prompt_version_ids == [
+        "pv_node_extraction_v1",
+        "pv_edge_linking_v1",
+        "pv_finding_reasoning_v1",
+    ]
     assert len(result.run.input_snapshot_ids) == len(result.artifacts)
     assert result.run.input_snapshot_ids[0].startswith("src_")
-    assert len(workflow.traces.llm_calls) == 1
-    assert list(workflow.traces.llm_calls.values())[0].validation_status == "passed"
+    assert len(workflow.traces.llm_calls) == 3
+    assert {call.prompt_version_id for call in workflow.traces.llm_calls.values()} == {
+        "pv_node_extraction_v1",
+        "pv_edge_linking_v1",
+        "pv_finding_reasoning_v1",
+    }
+    assert {
+        call.validation_status for call in workflow.traces.llm_calls.values()
+    } == {"passed"}
     llm_step = next(
         step for step in result.steps if step.stage_name == "llm_assisted_reasoning"
     )

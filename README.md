@@ -269,6 +269,7 @@ Current local implementation:
   routes sensitive threads to manual review, and masks email thread metadata
 - generic HTTP JSON model provider with file-backed model/prompt registry
 - local model-gateway smoke harness for HTTP fallback and trace validation
+- traceable dummy model-gateway calls for node extraction, edge linking, and finding reasoning
 - in-memory graph/vector backends
 - deterministic critical-impact rule for issues affecting P0/critical requirements
 - deterministic architecture verification-path rule for architecture blocks with no direct

@@ -109,6 +109,11 @@ Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
 - Latest pushed GitHub Actions `CI` run `25965768329` for `c2004f2` passed.
 - Latest full local regression after masking policy violation workflow block:
   `uv run pytest` reported `239 passed, 3 skipped`.
+- Latest full local regression after traceable node/finding LLM stage coverage:
+  `uv run pytest` reported `239 passed, 3 skipped`; readiness local regression
+  gates passed, while the overall readiness summary remains
+  `failed=7`, `manual_required=10`, `passed=2`, `warning=0` until
+  company/staging evidence is supplied.
 
 ## 4. Company/Staging Gates
 

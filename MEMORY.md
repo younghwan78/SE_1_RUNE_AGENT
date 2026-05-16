@@ -27,6 +27,9 @@ Do not use or recreate removed planning files:
 - FastAPI API skeleton and OpenAPI surface guard.
 - Pydantic contracts for ontology, debug traces, approvals, feedback, audit, source adapter contracts, and source sync cursor snapshots.
 - Local deterministic analysis workflow with ingestion, masking, chunking, evidence spans, node extraction, edge linking, findings, approval staging, LLM-assisted reasoning trace, and replay diff.
+- The local workflow records dummy model-gateway traces for node extraction,
+  edge linking, and finding reasoning using `pv_node_extraction_v1`,
+  `pv_edge_linking_v1`, and `pv_finding_reasoning_v1`.
 - Masking policy violations stop analysis before node extraction/LLM reasoning,
   mark the mask/chunk step failed, persist a security-review debug artifact
   reference, and fail the run with `MASKING_POLICY_VIOLATION`.
@@ -143,6 +146,27 @@ Do not mark the overall production goal complete until a completion audit verifi
   - `uv run pytest tests/unit/ingestion/test_masking_chunking.py tests/integration/test_dummy_analysis_pipeline.py tests/unit/api/test_runtime_state.py tests/contract/test_run_api.py tests/unit/debug/test_trace_recorder.py -q`: `20 passed`
   - `uv run pytest tests/unit/ops/test_release_blocker_checker.py tests/integration/test_dummy_analysis_pipeline.py::test_masking_policy_violation_blocks_analysis_and_routes_security_review -q`: `3 passed`
   - `uv run python ops/security/check_release_blockers.py`: passed, now including the workflow-level masking block integration evidence
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `239 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`: local regression gates passed; overall readiness still fails as expected with `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because company/staging variables and reviewed evidence are unset.
+
+## 2026-05-17 Traceable Node/Finding LLM Stage Coverage
+
+- Extended `LocalAnalysisWorkflow` so the local deterministic analysis run now
+  records model-gateway traces for node extraction and finding reasoning in
+  addition to edge-linking reasoning.
+- Prompt trace coverage now includes:
+  - `pv_node_extraction_v1`
+  - `pv_edge_linking_v1`
+  - `pv_finding_reasoning_v1`
+- Updated debug, replay, persistence, integration, and metrics contracts to
+  expect three LLM call traces per local analysis run.
+- Changed `ModelGatewayClient` artifact names to include `step_id`, preventing
+  multi-stage calls in the same run from overwriting `masked_payload`,
+  `raw_response`, or `parsed_output` debug artifacts.
+- Verification:
+  - `uv run pytest tests/contract/test_health_api.py::test_metrics_summary_reports_http_and_runtime_counts tests/unit/model_gateway tests/contract/test_debug_api.py tests/contract/test_replay_feedback_api.py tests/contract/test_persistence_api.py tests/integration/test_dummy_analysis_pipeline.py -q`: `40 passed`
   - `uv run ruff check .`: passed
   - `uv run mypy src`: passed
   - `uv run pytest`: `239 passed, 3 skipped`
