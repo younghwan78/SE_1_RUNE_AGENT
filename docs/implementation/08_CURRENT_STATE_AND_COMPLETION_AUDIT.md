@@ -1407,6 +1407,25 @@ blocking:
     has no local-action blockers, but full production completion remains
     blocked by company/staging endpoint configuration and reviewed manual
     evidence.
+- 2026-05-17 complete handoff bundle missing env guard:
+  - `ops/rehearsal/validate_handoff_bundle.py` now rejects a bundle with
+    `goal_complete=true` if `readiness_passed` is not true,
+    `remaining_blocker_count` is non-zero, or `missing_env` /
+    `missing_env_count` still indicates unresolved staging configuration.
+  - RED/GREEN:
+    `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_complete_bundle_with_missing_env -q`
+    failed while a tampered complete bundle with matching hash and manifest
+    `missing_env=["POSTGRES_DSN"]` passed validation, then passed after the
+    complete-state consistency guard was added.
+  - Verification:
+    `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_goal_completion_audit.py -q`
+    passed with `23 passed`;
+    `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`
+    passed; `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
 
 ## 5. Completion Gate
 

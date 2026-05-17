@@ -270,6 +270,42 @@ def test_handoff_bundle_validator_accepts_complete_reviewed_evidence_bundle(tmp_
     assert report["passed"] is True
 
 
+def test_handoff_bundle_validator_rejects_complete_bundle_with_missing_env(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
+    validator = _load_module(
+        "validate_handoff_bundle",
+        "ops/rehearsal/validate_handoff_bundle.py",
+    )
+    env_path = tmp_path / "staging.env"
+    env_path.write_text("\n".join(_complete_production_env_lines()), encoding="utf-8")
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text(json.dumps(_complete_manual_evidence()), encoding="utf-8")
+    bundle_dir = tmp_path / "bundle"
+    builder.build_handoff_bundle(
+        bundle_dir,
+        env_file=env_path,
+        evidence_file=evidence_path,
+        run_local_gates=False,
+    )
+    plan_path = bundle_dir / "staging-evidence-plan.md"
+    plan_path.write_text(
+        plan_path.read_text(encoding="utf-8")
+        + "\n## tampered_missing_env\n\n- Missing env: `POSTGRES_DSN`\n",
+        encoding="utf-8",
+    )
+    manifest_path = bundle_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["missing_env"] = ["POSTGRES_DSN"]
+    manifest["missing_env_count"] = 1
+    manifest["artifact_hashes"]["staging-evidence-plan.md"] = _sha256(plan_path)
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = validator.validate_handoff_bundle(bundle_dir)
+
+    assert report["passed"] is False
+    assert "complete_bundle_has_missing_env" in report["failures"]
+
+
 def _complete_production_env_lines() -> list[str]:
     return [
         "STATE_STORE=postgres",

@@ -107,6 +107,7 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
         if goal_report.get("summary") != manifest.get("goal_summary"):
             failures.append("goal_summary_mismatch")
         _validate_manifest_blockers(goal_report, manifest, failures)
+        _validate_manifest_completion_state(manifest, failures)
     if manual_template:
         _validate_schema(manual_template, "manual-evidence-template", failures)
     if readiness_report and manual_template:
@@ -199,6 +200,20 @@ def _validate_manifest_missing_env(
         failures.append("missing_env_mismatch")
     if manifest.get("missing_env_count") != len(expected):
         failures.append("missing_env_count_mismatch")
+
+
+def _validate_manifest_completion_state(
+    manifest: Mapping[str, Any],
+    failures: list[str],
+) -> None:
+    if manifest.get("goal_complete") is not True:
+        return
+    if manifest.get("readiness_passed") is not True:
+        failures.append("complete_bundle_readiness_not_passed")
+    if manifest.get("remaining_blocker_count") != 0:
+        failures.append("complete_bundle_has_remaining_blockers")
+    if _string_list(manifest.get("missing_env")) or manifest.get("missing_env_count") != 0:
+        failures.append("complete_bundle_has_missing_env")
 
 
 def _missing_env_from_staging_plan(content: str) -> list[str]:

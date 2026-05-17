@@ -2337,3 +2337,26 @@ Remaining production gap is unchanged:
   the current workstation boundary, but the overall goal must remain active
   until company/staging endpoint configuration and reviewed manual evidence
   are supplied.
+
+## 2026-05-17 Complete Handoff Bundle Missing Env Guard
+
+- Hardened `ops/rehearsal/validate_handoff_bundle.py` so a bundle with
+  `goal_complete=true` cannot also carry `missing_env` or a non-zero
+  `missing_env_count`.
+- The validator also rejects complete bundles whose `readiness_passed` is not
+  true or whose `remaining_blocker_count` is non-zero.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_complete_bundle_with_missing_env -q`
+    failed while a tampered complete bundle with matching hash and manifest
+    `missing_env=["POSTGRES_DSN"]` passed validation.
+  - The same test passed after adding the complete-state consistency guard.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_goal_completion_audit.py -q`:
+    `23 passed`
+  - `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
