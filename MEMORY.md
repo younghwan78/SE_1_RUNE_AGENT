@@ -2262,3 +2262,25 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+
+## 2026-05-17 Local Handoff Assertion Missing Env Output
+
+- `ops/rehearsal/assert_local_handoff_complete.py` now echoes
+  `missing_env` and `missing_env_count` from the handoff manifest in its
+  structured output.
+- Rationale: this is the final local handoff command, so its output should show
+  the same staging environment gap summary as the validator report.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_local_handoff_assertion.py::test_local_handoff_assertion_passes_when_no_local_blockers -q`
+    failed with `KeyError: 'missing_env_count'`, then passed after the
+    assertion output copied the manifest fields.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_local_handoff_assertion.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py -q`:
+    `18 passed`
+  - `uv run ruff check ops/rehearsal/assert_local_handoff_complete.py tests/unit/ops/test_local_handoff_assertion.py`:
+    passed
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.

@@ -15,6 +15,8 @@ def test_local_handoff_assertion_passes_when_no_local_blockers(tmp_path) -> None
         {
             "goal_complete": False,
             "remaining_blocker_count": 20,
+            "missing_env_count": 2,
+            "missing_env": ["MODEL_GATEWAY_ENDPOINT_URL", "POSTGRES_DSN"],
             "blocker_summary": {
                 "company_or_staging_evidence_required": 20,
                 "local_action_required": 0,
@@ -32,6 +34,8 @@ def test_local_handoff_assertion_passes_when_no_local_blockers(tmp_path) -> None
 
     assert report["passed"] is True
     assert report["remaining_blocker_count"] == 20
+    assert report["missing_env_count"] == 2
+    assert report["missing_env"] == ["MODEL_GATEWAY_ENDPOINT_URL", "POSTGRES_DSN"]
     assert report["blocker_summary"]["local_action_required"] == 0
     assert report["failures"] == []
 
@@ -97,6 +101,8 @@ def _write_manifest(bundle_dir: Path, values: dict[str, object]) -> None:
         "schema_version": "v1",
         "goal_complete": values["goal_complete"],
         "remaining_blocker_count": values["remaining_blocker_count"],
+        "missing_env_count": values.get("missing_env_count", 0),
+        "missing_env": values.get("missing_env", []),
         "blocker_summary": values["blocker_summary"],
     }
     (bundle_dir / "manifest.json").write_text(

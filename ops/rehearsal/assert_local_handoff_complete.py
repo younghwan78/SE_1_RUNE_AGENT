@@ -16,6 +16,8 @@ def assert_local_handoff_complete(bundle_dir: Path) -> dict[str, Any]:
     local_action_required = blocker_summary.get("local_action_required")
     company_required = blocker_summary.get("company_or_staging_evidence_required")
     local_action_blockers = _string_list(blocker_summary.get("local_action_blockers"))
+    missing_env = _string_list(manifest.get("missing_env"))
+    missing_env_count = manifest.get("missing_env_count")
 
     if local_action_required != 0:
         failures.append(f"local_action_required:{local_action_required}")
@@ -34,6 +36,8 @@ def assert_local_handoff_complete(bundle_dir: Path) -> dict[str, Any]:
         "bundle_dir": str(bundle_dir),
         "goal_complete": manifest.get("goal_complete"),
         "remaining_blocker_count": remaining_blocker_count,
+        "missing_env_count": missing_env_count,
+        "missing_env": missing_env,
         "blocker_summary": blocker_summary,
         "failures": failures,
         "passed": not failures,
