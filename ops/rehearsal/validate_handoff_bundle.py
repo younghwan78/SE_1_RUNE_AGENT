@@ -214,6 +214,23 @@ def _validate_manifest_completion_state(
         failures.append("complete_bundle_has_remaining_blockers")
     if _string_list(manifest.get("missing_env")) or manifest.get("missing_env_count") != 0:
         failures.append("complete_bundle_has_missing_env")
+    if _has_blocker_summary_entries(manifest.get("blocker_summary")):
+        failures.append("complete_bundle_has_blocker_summary")
+
+
+def _has_blocker_summary_entries(value: object) -> bool:
+    if not isinstance(value, Mapping):
+        return False
+    if value.get("local_action_required") not in (None, 0):
+        return True
+    if value.get("company_or_staging_evidence_required") not in (None, 0):
+        return True
+    if _string_list(value.get("local_action_blockers")):
+        return True
+    by_status = value.get("by_status")
+    if isinstance(by_status, Mapping):
+        return any(count != 0 for count in by_status.values())
+    return False
 
 
 def _missing_env_from_staging_plan(content: str) -> list[str]:

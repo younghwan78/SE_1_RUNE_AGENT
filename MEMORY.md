@@ -2360,3 +2360,26 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+
+## 2026-05-17 Complete Handoff Bundle Blocker Summary Guard
+
+- Hardened `ops/rehearsal/validate_handoff_bundle.py` so a bundle with
+  `goal_complete=true` cannot also carry non-zero `blocker_summary` entries.
+- This closes a semantic gap where a tampered bundle could keep
+  `remaining_blocker_count=0` while preserving a blocker summary that still
+  indicated unresolved company/staging or local-action blockers.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_complete_bundle_with_blocker_summary -q`
+    failed while a tampered complete bundle with matching manifest/report
+    `blocker_summary.company_or_staging_evidence_required=1` passed validation.
+  - The same test passed after adding the complete-state blocker-summary guard.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_runbook_docs.py -q`:
+    `29 passed`
+  - `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
