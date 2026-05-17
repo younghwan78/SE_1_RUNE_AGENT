@@ -150,7 +150,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 260 passed, 3 skipped
+- `uv run pytest`: 261 passed, 3 skipped
 - `uv run pytest tests/unit/model_gateway -q`: 16 passed, validating dummy
   provider calls, policy enforcement, structured validation retry, fallback
   trace recording, provider usage metadata, and same-input model/prompt
@@ -269,6 +269,11 @@ Latest local verification:
   can load a secure KEY=VALUE staging env file together with reviewed evidence
   without printing secret values
 - `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_load_env_file_merges_staging_values_without_printing_secrets tests/unit/ops/test_production_readiness_check.py::test_load_env_file_rejects_invalid_lines -q`: 2 passed
+- `ops/rehearsal/build_staging_evidence_plan.py` accepts `--env-file` so the
+  collection plan can be generated from the same secure staging env file as the
+  readiness and goal-completion audits
+- `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`: 5 passed
+- `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file .env.example --format markdown`: passed, reporting `Unresolved gates: 17` and summary `failed=6`, `manual_required=11`, `passed=2`, `warning=0`
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example`: passed structurally with `goal_complete=false`, validating the env-file audit input path
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`: passed structurally with `goal_complete=false`, `remaining_blocker_count=20`, `prompt_to_artifact_checklist_count=6`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior

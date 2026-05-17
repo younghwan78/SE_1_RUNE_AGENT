@@ -45,6 +45,34 @@ def test_staging_evidence_plan_includes_kubernetes_gate_when_selected() -> None:
     assert "helm lint ops/helm/rune-agent" in gates["kubernetes_helm_rehearsal"]["commands"]
 
 
+def test_staging_evidence_plan_loads_env_file_without_leaking_secret(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    module = _load_module()
+    env_path = tmp_path / "staging.env"
+    env_path.write_text(
+        "\n".join(
+            [
+                "STATE_STORE=postgres",
+                "POSTGRES_DSN=postgresql://rune:secret@db/rune_agent",
+                "GRAPH_BACKEND=neo4j",
+                "NEO4J_URI=bolt://neo4j:7687",
+                "NEO4J_USERNAME=neo4j",
+                "NEO4J_PASSWORD=secret",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    env = module.load_plan_env(env_path)
+    plan = module.build_staging_evidence_plan(env)
+
+    gates = {gate["check_id"]: gate for gate in plan["gates"]}
+    assert "postgres_state_store" not in gates
+    assert "neo4j_graph_backend" not in gates
+    assert "qdrant_vector_backend" in gates
+    assert "rune:secret" not in str(plan)
+    assert "bolt://neo4j" not in str(plan)
+
+
 def test_staging_evidence_plan_markdown_is_operator_readable() -> None:
     module = _load_module()
 

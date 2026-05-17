@@ -148,6 +148,7 @@ Generate the matching command/evidence collection plan:
 
 ```bash
 uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown \
+  --env-file /secure/path/staging.env \
   --output /secure/path/staging_evidence_plan.md
 ```
 

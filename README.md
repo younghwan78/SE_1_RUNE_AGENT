@@ -103,6 +103,14 @@ uv run python ops/rehearsal/check_production_readiness.py `
   --evidence-file ops/rehearsal/production_readiness_evidence.example.json
 ```
 
+Generate an evidence collection plan from the same environment file:
+
+```powershell
+uv run python ops/rehearsal/build_staging_evidence_plan.py `
+  --env-file .env.example `
+  --format markdown
+```
+
 Run the top-level goal-completion audit before declaring this implementation
 complete. Use the same reviewed evidence file after company/staging rehearsals:
 

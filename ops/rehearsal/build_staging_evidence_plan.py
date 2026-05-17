@@ -188,8 +188,15 @@ def main() -> int:
         type=Path,
         help="Optional output path. Omit to print to stdout.",
     )
+    parser.add_argument(
+        "--env-file",
+        type=Path,
+        default=None,
+        help="Optional KEY=VALUE environment file for company/staging checks.",
+    )
     args = parser.parse_args()
-    plan = build_staging_evidence_plan(os.environ)
+    env = load_plan_env(args.env_file, os.environ) if args.env_file else dict(os.environ)
+    plan = build_staging_evidence_plan(env)
     rendered = (
         json.dumps(plan, indent=2, sort_keys=True)
         if args.format == "json"
@@ -200,6 +207,12 @@ def main() -> int:
     else:
         print(rendered)
     return 0
+
+
+def load_plan_env(path: Path, base_env: Mapping[str, str] | None = None) -> dict[str, str]:
+    """Load the staging evidence plan environment through the readiness parser."""
+    checker = _load_readiness_checker()
+    return checker.load_env_file(path, base_env or {})
 
 
 def build_staging_evidence_plan(env: Mapping[str, str]) -> dict[str, Any]:

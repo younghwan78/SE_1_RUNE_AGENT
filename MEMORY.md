@@ -869,6 +869,22 @@ Validation evidence:
   `manual_required=10`, `passed=3`, `warning=0`. This validates the intended
   release-style env-file plus local-gates execution path; remaining blockers
   still require real company/staging values and reviewed manual evidence.
+- Added `--env-file` support to `ops/rehearsal/build_staging_evidence_plan.py`
+  so the evidence collection plan can be generated from the same secure staging
+  env file used by readiness and goal-completion audits.
+- Updated `README.md` and `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`
+  with `build_staging_evidence_plan.py --env-file` examples.
+- `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`: `5 passed`
+- `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file .env.example --format markdown`:
+  passed, reporting `Unresolved gates: 17` and summary `failed=6`,
+  `manual_required=11`, `passed=2`, `warning=0`.
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `261 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`:
+  passed structurally with `goal_complete=false`, `remaining_blocker_count=20`,
+  `prompt_to_artifact_checklist_count=6`, readiness summary `failed=6`,
+  `manual_required=10`, `passed=3`, `warning=0`.
 
 Remaining production gap is unchanged:
 
