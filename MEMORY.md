@@ -914,6 +914,19 @@ Validation evidence:
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`:
   passed structurally with `goal_complete=false`, `remaining_blocker_count=20`,
   `release_scope_goal_ready=false`, and `production_readiness_passed=false`.
+- Added `--output` support to `ops/rehearsal/check_production_readiness.py` and
+  `ops/rehearsal/check_goal_completion.py` so staging readiness and final
+  goal-completion reports can be written as JSON artifacts for review/retention
+  instead of being copied from stdout.
+- Reused `write_json_output` for readiness evidence-template writing and added
+  unit coverage for JSON artifact output.
+- Updated `README.md` and `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`
+  with `--output` examples for readiness and goal-completion reports.
+- `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_write_json_output_writes_report_artifact -q`:
+  `1 passed`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `263 passed, 3 skipped`
 
 Remaining production gap is unchanged:
 

@@ -150,7 +150,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 262 passed, 3 skipped
+- `uv run pytest`: 263 passed, 3 skipped
 - `uv run pytest tests/unit/model_gateway -q`: 16 passed, validating dummy
   provider calls, policy enforcement, structured validation retry, fallback
   trace recording, provider usage metadata, and same-input model/prompt
@@ -279,6 +279,10 @@ Latest local verification:
 - GitHub Actions `CI` now includes env-file smoke gates for readiness evidence template generation, staging evidence plan generation, and goal-completion audit; `uv run python ops/rehearsal/validate_ci_gate_coverage.py` passed with `ci_command_count=26`
 - `check_goal_completion.py` now resolves `company_evidence_required` release-scope items through mapped production-readiness checks, preserving local `release_ready=false` while allowing reviewed company/staging evidence to drive `release_scope_goal_ready=true` and ultimately `goal_complete=true`
 - `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`: 5 passed, including complete reviewed-evidence goal-completion coverage
+- `ops/rehearsal/check_production_readiness.py` and
+  `ops/rehearsal/check_goal_completion.py` accept `--output` to persist JSON
+  readiness and goal-completion report artifacts for staging review/retention
+- `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_write_json_output_writes_report_artifact -q`: 1 passed
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment

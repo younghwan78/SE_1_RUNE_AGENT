@@ -1,6 +1,7 @@
 """Production-readiness checker tests."""
 
 import importlib.util
+import json
 from pathlib import Path
 from types import ModuleType
 
@@ -207,6 +208,22 @@ def test_load_env_file_rejects_invalid_lines(tmp_path) -> None:  # type: ignore[
 
     with pytest.raises(ValueError, match="must be KEY=VALUE"):
         checker.load_env_file(env_path)
+
+
+def test_write_json_output_writes_report_artifact(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    output_path = tmp_path / "readiness-report.json"
+
+    checker.write_json_output(
+        {"schema_version": "v1", "passed": False, "summary": {"failed": 1}},
+        output_path,
+    )
+
+    assert json.loads(output_path.read_text(encoding="utf-8")) == {
+        "schema_version": "v1",
+        "passed": False,
+        "summary": {"failed": 1},
+    }
 
 
 def test_load_manual_evidence_rejects_passed_without_review_metadata(tmp_path) -> None:  # type: ignore[no-untyped-def]

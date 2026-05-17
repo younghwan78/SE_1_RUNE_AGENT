@@ -100,7 +100,8 @@ failed, warning, or manual-required checks:
 ```powershell
 uv run python ops/rehearsal/check_production_readiness.py `
   --env-file .env.example `
-  --evidence-file ops/rehearsal/production_readiness_evidence.example.json
+  --evidence-file ops/rehearsal/production_readiness_evidence.example.json `
+  --output .local_artifacts/readiness-report.json
 ```
 
 Generate an evidence collection plan from the same environment file:
@@ -118,7 +119,8 @@ complete. Use the same reviewed evidence file after company/staging rehearsals:
 uv run python ops/rehearsal/check_goal_completion.py `
   --env-file .env.example `
   --run-local-gates `
-  --evidence-file ops/rehearsal/production_readiness_evidence.example.json
+  --evidence-file ops/rehearsal/production_readiness_evidence.example.json `
+  --output .local_artifacts/goal-completion-report.json
 ```
 
 Run the API locally:

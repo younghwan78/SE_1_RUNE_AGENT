@@ -382,6 +382,12 @@ def main() -> int:
         default=None,
         help="Optional KEY=VALUE environment file for company/staging checks.",
     )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Optional JSON report output path. Use '-' to print to stdout.",
+    )
     args = parser.parse_args()
     env = (
         READINESS_MODULE.load_env_file(args.env_file, os.environ)
@@ -398,7 +404,10 @@ def main() -> int:
         run_local_gates=args.run_local_gates,
         manual_evidence=manual_evidence,
     )
-    print(json.dumps(report, indent=2, sort_keys=True))
+    if args.output:
+        READINESS_MODULE.write_json_output(report, args.output)
+    else:
+        print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["goal_complete"] or args.allow_incomplete else 1
 
 

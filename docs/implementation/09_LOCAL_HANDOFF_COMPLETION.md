@@ -157,7 +157,8 @@ After replacing TODO entries with reviewed evidence:
 ```bash
 uv run python ops/rehearsal/check_production_readiness.py \
   --env-file /secure/path/staging.env \
-  --evidence-file /secure/path/production_readiness_evidence.json
+  --evidence-file /secure/path/production_readiness_evidence.json \
+  --output /secure/path/production_readiness_report.json
 ```
 
 Before declaring the overall implementation goal complete, run the top-level
@@ -167,7 +168,8 @@ completion audit with the same reviewed evidence file:
 uv run python ops/rehearsal/check_goal_completion.py \
   --env-file /secure/path/staging.env \
   --run-local-gates \
-  --evidence-file /secure/path/production_readiness_evidence.json
+  --evidence-file /secure/path/production_readiness_evidence.json \
+  --output /secure/path/goal_completion_report.json
 ```
 
 ## 5. Source Skill Export Dry-Run

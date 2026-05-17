@@ -176,6 +176,15 @@ def load_env_file(path: Path, base_env: Mapping[str, str] | None = None) -> dict
     return merged
 
 
+def write_json_output(payload: Mapping[str, Any], output_path: Path) -> None:
+    """Write a JSON payload to stdout or an artifact path."""
+    rendered = json.dumps(payload, indent=2, sort_keys=True)
+    if str(output_path) == "-":
+        print(rendered)
+        return
+    output_path.write_text(rendered + "\n", encoding="utf-8")
+
+
 def _strip_env_quotes(value: str) -> str:
     if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
         return value[1:-1]
@@ -724,18 +733,17 @@ def main() -> int:
             "company/staging gates. Use '-' to print to stdout."
         ),
     )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Optional JSON report output path. Use '-' to print to stdout.",
+    )
     args = parser.parse_args()
     env = load_env_file(args.env_file, os.environ) if args.env_file else dict(os.environ)
     if args.write_evidence_template is not None:
         template = build_manual_evidence_template(env)
-        template_json = json.dumps(template, indent=2, sort_keys=True)
-        if str(args.write_evidence_template) == "-":
-            print(template_json)
-        else:
-            args.write_evidence_template.write_text(
-                template_json + "\n",
-                encoding="utf-8",
-            )
+        write_json_output(template, args.write_evidence_template)
         return 0
     manual_evidence = load_manual_evidence(args.evidence_file) if args.evidence_file else []
     report = build_readiness_report(
@@ -744,7 +752,10 @@ def main() -> int:
         command_timeout_seconds=args.command_timeout_seconds,
         manual_evidence=manual_evidence,
     )
-    print(json.dumps(report, indent=2, sort_keys=True))
+    if args.output:
+        write_json_output(report, args.output)
+    else:
+        print(json.dumps(report, indent=2, sort_keys=True))
     return 0 if report["passed"] else 1
 
 
