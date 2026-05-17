@@ -305,6 +305,7 @@ def render_markdown(plan: Mapping[str, Any]) -> str:
                 f"- Status: `{gate['status']}`",
                 f"- Summary: {gate['summary']}",
                 f"- Next action: {gate['next_action'] or 'review the gate summary'}",
+                f"- Missing env: {_inline_list(gate['missing_env'])}",
                 f"- Required env: {_inline_list(gate['required_env'])}",
                 "- Commands:",
                 *[f"  - `{command}`" for command in gate["commands"]],
@@ -331,6 +332,7 @@ def _gate_plan(check: Mapping[str, Any]) -> dict[str, Any]:
         "summary": check["summary"],
         "next_action": check.get("next_action"),
         "current_evidence": _mask_evidence(check.get("evidence", [])),
+        "missing_env": _missing_env_from_evidence(check.get("evidence", [])),
         "required_env": list(guidance.required_env),
         "commands": list(guidance.commands),
         "required_evidence": list(guidance.required_evidence),
@@ -351,6 +353,19 @@ def _mask_evidence(values: object) -> list[str]:
         else:
             masked.append(value)
     return masked
+
+
+def _missing_env_from_evidence(values: object) -> list[str]:
+    if not isinstance(values, Sequence) or isinstance(values, str):
+        return []
+    missing: set[str] = set()
+    for value in values:
+        if not isinstance(value, str):
+            continue
+        key, separator, suffix = value.partition("=")
+        if separator and suffix == "<unset>" and key:
+            missing.add(key)
+    return sorted(missing)
 
 
 def _inline_list(values: Sequence[str]) -> str:

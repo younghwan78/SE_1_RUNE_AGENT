@@ -21,6 +21,7 @@ def test_staging_evidence_plan_lists_unresolved_gates_without_secrets() -> None:
     assert "postgres_state_store" in gates
     assert "company_jira_sandbox_rehearsal" in gates
     assert "POSTGRES_DSN" in " ".join(gates["postgres_state_store"]["required_env"])
+    assert gates["postgres_state_store"]["missing_env"] == ["STATE_STORE"]
     assert (
         "uv run python ops/source/rehearse_company_sources.py --source jira"
         in gates["company_jira_sandbox_rehearsal"]["commands"]
@@ -83,6 +84,7 @@ def test_staging_evidence_plan_markdown_is_operator_readable() -> None:
     assert "## Final Validation" in markdown
     assert "## company_model_gateway_rehearsal" in markdown
     assert "- Next action:" in markdown
+    assert "- Missing env:" in markdown
     assert (
         "Run ops/model_gateway/rehearse_model_gateway.py against the "
         "company-approved model provider sandbox."

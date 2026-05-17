@@ -2170,3 +2170,27 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+
+## 2026-05-17 Staging Evidence Missing Env Field
+
+- `ops/rehearsal/build_staging_evidence_plan.py` now exposes
+  `missing_env` for each unresolved gate by parsing checker evidence entries
+  such as `POSTGRES_DSN=<unset>`.
+- The markdown evidence plan now renders `- Missing env:` for every gate.
+- Rationale: release operators should not have to infer missing staging
+  variables from free-form evidence text while resolving company/staging
+  blockers.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_lists_unresolved_gates_without_secrets tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_markdown_is_operator_readable -q`
+    failed with `KeyError: 'missing_env'` and missing markdown text, then
+    passed after implementing structured missing-env extraction and rendering.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`:
+    `9 passed`
+  - `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py tests/unit/ops/test_staging_evidence_plan.py`:
+    passed
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
