@@ -100,6 +100,19 @@ def test_readme_handoff_examples_match_final_audit_commands() -> None:
         assert required in content
 
 
+def test_handoff_runbooks_document_blocker_summary_manifest() -> None:
+    readme = Path("README.md")
+    ubuntu_runbook = Path("README_ubuntu.md")
+    local_handoff = Path("docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md")
+
+    for path in [readme, ubuntu_runbook, local_handoff]:
+        content = path.read_text(encoding="utf-8")
+        assert "blocker_summary" in content
+        assert "local_action_required" in content
+        assert "company_or_staging_evidence_required" in content
+        assert "blocker_summary_mismatch" in content
+
+
 def _normalize_runbook_commands(content: str) -> str:
     return " ".join(
         content.replace("`", " ")

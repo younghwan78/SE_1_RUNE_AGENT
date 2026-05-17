@@ -1918,3 +1918,22 @@ Remaining production gap is unchanged:
     `blocker_summary.company_or_staging_evidence_required=20`.
   - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
     passed with `failures=[]`.
+
+## 2026-05-17 Handoff Runbook Blocker Summary Guard
+
+- Updated `README.md`, `README_ubuntu.md`, and
+  `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` so release owners know
+  that handoff `manifest.json` includes `blocker_summary`.
+- The runbooks now explain:
+  - `blocker_summary.local_action_required`
+  - `blocker_summary.company_or_staging_evidence_required`
+  - `blocker_summary_mismatch`
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_runbook_docs.py::test_handoff_runbooks_document_blocker_summary_manifest -q`
+    failed while the runbooks omitted the blocker summary terms, then passed
+    after updating the handoff sections.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_runbook_docs.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py -q`:
+    `18 passed`
+  - `uv run ruff check tests/unit/ops/test_runbook_docs.py`: passed
+  - `git diff --check`: passed

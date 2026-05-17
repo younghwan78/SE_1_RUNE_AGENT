@@ -1086,6 +1086,18 @@ blocking:
     passed and emitted manifest `blocker_summary.local_action_required=0`,
     `blocker_summary.company_or_staging_evidence_required=20`; validator passed
     with `failures=[]`.
+- 2026-05-17 handoff runbook blocker summary guard:
+  - `README.md`, `README_ubuntu.md`, and
+    `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` now document the
+    handoff manifest `blocker_summary`, including `local_action_required`,
+    `company_or_staging_evidence_required`, and validator
+    `blocker_summary_mismatch`.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_runbook_docs.py::test_handoff_runbooks_document_blocker_summary_manifest -q`
+    failed while those handoff runbooks omitted the blocker summary terms, then
+    passed after the handoff sections were updated.
+  - Verification: `uv run pytest tests/unit/ops/test_runbook_docs.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py -q`
+    passed with `18 passed`; `uv run ruff check tests/unit/ops/test_runbook_docs.py`
+    passed; `git diff --check` passed.
 
 ## 5. Completion Gate
 

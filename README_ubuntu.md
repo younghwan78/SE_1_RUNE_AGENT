@@ -361,6 +361,11 @@ uv run python ops/rehearsal/validate_handoff_bundle.py \
 The validator checks manifest/report consistency, required artifact presence,
 JSON schema shape, staging evidence plan structure, and
 manual-evidence-template coverage for every `manual_required` readiness gate.
+The manifest includes `blocker_summary` from the goal-completion report:
+`local_action_required` should be zero before handoff from a local workstation,
+and `company_or_staging_evidence_required` shows the blockers that still need
+company/staging endpoints or reviewed evidence. The validator rejects
+`blocker_summary_mismatch` when the manifest and goal-completion report differ.
 
 After real staging rehearsals, run:
 

@@ -150,7 +150,12 @@ uv run python ops/rehearsal/validate_handoff_bundle.py `
 ```
 
 The validator also checks that `manual-evidence-template.json` covers every
-`manual_required` gate from `production-readiness-report.json`.
+`manual_required` gate from `production-readiness-report.json`. The manifest
+also carries `blocker_summary` from `goal-completion-report.json`; use
+`local_action_required` to see whether any workstation-local tasks remain and
+`company_or_staging_evidence_required` to see the count that still depends on
+company/staging systems. The validator rejects `blocker_summary_mismatch` if
+the manifest drifts from the goal-completion report.
 
 Run the API locally:
 
