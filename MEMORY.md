@@ -1719,3 +1719,32 @@ Remaining production gap is unchanged:
     passed structurally with the aligned final readiness command,
     `goal_complete=false`, `remaining_blocker_count=20`, readiness summary
     `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
+
+## 2026-05-17 Runbook Final Handoff Command Alignment
+
+- Refreshed `README.md` and `README_ubuntu.md` so the human-facing final
+  readiness and handoff examples match the current goal audit and staging
+  evidence plan command contract.
+- The staging/release handoff bundle examples now include both reviewed
+  evidence input and `--run-local-gates`, preventing local regression evidence
+  from being omitted during final handoff bundle generation.
+- The Ubuntu post-staging readiness example now includes `--run-local-gates`
+  with the reviewed staging env and evidence file.
+- Added a runbook regression test in `tests/unit/ops/test_runbook_docs.py`
+  that normalizes PowerShell/Bash line continuations and checks the exact final
+  handoff command shapes.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_runbook_docs.py -q` failed while the
+    README/Ubuntu examples lacked the final `--run-local-gates` handoff shape.
+  - The focused test passed after the runbook examples were aligned.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_runbook_docs.py tests/unit/ops/test_ci_gate_coverage.py -q`:
+    `6 passed`
+  - `uv run ruff check tests/unit/ops/test_runbook_docs.py`: passed
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `missing_required=[]` and `unexpected_omissions=[]`
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally after the runbook command refresh, with
+    `goal_complete=false`, `remaining_blocker_count=20`, readiness summary
+    `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.

@@ -101,6 +101,7 @@ failed, warning, or manual-required checks:
 uv run python ops/rehearsal/check_production_readiness.py `
   --env-file .env.example `
   --evidence-file ops/rehearsal/production_readiness_evidence.example.json `
+  --run-local-gates `
   --output .local_artifacts/readiness-report.json
 ```
 
@@ -136,6 +137,8 @@ pre-review bundles that are expected to remain blocked:
 uv run python ops/rehearsal/build_handoff_bundle.py `
   --allow-incomplete `
   --env-file ops/rehearsal/staging.env.example `
+  --evidence-file ops/rehearsal/production_readiness_evidence.example.json `
+  --run-local-gates `
   --output-dir .local_artifacts/staging-handoff-bundle
 ```
 

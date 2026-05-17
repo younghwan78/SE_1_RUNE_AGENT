@@ -345,6 +345,7 @@ uv run python ops/rehearsal/build_handoff_bundle.py \
   --allow-incomplete \
   --env-file /secure/path/staging.env \
   --evidence-file /secure/path/production_readiness_evidence.json \
+  --run-local-gates \
   --output-dir /secure/path/rune_handoff_bundle
 ```
 
@@ -365,6 +366,7 @@ After real staging rehearsals, run:
 
 ```bash
 uv run python ops/rehearsal/check_production_readiness.py \
+  --run-local-gates \
   --env-file /secure/path/staging.env \
   --evidence-file /secure/path/production_readiness_evidence.json
 ```

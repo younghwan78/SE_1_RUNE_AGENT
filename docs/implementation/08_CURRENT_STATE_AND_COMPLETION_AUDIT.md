@@ -956,6 +956,22 @@ blocking:
   - RED/GREEN: `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
     failed while the final handoff bundle command lacked `--run-local-gates`,
     then passed after adding it.
+- 2026-05-17 runbook final handoff command alignment:
+  - `README.md` and `README_ubuntu.md` now show final readiness/handoff
+    examples that include reviewed evidence input and `--run-local-gates`.
+  - `tests/unit/ops/test_runbook_docs.py` now guards the exact final command
+    shapes across PowerShell and Bash runbook examples.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_runbook_docs.py -q` failed
+    while the README/Ubuntu examples omitted the final `--run-local-gates`
+    handoff shape, then passed after the runbooks were aligned.
+  - Verification: `uv run pytest tests/unit/ops/test_runbook_docs.py tests/unit/ops/test_ci_gate_coverage.py -q`
+    passed with `6 passed`; `uv run ruff check tests/unit/ops/test_runbook_docs.py`
+    passed; `uv run python ops/rehearsal/validate_ci_gate_coverage.py` passed
+    with no missing required commands; `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, and readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
 
 ## 5. Completion Gate
 
