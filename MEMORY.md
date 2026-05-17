@@ -1698,3 +1698,24 @@ Remaining production gap is unchanged:
     passed
   - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
     passed with no failures.
+
+## 2026-05-17 Goal Audit Final Readiness Command Env Alignment
+
+- Aligned `ops/rehearsal/check_goal_completion.py`
+  `company_staging_readiness` final readiness command with the staging
+  evidence plan by adding `--env-file <staging.env>`.
+- This keeps all final validation commands on the same reviewed staging env
+  input path.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the goal audit command omitted `--env-file <staging.env>`.
+  - The focused test passed after adding the env-file placeholder.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`:
+    `5 passed`
+  - `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with the aligned final readiness command,
+    `goal_complete=false`, `remaining_blocker_count=20`, readiness summary
+    `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.

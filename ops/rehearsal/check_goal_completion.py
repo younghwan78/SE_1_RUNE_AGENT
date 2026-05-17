@@ -252,7 +252,8 @@ def _build_prompt_to_artifact_checklist(
                 "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown",
                 (
                     "uv run python ops/rehearsal/check_production_readiness.py "
-                    "--run-local-gates --evidence-file <reviewed-evidence.json>"
+                    "--run-local-gates --env-file <staging.env> "
+                    "--evidence-file <reviewed-evidence.json>"
                 ),
                 (
                     "uv run python ops/rehearsal/check_goal_completion.py "

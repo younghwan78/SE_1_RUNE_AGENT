@@ -284,6 +284,10 @@ Latest local verification:
 - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_staging_evidence_plan.py -q`: 20 passed after the final command semantic guard was added
 - `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`: passed after the final command semantic guard was added
 - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`: passed after the final command semantic guard was added
+- `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`: failed before the goal-completion checklist included `--env-file <staging.env>` on the final readiness command, then passed after aligning it with the staging evidence plan
+- `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`: 5 passed after final readiness command env-file alignment
+- `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`: passed after final readiness command env-file alignment
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`: passed structurally after final readiness command env-file alignment, reporting `goal_complete=false`, `remaining_blocker_count=20`, `prompt_to_artifact_checklist_count=6`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`
 - GitHub Actions `CI` run `25979725389` for commit `c3f9a36`: success, including `Handoff bundle env-file smoke`
 - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`: passed after first verifying the new staging evidence plan CI smoke requirement failed when absent
 - `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q`: passed after first verifying `LOCAL_GATE_COMMANDS` did not include the staging evidence plan smoke

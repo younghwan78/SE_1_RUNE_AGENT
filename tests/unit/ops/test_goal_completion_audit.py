@@ -72,6 +72,12 @@ def test_goal_completion_audit_maps_prompt_requirements_to_artifacts() -> None:
     )
     assert "production_readiness:postgres_state_store" in company_item["gaps"]
     assert (
+        "uv run python ops/rehearsal/check_production_readiness.py "
+        "--run-local-gates --env-file <staging.env> "
+        "--evidence-file <reviewed-evidence.json>"
+        in company_item["commands"]
+    )
+    assert (
         "uv run python ops/rehearsal/check_goal_completion.py "
         "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
         "--run-local-gates"
