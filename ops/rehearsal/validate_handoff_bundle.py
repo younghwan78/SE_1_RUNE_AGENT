@@ -2,10 +2,14 @@
 
 import argparse
 import hashlib
+import importlib.util
 import json
 from collections.abc import Mapping
 from pathlib import Path
+from types import ModuleType
 from typing import Any
+
+SCRIPT_DIR = Path(__file__).resolve().parent
 
 EXPECTED_ARTIFACTS = {
     "goal-completion-report.json",
@@ -14,15 +18,21 @@ EXPECTED_ARTIFACTS = {
     "staging-evidence-plan.md",
 }
 
-EXPECTED_STAGING_PLAN_SNIPPETS = (
-    "ops/rehearsal/check_production_readiness.py",
-    "ops/rehearsal/check_goal_completion.py",
-    (
-        "ops/rehearsal/build_handoff_bundle.py --env-file <staging.env> "
-        "--evidence-file <reviewed-evidence.json> --run-local-gates "
-        "--output-dir <handoff-bundle-dir>"
-    ),
-    "ops/rehearsal/validate_handoff_bundle.py",
+
+def _load_script_module(module_name: str, path: Path) -> ModuleType:
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load {module_name} from {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+EXPECTED_STAGING_PLAN_SNIPPETS = tuple(
+    _load_script_module(
+        "final_validation_commands",
+        SCRIPT_DIR / "final_validation_commands.py",
+    ).FINAL_VALIDATION_COMMANDS
 )
 
 

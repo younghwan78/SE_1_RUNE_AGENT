@@ -1807,3 +1807,24 @@ Remaining production gap is unchanged:
     plus `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
     passed with bundle `remaining_blocker_count=20` and validator
     `failures=[]`.
+
+## 2026-05-17 Handoff Bundle Validator Shared Final Commands
+
+- Extended the single-source final validation command cleanup to
+  `ops/rehearsal/validate_handoff_bundle.py`.
+- The validator now loads `ops/rehearsal/final_validation_commands.py` instead
+  of keeping a separate hardcoded `EXPECTED_STAGING_PLAN_SNIPPETS` command
+  tuple.
+- Added `tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_uses_shared_final_validation_commands`
+  so the validator cannot drift from the shared final validation command set.
+- RED/GREEN:
+  - The new validator single-source test failed while validator snippets were
+    still hardcoded and partial.
+  - The test passed after the validator loaded the shared command module.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_goal_completion_audit.py -q`:
+    `24 passed`
+  - `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with `failures=[]`.

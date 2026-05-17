@@ -170,10 +170,26 @@ def test_handoff_bundle_validator_rejects_stale_final_handoff_command(tmp_path) 
     assert report["passed"] is False
     assert (
         "staging_evidence_plan_missing:"
-        "ops/rehearsal/build_handoff_bundle.py --env-file <staging.env> "
+        "uv run python ops/rehearsal/build_handoff_bundle.py --env-file <staging.env> "
         "--evidence-file <reviewed-evidence.json> --run-local-gates "
         "--output-dir <handoff-bundle-dir>"
     ) in report["failures"]
+
+
+def test_handoff_bundle_validator_uses_shared_final_validation_commands() -> None:
+    validator = _load_module(
+        "validate_handoff_bundle",
+        "ops/rehearsal/validate_handoff_bundle.py",
+    )
+    commands = _load_module(
+        "final_validation_commands",
+        "ops/rehearsal/final_validation_commands.py",
+    )
+
+    assert (
+        tuple(validator.EXPECTED_STAGING_PLAN_SNIPPETS)
+        == commands.FINAL_VALIDATION_COMMANDS
+    )
 
 
 def test_handoff_bundle_validator_accepts_complete_reviewed_evidence_bundle(tmp_path) -> None:  # type: ignore[no-untyped-def]

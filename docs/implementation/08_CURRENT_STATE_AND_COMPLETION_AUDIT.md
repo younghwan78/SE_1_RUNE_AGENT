@@ -1012,6 +1012,20 @@ blocking:
     `remaining_blocker_count=20`, and readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`; staging handoff bundle
     generation with `--run-local-gates` and bundle validation passed.
+- 2026-05-17 handoff bundle validator shared final commands:
+  - `ops/rehearsal/validate_handoff_bundle.py` now loads the shared
+    `ops/rehearsal/final_validation_commands.py` command tuple instead of
+    maintaining a separate partial snippet list.
+  - `tests/unit/ops/test_handoff_bundle_validator.py` now verifies the
+    validator's expected staging plan snippets equal the shared final
+    validation command source.
+  - RED/GREEN: the new validator single-source test failed while the validator
+    used hardcoded partial snippets, then passed after switching to the shared
+    command module.
+  - Verification: `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_goal_completion_audit.py -q`
+    passed with `24 passed`; ruff passed on the touched validator files;
+    `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`
+    passed with no failures.
 
 ## 5. Completion Gate
 
