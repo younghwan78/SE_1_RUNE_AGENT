@@ -270,6 +270,8 @@ def _manifest_summary(manifest: Mapping[str, Any]) -> dict[str, Any]:
         "goal_complete": manifest.get("goal_complete"),
         "remaining_blocker_count": manifest.get("remaining_blocker_count"),
         "blocker_summary": manifest.get("blocker_summary"),
+        "missing_env_count": manifest.get("missing_env_count"),
+        "missing_env": manifest.get("missing_env"),
     }
 
 
@@ -287,6 +289,8 @@ def _report(
         "goal_complete": manifest_summary.get("goal_complete"),
         "remaining_blocker_count": manifest_summary.get("remaining_blocker_count"),
         "blocker_summary": manifest_summary.get("blocker_summary"),
+        "missing_env_count": manifest_summary.get("missing_env_count"),
+        "missing_env": manifest_summary.get("missing_env"),
         "failures": failures,
         "summary": {
             "failed": len(failures),

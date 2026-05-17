@@ -1324,6 +1324,24 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+- 2026-05-17 handoff validator missing env output:
+  - `ops/rehearsal/validate_handoff_bundle.py` now echoes `missing_env` and
+    `missing_env_count` in its structured validator report.
+  - This keeps the reviewer-facing validator output sufficient to inspect
+    staging environment gaps without separately opening `manifest.json`.
+  - RED/GREEN:
+    `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_accepts_generated_bundle -q`
+    failed with `KeyError: 'missing_env_count'`, then passed after the
+    validator report copied the manifest fields.
+  - Verification:
+    `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py -q`
+    passed with `15 passed`;
+    `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`
+    passed; `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
 
 ## 5. Completion Gate
 
