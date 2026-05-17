@@ -112,6 +112,27 @@ def test_staging_evidence_plan_includes_final_validation_commands() -> None:
     ]
 
 
+def test_final_validation_commands_have_single_shared_source() -> None:
+    commands_module = _load_module_from_path(
+        "final_validation_commands",
+        "ops/rehearsal/final_validation_commands.py",
+    )
+    staging_plan = _load_module()
+    goal_completion = _load_module_from_path(
+        "check_goal_completion",
+        "ops/rehearsal/check_goal_completion.py",
+    )
+
+    plan = staging_plan.build_staging_evidence_plan({})
+    report = goal_completion.build_goal_completion_audit({})
+    company_item = {
+        item["criterion_id"]: item for item in report["prompt_to_artifact_checklist"]
+    }["company_staging_readiness"]
+
+    assert tuple(plan["final_validation_commands"]) == commands_module.FINAL_VALIDATION_COMMANDS
+    assert tuple(company_item["commands"][1:]) == commands_module.FINAL_VALIDATION_COMMANDS
+
+
 def test_staging_evidence_plan_applies_reviewed_manual_evidence() -> None:
     module = _load_module()
     checker = _load_checker_module()
@@ -162,8 +183,15 @@ def test_staging_evidence_plan_doc_refs_exist() -> None:
 
 
 def _load_module() -> ModuleType:
-    module_path = Path("ops/rehearsal/build_staging_evidence_plan.py")
-    spec = importlib.util.spec_from_file_location("build_staging_evidence_plan", module_path)
+    return _load_module_from_path(
+        "build_staging_evidence_plan",
+        "ops/rehearsal/build_staging_evidence_plan.py",
+    )
+
+
+def _load_module_from_path(name: str, path: str) -> ModuleType:
+    module_path = Path(path)
+    spec = importlib.util.spec_from_file_location(name, module_path)
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)

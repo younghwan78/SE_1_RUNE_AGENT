@@ -986,6 +986,32 @@ blocking:
     passed with `6 passed`; `uv run ruff check tests/unit/ops/test_runbook_docs.py`
     passed; `uv run python ops/rehearsal/validate_ci_gate_coverage.py` passed
     with no missing required commands; `git diff --check` passed.
+- 2026-05-17 final validation command single source:
+  - Added `ops/rehearsal/final_validation_commands.py` as the shared source for
+    the final company/staging validation command set.
+  - `ops/rehearsal/build_staging_evidence_plan.py` and
+    `ops/rehearsal/check_goal_completion.py` now consume the shared command
+    source instead of carrying duplicated strings.
+  - `tests/unit/ops/test_staging_evidence_plan.py` now verifies that the
+    staging evidence plan and the `company_staging_readiness` goal-audit
+    checklist emit the same shared commands.
+  - `tests/unit/ops/test_goal_completion_audit.py` now verifies that
+    `ops/rehearsal/final_validation_commands.py` appears in the
+    `company_staging_readiness` artifact checklist.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_final_validation_commands_have_single_shared_source -q`
+    failed while the shared source file did not exist, then passed after adding
+    it. `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the shared command artifact was absent from the audit
+    checklist, then passed after adding it.
+  - Verification: `uv run pytest tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_handoff_bundle_validator.py -q`
+    passed with `23 passed`; ruff passed on the touched ops/test files;
+    `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`
+    rendered the shared final commands;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, and readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`; staging handoff bundle
+    generation with `--run-local-gates` and bundle validation passed.
 
 ## 5. Completion Gate
 

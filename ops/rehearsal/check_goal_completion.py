@@ -73,6 +73,12 @@ RELEASE_SCOPE_MODULE = _load_script_module(
     "validate_release_scope_artifacts",
     SCRIPT_DIR / "validate_release_scope_artifacts.py",
 )
+FINAL_VALIDATION_COMMANDS: tuple[str, ...] = tuple(
+    _load_script_module(
+        "final_validation_commands",
+        SCRIPT_DIR / "final_validation_commands.py",
+    ).FINAL_VALIDATION_COMMANDS
+)
 
 
 def build_goal_completion_audit(
@@ -246,26 +252,12 @@ def _build_prompt_to_artifact_checklist(
                 "ops/rehearsal/check_production_readiness.py",
                 "ops/rehearsal/check_goal_completion.py",
                 "ops/rehearsal/build_handoff_bundle.py",
+                "ops/rehearsal/final_validation_commands.py",
                 "ops/rehearsal/validate_handoff_bundle.py",
             ],
             "commands": [
                 "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown",
-                (
-                    "uv run python ops/rehearsal/check_production_readiness.py "
-                    "--run-local-gates --env-file <staging.env> "
-                    "--evidence-file <reviewed-evidence.json>"
-                ),
-                (
-                    "uv run python ops/rehearsal/check_goal_completion.py "
-                    "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
-                    "--run-local-gates"
-                ),
-                (
-                    "uv run python ops/rehearsal/build_handoff_bundle.py "
-                    "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
-                    "--run-local-gates --output-dir <handoff-bundle-dir>"
-                ),
-                "uv run python ops/rehearsal/validate_handoff_bundle.py <handoff-bundle-dir>",
+                *FINAL_VALIDATION_COMMANDS,
             ],
             "checks": [
                 {

@@ -1768,3 +1768,42 @@ Remaining production gap is unchanged:
   - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
     `missing_required=[]` and `unexpected_omissions=[]`
   - `git diff --check`: passed
+
+## 2026-05-17 Final Validation Command Single Source
+
+- Root cause: final company/staging validation commands were duplicated across
+  the staging evidence plan and goal-completion audit, which made runbook and
+  handoff command drift likely.
+- Added `ops/rehearsal/final_validation_commands.py` as the shared source for
+  final validation command strings.
+- Updated `ops/rehearsal/build_staging_evidence_plan.py` and
+  `ops/rehearsal/check_goal_completion.py` to consume that shared source.
+- Added regression coverage in
+  `tests/unit/ops/test_staging_evidence_plan.py` proving the staging evidence
+  plan and the `company_staging_readiness` goal-audit checklist emit the same
+  shared final commands.
+- Updated `tests/unit/ops/test_goal_completion_audit.py` so the completion
+  audit maps `ops/rehearsal/final_validation_commands.py` as a concrete
+  company/staging readiness artifact.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_final_validation_commands_have_single_shared_source -q`
+    failed while the shared source file did not exist, then passed after the
+    shared command module was introduced.
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the shared command artifact was absent from the
+    `company_staging_readiness` checklist, then passed after adding it.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_handoff_bundle_validator.py -q`:
+    `23 passed`
+  - `uv run ruff check ops/rehearsal/final_validation_commands.py ops/rehearsal/build_staging_evidence_plan.py ops/rehearsal/check_goal_completion.py tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`:
+    passed and rendered final validation commands from the shared source.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates --output-dir .local_artifacts/staging-handoff-bundle`
+    plus `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with bundle `remaining_blocker_count=20` and validator
+    `failures=[]`.
