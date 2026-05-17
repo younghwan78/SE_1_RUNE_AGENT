@@ -132,6 +132,7 @@ def build_goal_completion_audit(
             "release_ready": release_scope["release_ready"],
             "goal_ready": release_scope_goal_ready,
             "summary": release_scope["summary"],
+            "first_release_exclusions": release_scope["first_release_exclusions"],
         },
         "production_readiness": {
             "passed": production_readiness["passed"],
@@ -199,6 +200,7 @@ def _build_prompt_to_artifact_checklist(
                 }
                 for item in release_items
             ],
+            "first_release_exclusions": release_scope["first_release_exclusions"],
             "gaps": [
                 blocker_id
                 for blocker_id in sorted(blocker_ids)

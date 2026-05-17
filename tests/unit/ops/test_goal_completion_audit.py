@@ -54,6 +54,10 @@ def test_goal_completion_audit_maps_prompt_requirements_to_artifacts() -> None:
 
     scope_item = checklist["first_release_scope_artifacts"]
     assert len(scope_item["scope_items"]) == report["release_scope"]["summary"]["item_count"]
+    assert scope_item["first_release_exclusions"] == report["release_scope"][
+        "first_release_exclusions"
+    ]
+    assert "AI의 원본 시스템 write-back" in scope_item["first_release_exclusions"]
     assert "src/req_tracker/adapters/jira_rest.py" in scope_item["artifacts"]
     assert any(
         command.startswith("uv run pytest tests/unit/adapters/test_jira_rest_adapter.py")

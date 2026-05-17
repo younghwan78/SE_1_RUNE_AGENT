@@ -1828,3 +1828,41 @@ Remaining production gap is unchanged:
     passed
   - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
     passed with `failures=[]`.
+
+## 2026-05-17 First Release Exclusion Audit Coverage
+
+- Strengthened the release-scope verifier so it reports the first-release
+  exclusion bullets from `PRODUCTION_EXECUTION_PLAN.md`, not only the required
+  inclusion bullets.
+- Added `load_first_release_exclusions_from_plan()` to
+  `ops/rehearsal/validate_release_scope_artifacts.py`.
+- The top-level goal-completion audit now carries
+  `first_release_exclusions` in both `release_scope` and the
+  `first_release_scope_artifacts` prompt-to-artifact checklist.
+- This makes explicit that excluded first-release behavior remains excluded:
+  Email ingestion, source-system write-back, unapproved automatic graph change,
+  automatic prompt activation, enterprise-wide rollout, and high-risk bulk
+  auto approval.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py::test_release_scope_report_lists_first_release_exclusions -q`
+    failed while the release-scope report had no `first_release_exclusions`
+    field, then passed after parsing exclusions from the production plan.
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the top-level audit omitted exclusions, then passed after
+    carrying them into the audit report and checklist.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_goal_completion_audit.py -q`:
+    `13 passed`
+  - `uv run ruff check ops/rehearsal/validate_release_scope_artifacts.py ops/rehearsal/check_goal_completion.py tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed
+    and emitted the first-release exclusion list.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example`:
+    passed structurally and emitted the exclusion list; because
+    `--run-local-gates` was intentionally omitted in this check, it reported
+    `remaining_blocker_count=21` with `local_regression_gates` still manual.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with the exclusion list present, `goal_complete=false`,
+    `remaining_blocker_count=20`, and readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`; remaining blockers are
+    company/staging evidence and production endpoint configuration.

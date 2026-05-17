@@ -291,8 +291,10 @@ def build_release_scope_report(
         if not item["audit_covered"]:
             failures.append(f"{item['item_id']}:missing_completion_audit_marker")
     plan_requirements: list[str] = []
+    first_release_exclusions: list[str] = []
     if validate_plan_alignment:
         plan_requirements = load_first_release_requirements_from_plan()
+        first_release_exclusions = load_first_release_exclusions_from_plan()
         item_requirements = [item["requirement"] for item in rendered_items]
         if item_requirements != plan_requirements:
             failures.append("first_release_scope:plan_verifier_requirement_mismatch")
@@ -313,6 +315,7 @@ def build_release_scope_report(
             "status_counts": dict(sorted(status_counts.items())),
         },
         "plan_requirements": plan_requirements,
+        "first_release_exclusions": first_release_exclusions,
         "items": rendered_items,
         "failures": failures,
     }
@@ -335,6 +338,25 @@ def load_first_release_requirements_from_plan(
         if in_required_scope and stripped.startswith("- "):
             requirements.append(stripped.removeprefix("- ").strip())
     return requirements
+
+
+def load_first_release_exclusions_from_plan(
+    plan_path: Path = PRODUCTION_PLAN_PATH,
+) -> list[str]:
+    """Read the first-release exclusion bullets from the production plan."""
+    lines = plan_path.read_text(encoding="utf-8").splitlines()
+    in_exclusions = False
+    exclusions: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped == "첫 릴리스 제외:":
+            in_exclusions = True
+            continue
+        if in_exclusions and stripped.startswith("## "):
+            break
+        if in_exclusions and stripped.startswith("- "):
+            exclusions.append(stripped.removeprefix("- ").strip())
+    return exclusions
 
 
 def _render_item(item: ReleaseScopeItem, *, audit_text: str) -> dict[str, Any]:

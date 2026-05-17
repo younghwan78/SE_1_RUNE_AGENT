@@ -1026,6 +1026,34 @@ blocking:
     passed with `24 passed`; ruff passed on the touched validator files;
     `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`
     passed with no failures.
+- 2026-05-17 first release exclusion audit coverage:
+  - `ops/rehearsal/validate_release_scope_artifacts.py` now parses and reports
+    the `첫 릴리스 제외` bullets from `PRODUCTION_EXECUTION_PLAN.md`.
+  - `ops/rehearsal/check_goal_completion.py` now carries those exclusions in
+    both the `release_scope` summary and the `first_release_scope_artifacts`
+    prompt-to-artifact checklist.
+  - This makes excluded first-release behavior visible in the completion audit:
+    Email ingestion, source-system write-back, unapproved automatic graph
+    mutation, automatic prompt activation, enterprise-wide rollout, and
+    high-risk bulk auto approval.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_release_scope_artifacts.py::test_release_scope_report_lists_first_release_exclusions -q`
+    failed while the release-scope report omitted the exclusion list, then
+    passed after exclusions were parsed from the production plan.
+    `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the top-level audit omitted the exclusion list, then passed
+    after adding it to the report and checklist.
+  - Verification: `uv run pytest tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_goal_completion_audit.py -q`
+    passed with `13 passed`; ruff passed on the touched release-scope/audit
+    files; `uv run python ops/rehearsal/validate_release_scope_artifacts.py`
+    passed and emitted the first-release exclusion list; `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example`
+    passed structurally and emitted the exclusion list, with
+    `remaining_blocker_count=21` because local gates were not run in that
+    specific smoke.
+  - Final local-gate audit: `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with the exclusion list present, `goal_complete=false`,
+    `remaining_blocker_count=20`, and readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`; remaining blockers require
+    company/staging evidence and production endpoint configuration.
 
 ## 5. Completion Gate
 

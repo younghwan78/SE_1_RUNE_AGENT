@@ -58,6 +58,21 @@ def test_release_scope_requirements_match_production_plan() -> None:
     assert verifier_requirements == plan_requirements
 
 
+def test_release_scope_report_lists_first_release_exclusions() -> None:
+    module = _load_module()
+
+    report = module.build_release_scope_report()
+
+    assert report["first_release_exclusions"] == [
+        "Email ingestion",
+        "AI의 원본 시스템 write-back",
+        "승인 없는 자동 graph 변경",
+        "자동 prompt active 변경",
+        "전사 전체 rollout",
+        "high-risk item bulk auto approval",
+    ]
+
+
 def test_release_scope_items_have_completion_audit_coverage() -> None:
     module = _load_module()
 
