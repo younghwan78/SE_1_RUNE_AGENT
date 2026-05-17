@@ -54,6 +54,10 @@ def test_handoff_bundle_writes_required_artifacts_without_secrets(tmp_path) -> N
     assert manifest["remaining_blocker_count"] == manifest["goal_summary"][
         "remaining_blocker_count"
     ]
+    goal_report = json.loads(
+        (output_dir / "goal-completion-report.json").read_text(encoding="utf-8")
+    )
+    assert manifest["blocker_summary"] == goal_report["blocker_summary"]
     assert manifest["remaining_blockers"]
     assert {
         "blocker_id",

@@ -1069,6 +1069,23 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `blocker_summary.company_or_staging_evidence_required=20`.
+- 2026-05-17 handoff bundle blocker summary:
+  - `ops/rehearsal/build_handoff_bundle.py` now copies the goal audit
+    `blocker_summary` into `manifest.json`.
+  - `ops/rehearsal/validate_handoff_bundle.py` rejects
+    `blocker_summary_mismatch` if the manifest and
+    `goal-completion-report.json` disagree.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_handoff_bundle.py::test_handoff_bundle_writes_required_artifacts_without_secrets -q`
+    failed with `KeyError: 'blocker_summary'`, then passed after adding the
+    manifest field. `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_manifest_blocker_summary_drift -q`
+    failed while validator accepted a tampered summary, then passed after
+    adding the drift check.
+  - Verification: `uv run pytest tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_goal_completion_audit.py -q`
+    passed with `20 passed`; ruff passed on the touched handoff files;
+    `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates --output-dir .local_artifacts/staging-handoff-bundle`
+    passed and emitted manifest `blocker_summary.local_action_required=0`,
+    `blocker_summary.company_or_staging_evidence_required=20`; validator passed
+    with `failures=[]`.
 
 ## 5. Completion Gate
 

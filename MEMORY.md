@@ -1892,3 +1892,29 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `blocker_summary.company_or_staging_evidence_required=20`.
+
+## 2026-05-17 Handoff Bundle Blocker Summary
+
+- Propagated goal audit `blocker_summary` into the handoff bundle manifest so
+  release owners do not need to open `goal-completion-report.json` just to see
+  whether any workstation-local blockers remain.
+- `ops/rehearsal/validate_handoff_bundle.py` now rejects
+  `blocker_summary_mismatch` if the manifest drifts from the goal-completion
+  report.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle.py::test_handoff_bundle_writes_required_artifacts_without_secrets -q`
+    failed with `KeyError: 'blocker_summary'`, then passed after adding the
+    field to the manifest.
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_manifest_blocker_summary_drift -q`
+    failed while validator accepted a tampered summary, then passed after
+    adding `blocker_summary_mismatch`.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_goal_completion_audit.py -q`:
+    `20 passed`
+  - `uv run ruff check ops/rehearsal/build_handoff_bundle.py ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed and emitted manifest `blocker_summary.local_action_required=0`,
+    `blocker_summary.company_or_staging_evidence_required=20`.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with `failures=[]`.

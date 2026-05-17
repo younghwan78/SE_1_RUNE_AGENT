@@ -170,6 +170,8 @@ def _validate_manifest_blockers(
     expected_count = _summary_remaining_blocker_count(goal_report)
     if manifest.get("remaining_blocker_count") != expected_count:
         failures.append("remaining_blocker_count_mismatch")
+    if manifest.get("blocker_summary") != goal_report.get("blocker_summary"):
+        failures.append("blocker_summary_mismatch")
     if _manifest_blocker_fingerprint(manifest.get("remaining_blockers")) != (
         _manifest_blocker_fingerprint(goal_report.get("remaining_blockers"))
     ):

@@ -85,6 +85,7 @@ def build_handoff_bundle(
         "goal_complete": goal_report["goal_complete"],
         "readiness_summary": readiness_report["summary"],
         "goal_summary": goal_report["summary"],
+        "blocker_summary": goal_report["blocker_summary"],
         "remaining_blocker_count": goal_report["summary"]["remaining_blocker_count"],
         "remaining_blockers": _manifest_blockers(goal_report),
     }
