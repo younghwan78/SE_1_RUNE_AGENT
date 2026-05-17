@@ -2434,3 +2434,24 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+
+## 2026-05-17 Agent and README Review After Handoff Validator Hardening
+
+- Current repository file check found `AGENTS.md`, `README.md`, and
+  `MEMORY.md`; no singular `AGENT.md` exists.
+- Reviewed `AGENTS.md` against the latest work. No update is required because
+  it already captures the durable source-of-truth, architecture, testing, and
+  git-discipline rules. The new changes are operational handoff validator
+  semantics, not new agent behavior or architecture rules.
+- `README.md` did need a targeted operator-doc update because the handoff
+  section documented `blocker_summary` and `missing_env` drift checks but not
+  the newer complete-bundle consistency guards.
+- Updated `README.md`, `README_ubuntu.md`, and
+  `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` to state that a bundle
+  cannot claim `goal_complete=true` while readiness is not passed, blockers or
+  blocker lists remain, `blocker_summary` reports unresolved work, or
+  `missing_env` / `missing_env_count` remains unresolved. The same docs now
+  mention readiness report summary recalculation and rejection of stale
+  `passed` or `summary` values.
+- Added `test_handoff_runbooks_document_complete_bundle_consistency_guards` to
+  keep the operator docs aligned with the validator behavior.

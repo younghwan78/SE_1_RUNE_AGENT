@@ -147,6 +147,20 @@ def test_handoff_runbooks_document_missing_env_summary() -> None:
         assert "missing_env_count_mismatch" in content
 
 
+def test_handoff_runbooks_document_complete_bundle_consistency_guards() -> None:
+    readme = Path("README.md")
+    ubuntu_runbook = Path("README_ubuntu.md")
+    local_handoff = Path("docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md")
+
+    for path in [readme, ubuntu_runbook, local_handoff]:
+        content = _normalize_runbook_commands(path.read_text(encoding="utf-8"))
+        assert "goal_complete=true" in content
+        assert "blocker counts" in content
+        assert "blocker lists" in content
+        assert "readiness report summary" in content
+        assert "stale passed or summary values" in content
+
+
 def _normalize_runbook_commands(content: str) -> str:
     return " ".join(
         content.replace("`", " ")

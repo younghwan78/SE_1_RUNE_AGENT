@@ -241,7 +241,12 @@ validator output also prints `goal_complete`, `remaining_blocker_count`, and
 `assert_local_handoff_complete.py` also print `missing_env` and
 `missing_env_count`, which summarize unresolved staging environment keys. The
 validator fails with `missing_env_mismatch` or `missing_env_count_mismatch` if
-those fields drift from `staging-evidence-plan.md`.
+those fields drift from `staging-evidence-plan.md`. A bundle cannot claim
+`goal_complete=true` while readiness is not passed, blocker counts or blocker
+lists remain, `blocker_summary` still reports unresolved work, or
+`missing_env` / `missing_env_count` still shows unresolved staging
+configuration. The validator also recalculates the readiness report summary
+from individual check statuses and rejects stale `passed` or `summary` values.
 
 ## 5. Source Skill Export Dry-Run
 

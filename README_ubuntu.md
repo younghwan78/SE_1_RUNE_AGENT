@@ -378,7 +378,12 @@ in its own JSON output. The manifest, validator output, and local handoff
 assertion also include `missing_env` and `missing_env_count`, which summarize
 unresolved staging environment keys. The validator rejects
 `missing_env_mismatch` and `missing_env_count_mismatch` when those fields drift
-from `staging-evidence-plan.md`.
+from `staging-evidence-plan.md`. A bundle cannot claim `goal_complete=true`
+while readiness is not passed, blocker counts or blocker lists remain,
+`blocker_summary` still reports unresolved work, or `missing_env` /
+`missing_env_count` still shows unresolved staging configuration. The validator
+also recalculates the readiness report summary from individual check statuses
+and rejects stale `passed` or `summary` values.
 
 After real staging rehearsals, run:
 

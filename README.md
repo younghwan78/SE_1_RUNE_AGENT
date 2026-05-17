@@ -168,7 +168,12 @@ JSON output. The manifest, validator output, and local handoff assertion also
 include `missing_env` and `missing_env_count` so operators can see unresolved
 staging configuration keys without opening each gate section. The validator
 rejects `missing_env_mismatch` and `missing_env_count_mismatch` if those fields
-drift from `staging-evidence-plan.md`.
+drift from `staging-evidence-plan.md`. A bundle cannot claim
+`goal_complete=true` while readiness is not passed, blocker counts or blocker
+lists remain, `blocker_summary` still reports unresolved work, or
+`missing_env` / `missing_env_count` still shows unresolved staging
+configuration. The validator also recalculates the readiness report summary
+from individual check statuses and rejects stale `passed` or `summary` values.
 
 Run the API locally:
 
