@@ -1653,3 +1653,29 @@ Remaining production gap is unchanged:
     passed structurally with the expanded model-gateway artifact list,
     `goal_complete=false`, `remaining_blocker_count=20`, readiness summary
     `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
+
+## 2026-05-17 Staging Evidence Final Handoff Command Alignment
+
+- Aligned `ops/rehearsal/build_staging_evidence_plan.py`
+  `FINAL_VALIDATION_COMMANDS` with the hardened goal-completion checklist by
+  adding `--run-local-gates` to the final
+  `ops/rehearsal/build_handoff_bundle.py` command.
+- This prevents the human-facing staging evidence plan from printing an older
+  final bundle command that would omit local gate evidence.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_includes_final_validation_commands -q`
+    failed while the plan still expected the handoff bundle command without
+    `--run-local-gates`.
+  - The focused test passed after updating the plan command.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py -q`:
+    `19 passed`
+  - `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py tests/unit/ops/test_staging_evidence_plan.py`:
+    passed
+  - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`:
+    passed and rendered the final handoff command with `--run-local-gates`.
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed with `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with no failures.
