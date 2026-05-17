@@ -1,5 +1,6 @@
 """Handoff bundle validator tests."""
 
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -145,6 +146,36 @@ def test_handoff_bundle_validator_rejects_missing_final_validation_section(tmp_p
     assert "staging_evidence_plan_final_validation_missing" in report["failures"]
 
 
+def test_handoff_bundle_validator_rejects_stale_final_handoff_command(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
+    validator = _load_module(
+        "validate_handoff_bundle",
+        "ops/rehearsal/validate_handoff_bundle.py",
+    )
+    bundle_dir = tmp_path / "bundle"
+    builder.build_handoff_bundle(bundle_dir, run_local_gates=False)
+    plan_path = bundle_dir / "staging-evidence-plan.md"
+    stale_content = plan_path.read_text(encoding="utf-8").replace(
+        "--run-local-gates --output-dir <handoff-bundle-dir>",
+        "--output-dir <handoff-bundle-dir>",
+    )
+    plan_path.write_text(stale_content, encoding="utf-8")
+    manifest_path = bundle_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["artifact_hashes"]["staging-evidence-plan.md"] = _sha256(plan_path)
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = validator.validate_handoff_bundle(bundle_dir)
+
+    assert report["passed"] is False
+    assert (
+        "staging_evidence_plan_missing:"
+        "ops/rehearsal/build_handoff_bundle.py --env-file <staging.env> "
+        "--evidence-file <reviewed-evidence.json> --run-local-gates "
+        "--output-dir <handoff-bundle-dir>"
+    ) in report["failures"]
+
+
 def test_handoff_bundle_validator_accepts_complete_reviewed_evidence_bundle(tmp_path) -> None:  # type: ignore[no-untyped-def]
     builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
     validator = _load_module(
@@ -242,3 +273,7 @@ def _load_module(module_name: str, path: str) -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()

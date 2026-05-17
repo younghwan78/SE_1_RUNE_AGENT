@@ -17,7 +17,11 @@ EXPECTED_ARTIFACTS = {
 EXPECTED_STAGING_PLAN_SNIPPETS = (
     "ops/rehearsal/check_production_readiness.py",
     "ops/rehearsal/check_goal_completion.py",
-    "ops/rehearsal/build_handoff_bundle.py",
+    (
+        "ops/rehearsal/build_handoff_bundle.py --env-file <staging.env> "
+        "--evidence-file <reviewed-evidence.json> --run-local-gates "
+        "--output-dir <handoff-bundle-dir>"
+    ),
     "ops/rehearsal/validate_handoff_bundle.py",
 )
 

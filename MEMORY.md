@@ -1679,3 +1679,22 @@ Remaining production gap is unchanged:
     `manual_required=10`, `passed=3`, `warning=0`.
   - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
     passed with no failures.
+
+## 2026-05-17 Handoff Bundle Final Command Semantic Guard
+
+- Strengthened `ops/rehearsal/validate_handoff_bundle.py` so the validator
+  requires the exact final handoff bundle command with `--run-local-gates` in
+  `staging-evidence-plan.md`.
+- This closes a gap where a stale final command could pass validation if the
+  artifact hash was updated after editing the plan.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_stale_final_handoff_command -q`
+    failed while a re-hashed stale plan without `--run-local-gates` passed.
+  - The focused test passed after requiring the exact final handoff command.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_staging_evidence_plan.py -q`:
+    `20 passed`
+  - `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with no failures.
