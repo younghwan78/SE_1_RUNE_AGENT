@@ -1227,6 +1227,36 @@ Remaining production gap is unchanged:
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
 
+## 2026-05-17 Final Reviewed Evidence Bundle Fix
+
+- Fixed `ops/rehearsal/build_handoff_bundle.py` so
+  `manual-evidence-template.json` is generated from the readiness report after
+  applying reviewed `--evidence-file` entries, rather than from env-only
+  readiness.
+- This matters for final release bundles: when all manual gates are resolved by
+  reviewed evidence, the generated manual evidence template now has no stale
+  TODO gate entries and `validate_handoff_bundle.py` can pass.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_accepts_complete_reviewed_evidence_bundle -q`
+    failed while the template still included 11 stale manual gates and passed
+    after generating the template from the evidence-applied readiness report.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_accepts_complete_reviewed_evidence_bundle tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py -q`:
+    `9 passed`
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `275 passed, 3 skipped`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=33`
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
+
 ## 2026-05-17 Readiness Evidence Example Drift Guard
 
 - Strengthened `ops/rehearsal/validate_evidence_example.py` so the committed

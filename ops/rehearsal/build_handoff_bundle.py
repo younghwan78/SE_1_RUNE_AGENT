@@ -53,7 +53,7 @@ def build_handoff_bundle(
         run_local_gates=run_local_gates,
         manual_evidence=manual_evidence,
     )
-    manual_template = readiness.build_manual_evidence_template(env)
+    manual_template = _build_manual_evidence_template(readiness_report)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     artifacts = {
@@ -85,6 +85,30 @@ def build_handoff_bundle(
 
 def _render_json(payload: Mapping[str, Any]) -> str:
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
+def _build_manual_evidence_template(readiness_report: Mapping[str, Any]) -> dict[str, Any]:
+    checks = [
+        {
+            "check_id": check["check_id"],
+            "status": "failed",
+            "summary": (
+                "TODO: replace after completing and reviewing this gate. "
+                f"Required action: {check.get('next_action') or check['summary']}"
+            ),
+            "evidence": [
+                "TODO: attach reviewed CI run id, artifact reference, or approval record"
+            ],
+        }
+        for check in readiness_report.get("checks", [])
+        if isinstance(check, Mapping) and check.get("status") == "manual_required"
+    ]
+    return {
+        "schema_version": "v1",
+        "reviewed_by": "TODO: release owner email or approval record",
+        "reviewed_at": "TODO: ISO-8601 UTC timestamp",
+        "checks": checks,
+    }
 
 
 def _manifest_blockers(goal_report: Mapping[str, Any]) -> list[dict[str, str]]:
