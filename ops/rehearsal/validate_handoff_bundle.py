@@ -212,6 +212,8 @@ def _validate_manifest_completion_state(
         failures.append("complete_bundle_readiness_not_passed")
     if manifest.get("remaining_blocker_count") != 0:
         failures.append("complete_bundle_has_remaining_blockers")
+    if _object_list(manifest.get("remaining_blockers")):
+        failures.append("complete_bundle_has_remaining_blocker_list")
     if _string_list(manifest.get("missing_env")) or manifest.get("missing_env_count") != 0:
         failures.append("complete_bundle_has_missing_env")
     if _has_blocker_summary_entries(manifest.get("blocker_summary")):

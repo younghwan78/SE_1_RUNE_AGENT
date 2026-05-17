@@ -345,6 +345,46 @@ def test_handoff_bundle_validator_rejects_complete_bundle_with_blocker_summary(t
     assert "complete_bundle_has_blocker_summary" in report["failures"]
 
 
+def test_handoff_bundle_validator_rejects_complete_bundle_with_remaining_blockers(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
+    validator = _load_module(
+        "validate_handoff_bundle",
+        "ops/rehearsal/validate_handoff_bundle.py",
+    )
+    env_path = tmp_path / "staging.env"
+    env_path.write_text("\n".join(_complete_production_env_lines()), encoding="utf-8")
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text(json.dumps(_complete_manual_evidence()), encoding="utf-8")
+    bundle_dir = tmp_path / "bundle"
+    builder.build_handoff_bundle(
+        bundle_dir,
+        env_file=env_path,
+        evidence_file=evidence_path,
+        run_local_gates=False,
+    )
+    remaining_blockers = [
+        {
+            "blocker_id": "production_readiness:company_postgres_rehearsal",
+            "next_action": "Run staging PostgreSQL rehearsal.",
+            "status": "manual_required",
+        }
+    ]
+    goal_path = bundle_dir / "goal-completion-report.json"
+    goal_report = json.loads(goal_path.read_text(encoding="utf-8"))
+    goal_report["remaining_blockers"] = remaining_blockers
+    goal_path.write_text(json.dumps(goal_report), encoding="utf-8")
+    manifest_path = bundle_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["remaining_blockers"] = remaining_blockers
+    manifest["artifact_hashes"]["goal-completion-report.json"] = _sha256(goal_path)
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = validator.validate_handoff_bundle(bundle_dir)
+
+    assert report["passed"] is False
+    assert "complete_bundle_has_remaining_blocker_list" in report["failures"]
+
+
 def _complete_production_env_lines() -> list[str]:
     return [
         "STATE_STORE=postgres",
