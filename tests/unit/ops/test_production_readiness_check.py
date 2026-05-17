@@ -332,6 +332,32 @@ def test_load_manual_evidence_rejects_passed_empty_evidence(tmp_path) -> None:  
         checker.load_manual_evidence(evidence_path)
 
 
+def test_load_manual_evidence_rejects_passed_without_traceable_reference(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    evidence_path = tmp_path / "evidence.json"
+    evidence_path.write_text(
+        """
+        {
+          "schema_version": "v1",
+          "reviewed_by": "release-owner@example.com",
+          "reviewed_at": "2026-05-12T00:00:00Z",
+          "checks": [
+            {
+              "check_id": "company_postgres_rehearsal",
+              "status": "passed",
+              "summary": "Reviewed staging run passed.",
+              "evidence": ["operator confirmed this passed"]
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="traceable evidence reference"):
+        checker.load_manual_evidence(evidence_path)
+
+
 def test_load_manual_evidence_rejects_duplicate_check_ids(tmp_path) -> None:  # type: ignore[no-untyped-def]
     checker = _load_checker_module()
     evidence_path = tmp_path / "evidence.json"

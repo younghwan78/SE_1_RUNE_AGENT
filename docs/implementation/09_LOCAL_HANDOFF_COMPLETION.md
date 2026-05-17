@@ -163,6 +163,11 @@ for Kubernetes-specific Helm evidence. Do not commit the filled file.
 
 After replacing TODO entries with reviewed evidence:
 
+Each `passed` manual evidence entry must include at least one traceable
+reference, such as `artifact:...`, `github-actions:...`, `staging-ci:...`,
+`run:...`, or `approval:...`. Free-text confirmations are not accepted as final
+release evidence.
+
 ```bash
 uv run python ops/rehearsal/check_production_readiness.py \
   --env-file /secure/path/staging.env \

@@ -19,6 +19,20 @@ ROOT = Path(__file__).resolve().parents[2]
 
 CheckStatus = Literal["passed", "warning", "failed", "manual_required"]
 
+TRACEABLE_EVIDENCE_PREFIXES = (
+    "artifact:",
+    "approval:",
+    "backup:",
+    "ci:",
+    "github-actions:",
+    "grafana:",
+    "load:",
+    "prometheus:",
+    "restore:",
+    "run:",
+    "staging-ci:",
+)
+
 
 @dataclass(frozen=True)
 class ReadinessCheck:
@@ -260,6 +274,11 @@ def _validate_review_metadata(
             raise ValueError(
                 f"{record.check_id} passed manual evidence must include non-empty evidence"
             )
+        if not any(_is_traceable_evidence_reference(entry) for entry in record.evidence):
+            raise ValueError(
+                f"{record.check_id} passed manual evidence must include at least one "
+                "traceable evidence reference"
+            )
     for field_name in ("reviewed_by", "reviewed_at"):
         value = payload.get(field_name)
         if not isinstance(value, str) or not value.strip():
@@ -281,6 +300,11 @@ def _validate_reviewed_at_utc(value: str) -> None:
         raise ValueError("reviewed_at must be an ISO-8601 UTC timestamp") from exc
     if parsed.tzinfo is None or parsed.utcoffset() != UTC.utcoffset(parsed):
         raise ValueError("reviewed_at must be an ISO-8601 UTC timestamp")
+
+
+def _is_traceable_evidence_reference(value: str) -> bool:
+    normalized = value.strip().lower()
+    return normalized.startswith(TRACEABLE_EVIDENCE_PREFIXES)
 
 
 def build_manual_evidence_template(env: Mapping[str, str]) -> dict[str, Any]:

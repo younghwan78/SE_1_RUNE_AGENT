@@ -1336,6 +1336,37 @@ Remaining production gap is unchanged:
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
 
+## 2026-05-17 Traceable Manual Evidence References
+
+- Strengthened `ops/rehearsal/check_production_readiness.py` so file-loaded
+  `passed` manual evidence must include at least one traceable evidence
+  reference prefix such as `artifact:`, `github-actions:`, `staging-ci:`,
+  `run:`, or `approval:`. Free-text confirmations no longer satisfy a final
+  production-readiness evidence file.
+- Updated `README_ubuntu.md` and
+  `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` to document the
+  traceable evidence reference requirement.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_load_manual_evidence_rejects_passed_without_traceable_reference -q`
+    failed while `"operator confirmed this passed"` was accepted for a passed
+    manual gate.
+  - The focused test passed after the loader required a traceable reference.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_production_readiness_check.py tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_readiness_evidence_example.py -q`:
+    `41 passed`
+  - `uv run ruff check ops/rehearsal/check_production_readiness.py tests/unit/ops/test_production_readiness_check.py`:
+    passed
+  - `uv run python ops/rehearsal/validate_evidence_example.py`: passed with
+    `check_count=11`, `expected_check_count=11`, and no failures.
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
+
 ## 2026-05-17 Readiness Evidence Example Drift Guard
 
 - Strengthened `ops/rehearsal/validate_evidence_example.py` so the committed
