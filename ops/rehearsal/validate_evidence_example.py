@@ -1,5 +1,6 @@
 """Validate that the committed readiness evidence example cannot pass release gates."""
 
+import importlib.util
 import json
 import re
 from pathlib import Path
@@ -55,12 +56,33 @@ def validate_example(path: Path = EXAMPLE_PATH) -> dict[str, Any]:
             failures.append(f"{check_id}:missing_todo_placeholder")
         if FAKE_RUN_PATTERN.search(joined):
             failures.append(f"{check_id}:fake_run_id")
+    expected_check_ids = _expected_manual_gate_ids()
+    for check_id in sorted(expected_check_ids - seen_check_ids):
+        failures.append(f"missing_current_manual_gate:{check_id}")
+    for check_id in sorted(seen_check_ids - expected_check_ids):
+        failures.append(f"unknown_current_manual_gate:{check_id}")
     return {
         "check_count": len(checks),
         "example_path": _display_path(path),
+        "expected_check_count": len(expected_check_ids),
         "failures": failures,
         "passed": not failures,
         "schema_version": "v1",
+    }
+
+
+def _expected_manual_gate_ids() -> set[str]:
+    module_path = ROOT / "ops/rehearsal/check_production_readiness.py"
+    spec = importlib.util.spec_from_file_location("check_production_readiness", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("failed to load production readiness checker")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    template = module.build_manual_evidence_template({})
+    return {
+        check["check_id"]
+        for check in template["checks"]
+        if isinstance(check, dict) and isinstance(check.get("check_id"), str)
     }
 
 

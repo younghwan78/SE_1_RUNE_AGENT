@@ -132,6 +132,34 @@ def test_validator_rejects_missing_example_evidence_array(tmp_path) -> None:  # 
     assert "company_postgres_rehearsal:evidence_missing_or_empty" in report["failures"]
 
 
+def test_validator_rejects_example_missing_current_manual_gate(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    validator = _load_validator_module()
+    path = tmp_path / "bad_evidence.json"
+    path.write_text(
+        """
+        {
+          "schema_version": "v1",
+          "reviewed_by": "TODO: release owner",
+          "reviewed_at": "TODO: timestamp",
+          "checks": [
+            {
+              "check_id": "company_postgres_rehearsal",
+              "status": "failed",
+              "summary": "TODO: placeholder",
+              "evidence": ["TODO: attach reviewed CI run id"]
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    report = validator.validate_example(path)
+
+    assert report["passed"] is False
+    assert "missing_current_manual_gate:company_neo4j_rehearsal" in report["failures"]
+
+
 def _load_validator_module() -> ModuleType:
     module_path = Path("ops/rehearsal/validate_evidence_example.py")
     spec = importlib.util.spec_from_file_location("validate_evidence_example", module_path)
