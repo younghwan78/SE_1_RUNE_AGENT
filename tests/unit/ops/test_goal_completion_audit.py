@@ -21,6 +21,7 @@ def test_goal_completion_audit_separates_local_artifacts_from_readiness() -> Non
     blocker_ids = {blocker["blocker_id"] for blocker in report["remaining_blockers"]}
     assert "production_readiness:postgres_state_store" in blocker_ids
     assert "release_scope:model_gateway_prompt_registry" in blocker_ids
+    assert report["blocker_summary"]["local_action_required"] > 0
 
 
 def test_goal_completion_audit_lists_concrete_success_criteria() -> None:
@@ -140,6 +141,28 @@ def test_goal_completion_audit_applies_manual_evidence() -> None:
     assert report["production_readiness"]["manual_evidence_count"] == 1
 
 
+def test_goal_completion_audit_classifies_local_gate_as_local_action() -> None:
+    namespace = run_path("ops/rehearsal/check_goal_completion.py")
+
+    report = namespace["build_goal_completion_audit"](
+        _staging_template_env(),
+        manual_evidence=[],
+        run_local_gates=False,
+    )
+
+    assert report["summary"]["remaining_blocker_count"] == 21
+    assert report["blocker_summary"] == {
+        "company_or_staging_evidence_required": 20,
+        "local_action_required": 1,
+        "by_status": {
+            "company_evidence_required": 4,
+            "failed": 6,
+            "manual_required": 11,
+        },
+        "local_action_blockers": ["production_readiness:local_regression_gates"],
+    }
+
+
 def test_goal_completion_audit_can_complete_with_reviewed_company_evidence() -> None:
     namespace = run_path("ops/rehearsal/check_goal_completion.py")
 
@@ -163,6 +186,37 @@ def test_goal_completion_audit_can_complete_with_reviewed_company_evidence() -> 
     assert report["release_scope"]["goal_ready"] is True
     assert report["production_readiness"]["passed"] is True
     assert report["remaining_blockers"] == []
+    assert report["blocker_summary"] == {
+        "company_or_staging_evidence_required": 0,
+        "local_action_required": 0,
+        "by_status": {},
+        "local_action_blockers": [],
+    }
+
+
+def _staging_template_env() -> dict[str, str]:
+    return {
+        "REQ_TRACKER_ENV": "staging",
+        "DATASOURCE_MODE": "jira",
+        "STATE_STORE": "postgres",
+        "GRAPH_BACKEND": "neo4j",
+        "NEO4J_USERNAME": "neo4j",
+        "NEO4J_DATABASE": "neo4j",
+        "VECTOR_BACKEND": "qdrant",
+        "QDRANT_COLLECTION": "rune_chunks",
+        "QDRANT_VECTOR_SIZE": "64",
+        "MODEL_GATEWAY_MODE": "http_json",
+        "MODEL_GATEWAY_PROVIDER": "internal",
+        "MODEL_GATEWAY_PROFILE_ID": "company-sandbox",
+        "MODEL_GATEWAY_MODEL_NAME": "company-sandbox-model",
+        "MODEL_GATEWAY_PROMPT_VERSION_ID": "pv_company_probe",
+        "AUTH_MODE": "trusted_proxy",
+        "TRUSTED_GROUP_ROLE_MAP": '{"rune-admins":"admin"}',
+        "ARTIFACT_ROOT": "/var/lib/rune-agent/artifacts",
+        "OTEL_ENABLED": "true",
+        "DEPLOYMENT_TARGET": "ubuntu",
+        "KUBERNETES_DEPLOYMENT": "false",
+    }
 
 
 def _complete_production_env() -> dict[str, str]:

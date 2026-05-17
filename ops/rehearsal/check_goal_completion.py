@@ -108,6 +108,7 @@ def build_goal_completion_audit(
         production_readiness,
         remaining_blockers,
     )
+    blocker_summary = _build_blocker_summary(remaining_blockers)
     return {
         "schema_version": "v1",
         "objective": OBJECTIVE,
@@ -125,6 +126,7 @@ def build_goal_completion_audit(
             "release_scope_goal_ready": release_scope_goal_ready,
             "production_readiness_passed": production_readiness["passed"],
         },
+        "blocker_summary": blocker_summary,
         "success_criteria": list(SUCCESS_CRITERIA),
         "prompt_to_artifact_checklist": prompt_to_artifact_checklist,
         "release_scope": {
@@ -364,6 +366,35 @@ def _production_readiness_blockers(report: Mapping[str, Any]) -> list[dict[str, 
         for check in report["checks"]
         if check["status"] != "passed"
     ]
+
+
+def _build_blocker_summary(blockers: list[dict[str, str]]) -> dict[str, Any]:
+    by_status: dict[str, int] = {}
+    local_action_blockers: list[str] = []
+    company_or_staging_count = 0
+    for blocker in blockers:
+        status = blocker["status"]
+        by_status[status] = by_status.get(status, 0) + 1
+        blocker_id = blocker["blocker_id"]
+        if _requires_company_or_staging_evidence(blocker):
+            company_or_staging_count += 1
+        else:
+            local_action_blockers.append(blocker_id)
+    return {
+        "company_or_staging_evidence_required": company_or_staging_count,
+        "local_action_required": len(local_action_blockers),
+        "by_status": dict(sorted(by_status.items())),
+        "local_action_blockers": sorted(local_action_blockers),
+    }
+
+
+def _requires_company_or_staging_evidence(blocker: Mapping[str, str]) -> bool:
+    blocker_id = blocker["blocker_id"]
+    if blocker["status"] == "company_evidence_required":
+        return True
+    if blocker_id.startswith("production_readiness:"):
+        return blocker_id != "production_readiness:local_regression_gates"
+    return False
 
 
 def main() -> int:

@@ -1054,6 +1054,21 @@ blocking:
     `remaining_blocker_count=20`, and readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`; remaining blockers require
     company/staging evidence and production endpoint configuration.
+- 2026-05-17 goal audit blocker classification:
+  - `ops/rehearsal/check_goal_completion.py` now emits `blocker_summary` with
+    `company_or_staging_evidence_required`, `local_action_required`,
+    `by_status`, and `local_action_blockers`.
+  - This prevents the final audit from requiring manual interpretation to see
+    whether any workstation-local actions remain after local gates pass.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_classifies_local_gate_as_local_action -q`
+    failed with `KeyError: 'blocker_summary'`, then passed after adding the
+    classification field.
+  - Verification: `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`
+    passed with `6 passed`; ruff passed on the touched goal audit/test files;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `blocker_summary.company_or_staging_evidence_required=20`.
 
 ## 5. Completion Gate
 
