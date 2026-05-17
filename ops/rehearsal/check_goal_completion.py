@@ -258,6 +258,7 @@ def _build_prompt_to_artifact_checklist(
                 "ops/rehearsal/build_handoff_bundle.py",
                 "ops/rehearsal/final_validation_commands.py",
                 "ops/rehearsal/validate_handoff_bundle.py",
+                "ops/rehearsal/assert_local_handoff_complete.py",
             ],
             "commands": [
                 "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown",

@@ -1137,6 +1137,25 @@ blocking:
     `assert_local_handoff_complete.py` passed with `failures=[]`,
     `remaining_blocker_count=20`, `local_action_required=0`, and
     `company_or_staging_evidence_required=20`.
+- 2026-05-17 local handoff assertion artifact mapping:
+  - `ops/rehearsal/check_goal_completion.py` now lists
+    `ops/rehearsal/assert_local_handoff_complete.py` in the
+    `company_staging_readiness` artifact checklist, matching the final
+    validation command that already invokes it.
+  - This keeps the prompt-to-artifact checklist complete for final handoff:
+    each company/staging validation command is backed by a concrete tracked
+    script artifact.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the assertion script was absent from `company_staging_readiness`
+    artifacts, then passed after adding it.
+  - Verification: `uv run pytest tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_staging_evidence_plan.py -q`
+    passed with `15 passed`; `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`
+    passed; `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `company_staging_readiness.artifacts` including the local handoff
+    assertion script.
 
 ## 5. Completion Gate
 
