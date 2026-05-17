@@ -1463,6 +1463,25 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+- 2026-05-17 handoff bundle readiness report internal consistency guard:
+  - `ops/rehearsal/validate_handoff_bundle.py` now recalculates
+    `production-readiness-report.json` summary counts from individual check
+    statuses and verifies that `passed` matches the recalculated
+    failed/manual/warning counts.
+  - RED/GREEN:
+    `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_readiness_report_summary_drift -q`
+    failed while a tampered readiness report with one `failed` check but stale
+    `summary` and `passed=true` passed validation, then passed after readiness
+    report internal consistency validation was added.
+  - Verification:
+    `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_runbook_docs.py -q`
+    passed with `31 passed`;
+    `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`
+    passed; `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
 
 ## 5. Completion Gate
 

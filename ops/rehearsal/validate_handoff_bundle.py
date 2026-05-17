@@ -96,6 +96,7 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
 
     if readiness_report:
         _validate_schema(readiness_report, "production-readiness-report", failures)
+        _validate_readiness_report_internal_consistency(readiness_report, failures)
         if readiness_report.get("passed") != manifest.get("readiness_passed"):
             failures.append("readiness_passed_mismatch")
         if readiness_report.get("summary") != manifest.get("readiness_summary"):
@@ -172,6 +173,28 @@ def _validate_manual_template_coverage(
         failures.append(f"manual_template_missing_gate:{check_id}")
     for check_id in sorted(template_gate_ids - expected_gate_ids):
         failures.append(f"manual_template_unexpected_gate:{check_id}")
+
+
+def _validate_readiness_report_internal_consistency(
+    readiness_report: Mapping[str, Any],
+    failures: list[str],
+) -> None:
+    expected_summary = {"passed": 0, "warning": 0, "failed": 0, "manual_required": 0}
+    for check in _object_list(readiness_report.get("checks")):
+        status = check.get("status")
+        if status in expected_summary:
+            expected_summary[status] += 1
+        else:
+            failures.append(f"readiness_unknown_check_status:{status}")
+    if readiness_report.get("summary") != expected_summary:
+        failures.append("readiness_summary_internal_mismatch")
+    expected_passed = (
+        expected_summary["failed"] == 0
+        and expected_summary["manual_required"] == 0
+        and expected_summary["warning"] == 0
+    )
+    if readiness_report.get("passed") != expected_passed:
+        failures.append("readiness_passed_internal_mismatch")
 
 
 def _validate_manifest_blockers(

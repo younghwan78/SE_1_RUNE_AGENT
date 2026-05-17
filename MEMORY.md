@@ -2408,3 +2408,29 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+
+## 2026-05-17 Handoff Bundle Readiness Report Internal Consistency Guard
+
+- Hardened `ops/rehearsal/validate_handoff_bundle.py` so
+  `production-readiness-report.json` must be internally consistent:
+  `summary` is recalculated from individual check statuses, and `passed` must
+  match the recalculated failed/manual/warning counts.
+- This closes a semantic gap where a tampered handoff bundle could keep
+  manifest hashes aligned while changing an individual readiness check to
+  `failed` without updating `summary` or `passed`.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_readiness_report_summary_drift -q`
+    failed while a tampered readiness report with one `failed` check but stale
+    `summary` and `passed=true` passed validation.
+  - The same test passed after adding readiness report internal consistency
+    validation.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_runbook_docs.py -q`:
+    `31 passed`
+  - `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
