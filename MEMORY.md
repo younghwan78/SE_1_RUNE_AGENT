@@ -1520,3 +1520,30 @@ Remaining production gap is unchanged:
     returned non-zero as expected because production readiness is still blocked,
     but `local_regression_gates` passed and the summary matched the updated
     document.
+
+## 2026-05-17 Goal Completion Final Validation Checklist
+
+- Strengthened `ops/rehearsal/check_goal_completion.py` so the
+  `company_staging_readiness` prompt-to-artifact checklist includes the final
+  goal-completion audit, handoff bundle build, and handoff bundle validation
+  commands in addition to readiness and evidence-plan generation commands.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while those final validation commands were absent from the
+    checklist.
+  - The focused test passed after adding the final commands.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`:
+    `5 passed`
+  - `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with the final validation commands present in the
+    checklist; `goal_complete=false`, `remaining_blocker_count=20`, readiness
+    summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with no failures.
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=36`.

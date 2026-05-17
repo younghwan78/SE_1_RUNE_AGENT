@@ -886,6 +886,24 @@ blocking:
     `uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --run-local-gates`
     result: local regression gates passed, overall readiness remains blocked
     with summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
+- 2026-05-17 goal completion final validation checklist:
+  - `ops/rehearsal/check_goal_completion.py` now lists final
+    company/staging validation commands directly under the
+    `company_staging_readiness` prompt-to-artifact checklist: goal-completion
+    audit, handoff bundle build, and handoff bundle validation.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed before those final commands were present, then passed after adding
+    them.
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`:
+    `5 passed`
+  - `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with the final validation commands present in the
+    checklist; `goal_complete=false`, `remaining_blocker_count=20`, readiness
+    summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with no failures.
 
 ## 5. Completion Gate
 

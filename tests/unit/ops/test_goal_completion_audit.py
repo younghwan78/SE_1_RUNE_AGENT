@@ -68,6 +68,22 @@ def test_goal_completion_audit_maps_prompt_requirements_to_artifacts() -> None:
         for check in company_item["checks"]
     )
     assert "production_readiness:postgres_state_store" in company_item["gaps"]
+    assert (
+        "uv run python ops/rehearsal/check_goal_completion.py "
+        "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
+        "--run-local-gates"
+        in company_item["commands"]
+    )
+    assert (
+        "uv run python ops/rehearsal/build_handoff_bundle.py "
+        "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
+        "--output-dir <handoff-bundle-dir>"
+        in company_item["commands"]
+    )
+    assert (
+        "uv run python ops/rehearsal/validate_handoff_bundle.py <handoff-bundle-dir>"
+        in company_item["commands"]
+    )
 
 
 def test_goal_completion_audit_applies_manual_evidence() -> None:

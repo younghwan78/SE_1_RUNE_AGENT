@@ -251,6 +251,17 @@ def _build_prompt_to_artifact_checklist(
                     "uv run python ops/rehearsal/check_production_readiness.py "
                     "--run-local-gates --evidence-file <reviewed-evidence.json>"
                 ),
+                (
+                    "uv run python ops/rehearsal/check_goal_completion.py "
+                    "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
+                    "--run-local-gates"
+                ),
+                (
+                    "uv run python ops/rehearsal/build_handoff_bundle.py "
+                    "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
+                    "--output-dir <handoff-bundle-dir>"
+                ),
+                "uv run python ops/rehearsal/validate_handoff_bundle.py <handoff-bundle-dir>",
             ],
             "checks": [
                 {
