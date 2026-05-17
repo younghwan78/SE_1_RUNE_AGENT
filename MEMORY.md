@@ -863,6 +863,12 @@ Validation evidence:
   passed structurally with `goal_complete=false`, proving the new env-file input
   path works; local gates were not run in this smoke, so the local regression
   gate remains `manual_required` in that specific report.
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`:
+  passed structurally with `goal_complete=false`, `remaining_blocker_count=20`,
+  `prompt_to_artifact_checklist_count=6`, readiness summary `failed=6`,
+  `manual_required=10`, `passed=3`, `warning=0`. This validates the intended
+  release-style env-file plus local-gates execution path; remaining blockers
+  still require real company/staging values and reviewed manual evidence.
 
 Remaining production gap is unchanged:
 

@@ -270,6 +270,7 @@ Latest local verification:
   without printing secret values
 - `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_load_env_file_merges_staging_values_without_printing_secrets tests/unit/ops/test_production_readiness_check.py::test_load_env_file_rejects_invalid_lines -q`: 2 passed
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example`: passed structurally with `goal_complete=false`, validating the env-file audit input path
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`: passed structurally with `goal_complete=false`, `remaining_blocker_count=20`, `prompt_to_artifact_checklist_count=6`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment
