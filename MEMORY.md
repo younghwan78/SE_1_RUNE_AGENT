@@ -1007,3 +1007,43 @@ Remaining production gap is unchanged:
     `manual_required=10`, `passed=3`, `warning=0`; the local regression gate
     evidence now includes
     `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle`
+
+## 2026-05-17 Handoff Bundle Validator
+
+- Added `ops/rehearsal/validate_handoff_bundle.py` to validate generated
+  staging handoff bundles before release-owner review.
+- The validator checks:
+  - `manifest.json` schema version
+  - required artifact declarations and file presence
+  - non-empty artifact files
+  - JSON parse/object shape for readiness, goal, and manual-evidence template
+    artifacts
+  - manifest `readiness_passed`, `goal_complete`, readiness summary, and goal
+    summary consistency with generated report files
+  - staging evidence plan Markdown heading
+- Wired the validator into:
+  - GitHub Actions `CI` after `Handoff bundle env-file smoke`
+  - `ops/rehearsal/check_production_readiness.py` `LOCAL_GATE_COMMANDS`
+  - `ops/rehearsal/validate_ci_gate_coverage.py`
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py -q`
+    failed before `validate_handoff_bundle.py` existed and passed after
+    implementation.
+- Verification so far:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke tests/unit/ops/test_ci_gate_coverage.py -q`:
+    `9 passed`
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle`:
+    passed
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/handoff-bundle`:
+    passed with `artifact_count=4`, `failed=0`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=28`
+- Full verification after wiring validator into local gates:
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `269 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`; local regression evidence
+    includes both handoff bundle generation and validation commands.

@@ -71,6 +71,7 @@ uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py
 uv run python ops/rehearsal/validate_postgres_typed_mirrors.py
 uv run python ops/rehearsal/validate_evidence_example.py
 uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle
+uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/handoff-bundle
 uv run python ops/rehearsal/validate_ci_gate_coverage.py
 uv run python ops/ui/smoke_operator_ui.py
 uv run python ops/evals/run_feedback_eval_rehearsal.py
@@ -188,6 +189,17 @@ uv run python ops/rehearsal/build_handoff_bundle.py \
 Omit `--allow-incomplete` only when the bundle is expected to represent a final
 release decision. The command returns non-zero until the top-level
 goal-completion report is actually complete.
+
+Validate bundle integrity before review:
+
+```bash
+uv run python ops/rehearsal/validate_handoff_bundle.py \
+  /secure/path/rune_handoff_bundle
+```
+
+The validator checks manifest schema, required artifact presence, JSON parse
+validity, readiness/goal summary consistency, and the Markdown evidence-plan
+heading.
 
 ## 5. Source Skill Export Dry-Run
 

@@ -41,6 +41,7 @@ REQUIRED_CI_EXTRA_COMMANDS = {
         "--allow-incomplete --env-file .env.example "
         "--output-dir .local_artifacts/handoff-bundle"
     ),
+    "uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/handoff-bundle",
 }
 
 

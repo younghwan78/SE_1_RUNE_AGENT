@@ -64,6 +64,11 @@ def test_local_gate_commands_include_staging_evidence_plan_smoke() -> None:
         "--env-file .env.example --output-dir .local_artifacts/handoff-bundle"
         in commands
     )
+    assert (
+        "uv run python ops/rehearsal/validate_handoff_bundle.py "
+        ".local_artifacts/handoff-bundle"
+        in commands
+    )
 
 
 def test_readiness_report_requires_helm_evidence_for_kubernetes_target() -> None:

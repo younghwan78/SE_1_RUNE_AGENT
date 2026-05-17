@@ -88,6 +88,9 @@ jobs:
       - name: Handoff bundle env-file smoke
         run: uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle
 
+      - name: Handoff bundle validation
+        run: uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/handoff-bundle
+
       - name: Readiness example safety validation
         run: uv run python ops/rehearsal/validate_evidence_example.py
 
