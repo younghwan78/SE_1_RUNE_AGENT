@@ -857,6 +857,27 @@ blocking:
     `ci_command_count=36`
   - `uv run ruff check ops/rehearsal/validate_ci_gate_coverage.py tests/unit/ops/test_ci_gate_coverage.py`:
     passed
+- 2026-05-17 reviewed-evidence local gate coverage:
+  - `ops/rehearsal/check_production_readiness.py` `LOCAL_GATE_COMMANDS` now
+    includes reviewed-evidence staging evidence plan generation, reviewed
+    handoff bundle generation, and reviewed handoff bundle validation.
+  - This keeps local `--run-local-gates`, goal-completion audit evidence, and
+    CI coverage aligned for the reviewed-evidence handoff path.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q`
+    failed while `LOCAL_GATE_COMMANDS` lacked the reviewed-evidence commands,
+    then passed after adding them.
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=36`
+  - `uv run ruff check ops/rehearsal/check_production_readiness.py tests/unit/ops/test_production_readiness_check.py`:
+    passed
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest -q`: passed with the expected skipped tests.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with reviewed-evidence smoke commands included in
+    `local_regression_gates`; `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
 
 ## 5. Completion Gate
 

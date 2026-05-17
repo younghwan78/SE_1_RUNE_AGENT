@@ -90,6 +90,25 @@ def test_local_gate_commands_include_staging_evidence_plan_smoke() -> None:
         ".local_artifacts/staging-handoff-bundle"
         in commands
     )
+    assert (
+        "uv run python ops/rehearsal/build_staging_evidence_plan.py "
+        "--env-file ops/rehearsal/staging.env.example "
+        "--evidence-file ops/rehearsal/production_readiness_evidence.example.json "
+        "--format markdown"
+        in commands
+    )
+    assert (
+        "uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete "
+        "--env-file ops/rehearsal/staging.env.example "
+        "--evidence-file ops/rehearsal/production_readiness_evidence.example.json "
+        "--output-dir .local_artifacts/staging-handoff-bundle-reviewed"
+        in commands
+    )
+    assert (
+        "uv run python ops/rehearsal/validate_handoff_bundle.py "
+        ".local_artifacts/staging-handoff-bundle-reviewed"
+        in commands
+    )
 
 
 def test_readiness_report_requires_helm_evidence_for_kubernetes_target() -> None:
