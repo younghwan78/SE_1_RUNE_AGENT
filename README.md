@@ -135,15 +135,15 @@ pre-review bundles that are expected to remain blocked:
 ```powershell
 uv run python ops/rehearsal/build_handoff_bundle.py `
   --allow-incomplete `
-  --env-file .env.example `
-  --output-dir .local_artifacts/handoff-bundle
+  --env-file ops/rehearsal/staging.env.example `
+  --output-dir .local_artifacts/staging-handoff-bundle
 ```
 
 Validate the generated bundle before handing it to a release reviewer:
 
 ```powershell
 uv run python ops/rehearsal/validate_handoff_bundle.py `
-  .local_artifacts/handoff-bundle
+  .local_artifacts/staging-handoff-bundle
 ```
 
 The validator also checks that `manual-evidence-template.json` covers every

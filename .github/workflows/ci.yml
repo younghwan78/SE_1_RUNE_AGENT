@@ -79,6 +79,9 @@ jobs:
       - name: Staging evidence plan env-file smoke
         run: uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file .env.example --format markdown
 
+      - name: Staging evidence plan template smoke
+        run: uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown
+
       - name: Release scope artifact validation
         run: uv run python ops/rehearsal/validate_release_scope_artifacts.py
 
@@ -88,11 +91,20 @@ jobs:
       - name: Goal completion env-file audit
         run: uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example
 
+      - name: Goal completion staging-template audit
+        run: uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example
+
       - name: Handoff bundle env-file smoke
         run: uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle
 
       - name: Handoff bundle validation
         run: uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/handoff-bundle
+
+      - name: Handoff bundle staging-template smoke
+        run: uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle
+
+      - name: Handoff bundle staging-template validation
+        run: uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle
 
       - name: Readiness example safety validation
         run: uv run python ops/rehearsal/validate_evidence_example.py

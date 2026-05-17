@@ -71,6 +71,27 @@ def test_ci_gate_coverage_reports_missing_required_command(tmp_path) -> None:  #
         "--allow-incomplete --env-file .env.example"
         in report["missing_required"]
     )
+    assert (
+        "uv run python ops/rehearsal/build_staging_evidence_plan.py "
+        "--env-file ops/rehearsal/staging.env.example --format markdown"
+        in report["missing_required"]
+    )
+    assert (
+        "uv run python ops/rehearsal/check_goal_completion.py "
+        "--allow-incomplete --env-file ops/rehearsal/staging.env.example"
+        in report["missing_required"]
+    )
+    assert (
+        "uv run python ops/rehearsal/build_handoff_bundle.py "
+        "--allow-incomplete --env-file ops/rehearsal/staging.env.example "
+        "--output-dir .local_artifacts/staging-handoff-bundle"
+        in report["missing_required"]
+    )
+    assert (
+        "uv run python ops/rehearsal/validate_handoff_bundle.py "
+        ".local_artifacts/staging-handoff-bundle"
+        in report["missing_required"]
+    )
 
 
 def _load_validator_module() -> ModuleType:

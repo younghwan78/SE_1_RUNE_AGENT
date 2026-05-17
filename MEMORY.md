@@ -1158,6 +1158,45 @@ Remaining production gap is unchanged:
   to `origin/main`; GitHub Actions `CI` run `25980477607` completed
   successfully.
 
+## 2026-05-17 Staging Template Handoff Gate Coverage
+
+- Strengthened local gate and GitHub Actions coverage so the release handoff
+  path is exercised with `ops/rehearsal/staging.env.example`, not only the
+  generic `.env.example`.
+- Added staging-template commands to `LOCAL_GATE_COMMANDS`:
+  - `build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example`
+  - `check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example`
+  - `build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`
+  - `validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`
+- Added matching GitHub Actions steps and updated
+  `ops/rehearsal/validate_ci_gate_coverage.py`; CI command coverage now reports
+  `ci_command_count=33`.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q`
+    failed before staging-template handoff commands were added to local gates and
+    passed after implementation.
+  - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`
+    failed before staging-template CI requirements were added and passed after
+    implementation.
+- Verification so far:
+  - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`:
+    passed with unresolved gate output
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example`:
+    passed structurally with `goal_complete=false`
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `273 passed, 3 skipped`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=33`.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with the expanded local gate list,
+    `goal_complete=false`, `remaining_blocker_count=20`, readiness summary
+    `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
+
 ## 2026-05-17 Readiness Evidence Example Drift Guard
 
 - Strengthened `ops/rehearsal/validate_evidence_example.py` so the committed
