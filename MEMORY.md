@@ -837,6 +837,13 @@ Validation evidence:
   `manual_required=11`, `passed=1`, `warning=0`. Non-Docker local gates passed,
   but Docker-backed local gates were classified as `manual_required` because
   Docker is unavailable in this workstation shell.
+- Docker Desktop Linux engine later became available. Rerunning
+  `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --run-local-gates`
+  passed structurally with `goal_complete=false`, `remaining_blocker_count=21`,
+  `prompt_to_artifact_checklist_count=6`, readiness summary `failed=7`,
+  `manual_required=10`, `passed=2`, `warning=0`; local regression gates are now
+  passed, leaving company/staging environment configuration and reviewed manual
+  evidence as the remaining blockers.
 
 Remaining production gap is unchanged:
 
