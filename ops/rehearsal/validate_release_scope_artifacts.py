@@ -363,12 +363,28 @@ def _render_item(item: ReleaseScopeItem, *, audit_text: str) -> dict[str, Any]:
     payload = asdict(item)
     payload["evidence_paths"] = list(item.evidence_paths)
     payload["verification_commands"] = list(item.verification_commands)
+    verification_artifact_paths = _verification_artifact_paths(
+        item.verification_commands
+    )
+    artifact_paths = sorted({*item.evidence_paths, *verification_artifact_paths})
+    payload["verification_artifact_paths"] = verification_artifact_paths
+    payload["artifact_paths"] = artifact_paths
     payload["audit_markers"] = list(item.audit_markers)
     payload["audit_covered"] = all(marker in audit_text for marker in item.audit_markers)
     payload["missing_paths"] = [
-        path for path in item.evidence_paths if not (ROOT / path).exists()
+        path for path in artifact_paths if not (ROOT / path).exists()
     ]
     return payload
+
+
+def _verification_artifact_paths(commands: Sequence[str]) -> list[str]:
+    paths: set[str] = set()
+    path_prefixes = (".claude/", "config/", "docs/", "ops/", "src/", "tests/")
+    for command in commands:
+        for token in command.split():
+            if token.startswith(path_prefixes) or token.endswith(".py"):
+                paths.add(token)
+    return sorted(paths)
 
 
 def main() -> int:

@@ -180,7 +180,7 @@ def _build_prompt_to_artifact_checklist(
                 {
                     path
                     for item in release_items
-                    for path in item["evidence_paths"]
+                    for path in item.get("artifact_paths", item["evidence_paths"])
                 }
             ),
             "commands": sorted(

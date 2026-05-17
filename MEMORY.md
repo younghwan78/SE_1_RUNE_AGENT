@@ -1542,6 +1542,35 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `local_regression_gates.artifacts` including the local gate script set.
+
+## 2026-05-17 Release Scope Verification Target Artifact Mapping
+
+- Updated `ops/rehearsal/validate_release_scope_artifacts.py` so each
+  first-release scope item now reports:
+  - `verification_artifact_paths`
+  - combined `artifact_paths`
+- Updated `ops/rehearsal/check_goal_completion.py` so the
+  `first_release_scope_artifacts` checklist uses combined `artifact_paths`.
+- This makes verification command targets such as
+  `tests/unit/adapters/test_jira_rest_adapter.py` concrete checklist artifacts,
+  instead of only command-string references.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py::test_release_scope_maps_verification_command_targets_to_artifacts -q`
+    failed with missing `verification_artifact_paths`, then passed after adding
+    derived verification artifacts.
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed until the top-level checklist used combined `artifact_paths`.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_production_readiness_check.py -q`:
+    `40 passed`
+  - `uv run ruff check ops/rehearsal/validate_release_scope_artifacts.py ops/rehearsal/check_goal_completion.py tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`:
+    passed with `failures=[]`
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, and `blocker_summary.local_action_required=0`.
   - `git diff --check`: passed
   - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
     passed structurally with `goal_complete=false`,

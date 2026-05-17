@@ -1175,6 +1175,26 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `local_regression_gates.artifacts` including the local gate script set.
+- 2026-05-17 release-scope verification target artifact mapping:
+  - `ops/rehearsal/validate_release_scope_artifacts.py` now emits
+    `verification_artifact_paths` and combined `artifact_paths` for each
+    first-release scope item, derived from verification command targets.
+  - `ops/rehearsal/check_goal_completion.py` now uses the combined
+    `artifact_paths` for the `first_release_scope_artifacts` checklist, so
+    command targets such as `tests/unit/adapters/test_jira_rest_adapter.py` are
+    represented as concrete artifacts instead of appearing only inside command
+    strings.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_release_scope_artifacts.py::test_release_scope_maps_verification_command_targets_to_artifacts -q`
+    failed with missing `verification_artifact_paths`, then passed after adding
+    derived verification artifacts. `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed until the top-level checklist used the combined artifact list.
+  - Verification: `uv run pytest tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_production_readiness_check.py -q`
+    passed with `40 passed`; `uv run ruff check ops/rehearsal/validate_release_scope_artifacts.py ops/rehearsal/check_goal_completion.py tests/unit/ops/test_release_scope_artifacts.py tests/unit/ops/test_goal_completion_audit.py`
+    passed; `uv run python ops/rehearsal/validate_release_scope_artifacts.py`
+    passed with `failures=[]`; `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, and `blocker_summary.local_action_required=0`.
 
 ## 5. Completion Gate
 

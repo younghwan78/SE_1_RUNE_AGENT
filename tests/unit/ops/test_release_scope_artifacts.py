@@ -49,6 +49,21 @@ def test_model_gateway_scope_includes_http_transport_and_unicode_regression() ->
     )
 
 
+def test_release_scope_maps_verification_command_targets_to_artifacts() -> None:
+    module = _load_module()
+
+    report = module.build_release_scope_report()
+    jira_item = next(
+        item for item in report["items"] if item["item_id"] == "jira_incremental_sync"
+    )
+
+    assert (
+        "tests/unit/adapters/test_jira_rest_adapter.py"
+        in jira_item["verification_artifact_paths"]
+    )
+    assert "tests/unit/adapters/test_jira_rest_adapter.py" in jira_item["artifact_paths"]
+
+
 def test_release_scope_requirements_match_production_plan() -> None:
     module = _load_module()
 
