@@ -80,9 +80,36 @@ def test_staging_evidence_plan_markdown_is_operator_readable() -> None:
     markdown = module.render_markdown(plan)
 
     assert "# Staging Evidence Collection Plan" in markdown
+    assert "## Final Validation" in markdown
     assert "## company_model_gateway_rehearsal" in markdown
     assert "`uv run python ops/model_gateway/rehearse_model_gateway.py`" in markdown
+    assert "--evidence-file <reviewed-evidence.json>" in markdown
     assert "TODO" not in markdown
+
+
+def test_staging_evidence_plan_includes_final_validation_commands() -> None:
+    module = _load_module()
+
+    plan = module.build_staging_evidence_plan({})
+
+    assert plan["final_validation_commands"] == [
+        (
+            "uv run python ops/rehearsal/check_production_readiness.py "
+            "--run-local-gates --env-file <staging.env> "
+            "--evidence-file <reviewed-evidence.json>"
+        ),
+        (
+            "uv run python ops/rehearsal/check_goal_completion.py "
+            "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
+            "--run-local-gates"
+        ),
+        (
+            "uv run python ops/rehearsal/build_handoff_bundle.py "
+            "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
+            "--output-dir <handoff-bundle-dir>"
+        ),
+        "uv run python ops/rehearsal/validate_handoff_bundle.py <handoff-bundle-dir>",
+    ]
 
 
 def test_staging_evidence_plan_guides_every_unresolved_gate() -> None:

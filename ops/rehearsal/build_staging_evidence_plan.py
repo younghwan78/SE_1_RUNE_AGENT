@@ -20,6 +20,25 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 CHECKER_PATH = ROOT / "ops/rehearsal/check_production_readiness.py"
 
+FINAL_VALIDATION_COMMANDS: tuple[str, ...] = (
+    (
+        "uv run python ops/rehearsal/check_production_readiness.py "
+        "--run-local-gates --env-file <staging.env> "
+        "--evidence-file <reviewed-evidence.json>"
+    ),
+    (
+        "uv run python ops/rehearsal/check_goal_completion.py "
+        "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
+        "--run-local-gates"
+    ),
+    (
+        "uv run python ops/rehearsal/build_handoff_bundle.py "
+        "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
+        "--output-dir <handoff-bundle-dir>"
+    ),
+    "uv run python ops/rehearsal/validate_handoff_bundle.py <handoff-bundle-dir>",
+)
+
 
 @dataclass(frozen=True)
 class GateGuidance:
@@ -230,6 +249,7 @@ def build_staging_evidence_plan(env: Mapping[str, str]) -> dict[str, Any]:
         "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "unresolved_count": len(gates),
         "summary": report["summary"],
+        "final_validation_commands": list(FINAL_VALIDATION_COMMANDS),
         "gates": gates,
     }
 
@@ -242,6 +262,12 @@ def render_markdown(plan: Mapping[str, Any]) -> str:
         f"- Generated at: `{plan['generated_at']}`",
         f"- Unresolved gates: `{plan['unresolved_count']}`",
         f"- Summary: `{json.dumps(plan['summary'], sort_keys=True)}`",
+        "",
+        "## Final Validation",
+        "",
+        "After collecting reviewed evidence, run:",
+        "",
+        *[f"- `{command}`" for command in plan["final_validation_commands"]],
         "",
     ]
     for gate in plan["gates"]:

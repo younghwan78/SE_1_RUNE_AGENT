@@ -1283,6 +1283,33 @@ Remaining production gap is unchanged:
     `manual_required=10`, `passed=3`, `warning=0`.
   - `git diff --check`: passed
 
+## 2026-05-17 Staging Evidence Final Validation Commands
+
+- Added `final_validation_commands` to
+  `ops/rehearsal/build_staging_evidence_plan.py` so the company/staging
+  evidence collection plan explicitly tells release owners how to validate
+  reviewed evidence, run the goal completion audit, build the final handoff
+  bundle, and validate that bundle after gate evidence is collected.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_includes_final_validation_commands tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_markdown_is_operator_readable -q`
+    failed while the plan had no `final_validation_commands` and no
+    `## Final Validation` Markdown section.
+  - The same focused tests passed after adding the structured command list and
+    Markdown section.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`:
+    `7 passed`
+  - `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py tests/unit/ops/test_staging_evidence_plan.py`:
+    passed
+  - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`:
+    passed and rendered the final validation command sequence.
+  - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
+  - `git diff --check`: passed
+
 ## 2026-05-17 Readiness Evidence Example Drift Guard
 
 - Strengthened `ops/rehearsal/validate_evidence_example.py` so the committed
