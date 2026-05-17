@@ -142,6 +142,9 @@ uv run python ops/rehearsal/validate_handoff_bundle.py `
   .local_artifacts/handoff-bundle
 ```
 
+The validator also checks that `manual-evidence-template.json` covers every
+`manual_required` gate from `production-readiness-report.json`.
+
 Run the API locally:
 
 ```powershell

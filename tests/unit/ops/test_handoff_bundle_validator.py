@@ -57,6 +57,32 @@ def test_handoff_bundle_validator_rejects_manifest_summary_drift(tmp_path) -> No
     assert "readiness_summary_mismatch" in report["failures"]
 
 
+def test_handoff_bundle_validator_rejects_missing_manual_template_gate(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
+    validator = _load_module(
+        "validate_handoff_bundle",
+        "ops/rehearsal/validate_handoff_bundle.py",
+    )
+    bundle_dir = tmp_path / "bundle"
+    builder.build_handoff_bundle(bundle_dir, run_local_gates=False)
+    template_path = bundle_dir / "manual-evidence-template.json"
+    template = json.loads(template_path.read_text(encoding="utf-8"))
+    template["checks"] = [
+        check
+        for check in template["checks"]
+        if check["check_id"] != "company_jira_sandbox_rehearsal"
+    ]
+    template_path.write_text(json.dumps(template), encoding="utf-8")
+
+    report = validator.validate_handoff_bundle(bundle_dir)
+
+    assert report["passed"] is False
+    assert (
+        "manual_template_missing_gate:company_jira_sandbox_rehearsal"
+        in report["failures"]
+    )
+
+
 def _load_module(module_name: str, path: str) -> ModuleType:
     spec = importlib.util.spec_from_file_location(module_name, Path(path))
     assert spec is not None

@@ -73,6 +73,8 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
             failures.append("goal_summary_mismatch")
     if manual_template:
         _validate_schema(manual_template, "manual-evidence-template", failures)
+    if readiness_report and manual_template:
+        _validate_manual_template_coverage(readiness_report, manual_template, failures)
 
     staging_plan_path = bundle_dir / "staging-evidence-plan.md"
     if staging_plan_path.exists():
@@ -101,6 +103,33 @@ def _load_json(path: Path, failures: list[str], label: str) -> dict[str, Any] | 
 def _validate_schema(payload: Mapping[str, Any], label: str, failures: list[str]) -> None:
     if payload.get("schema_version") != "v1":
         failures.append(f"schema_version_not_v1:{label}")
+
+
+def _validate_manual_template_coverage(
+    readiness_report: Mapping[str, Any],
+    manual_template: Mapping[str, Any],
+    failures: list[str],
+) -> None:
+    expected_gate_ids = {
+        str(check["check_id"])
+        for check in _object_list(readiness_report.get("checks"))
+        if check.get("status") == "manual_required" and isinstance(check.get("check_id"), str)
+    }
+    template_gate_ids = {
+        str(check["check_id"])
+        for check in _object_list(manual_template.get("checks"))
+        if isinstance(check.get("check_id"), str)
+    }
+    for check_id in sorted(expected_gate_ids - template_gate_ids):
+        failures.append(f"manual_template_missing_gate:{check_id}")
+    for check_id in sorted(template_gate_ids - expected_gate_ids):
+        failures.append(f"manual_template_unexpected_gate:{check_id}")
+
+
+def _object_list(value: object) -> list[Mapping[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, Mapping)]
 
 
 def _string_list(value: object) -> list[str]:

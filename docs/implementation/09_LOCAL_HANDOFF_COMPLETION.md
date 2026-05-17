@@ -198,7 +198,8 @@ uv run python ops/rehearsal/validate_handoff_bundle.py \
 ```
 
 The validator checks manifest schema, required artifact presence, JSON parse
-validity, readiness/goal summary consistency, and the Markdown evidence-plan
+validity, readiness/goal summary consistency, manual-evidence-template coverage
+for every `manual_required` readiness gate, and the Markdown evidence-plan
 heading.
 
 ## 5. Source Skill Export Dry-Run
