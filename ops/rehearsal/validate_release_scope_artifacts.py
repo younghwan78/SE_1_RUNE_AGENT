@@ -75,10 +75,12 @@ RELEASE_SCOPE_ITEMS: tuple[ReleaseScopeItem, ...] = (
         status="company_evidence_required",
         evidence_paths=(
             "src/req_tracker/model_gateway/client.py",
+            "src/req_tracker/model_gateway/http_provider.py",
             "src/req_tracker/model_gateway/registry.py",
             "config/model_profiles.json",
             "config/prompt_versions.json",
             "ops/model_gateway/rehearse_model_gateway.py",
+            "tests/unit/model_gateway/test_http_provider_and_registry.py",
         ),
         verification_commands=(
             "uv run pytest tests/unit/model_gateway",

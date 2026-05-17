@@ -32,6 +32,23 @@ def test_graph_ui_release_scope_is_resolved_locally() -> None:
     assert "ops/ui/smoke_operator_ui.py" in graph_item["verification_commands"][0]
 
 
+def test_model_gateway_scope_includes_http_transport_and_unicode_regression() -> None:
+    module = _load_module()
+
+    report = module.build_release_scope_report()
+    model_item = next(
+        item
+        for item in report["items"]
+        if item["item_id"] == "model_gateway_prompt_registry"
+    )
+
+    assert "src/req_tracker/model_gateway/http_provider.py" in model_item["evidence_paths"]
+    assert (
+        "tests/unit/model_gateway/test_http_provider_and_registry.py"
+        in model_item["evidence_paths"]
+    )
+
+
 def test_release_scope_requirements_match_production_plan() -> None:
     module = _load_module()
 

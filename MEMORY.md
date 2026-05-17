@@ -1627,3 +1627,29 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
+
+## 2026-05-17 Model Gateway Unicode Artifact Traceability
+
+- Tightened `ops/rehearsal/validate_release_scope_artifacts.py` so the
+  `model_gateway_prompt_registry` release-scope item now lists:
+  - `src/req_tracker/model_gateway/http_provider.py`
+  - `tests/unit/model_gateway/test_http_provider_and_registry.py`
+- This connects the Korean/non-ASCII HTTP transport fix and regression test to
+  the first-release artifact checklist instead of relying only on the broader
+  `tests/unit/model_gateway` command.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py::test_model_gateway_scope_includes_http_transport_and_unicode_regression -q`
+    failed while those paths were absent from the release-scope verifier.
+  - The focused test passed after adding the HTTP provider and regression test
+    paths.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_release_scope_artifacts.py -q`:
+    `7 passed`
+  - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed
+    with `missing_artifacts=0` and `audit_coverage_missing=0`.
+  - `uv run ruff check ops/rehearsal/validate_release_scope_artifacts.py tests/unit/ops/test_release_scope_artifacts.py`:
+    passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with the expanded model-gateway artifact list,
+    `goal_complete=false`, `remaining_blocker_count=20`, readiness summary
+    `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
