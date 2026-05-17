@@ -82,6 +82,11 @@ def test_staging_evidence_plan_markdown_is_operator_readable() -> None:
     assert "# Staging Evidence Collection Plan" in markdown
     assert "## Final Validation" in markdown
     assert "## company_model_gateway_rehearsal" in markdown
+    assert "- Next action:" in markdown
+    assert (
+        "Run ops/model_gateway/rehearse_model_gateway.py against the "
+        "company-approved model provider sandbox."
+    ) in markdown
     assert "`uv run python ops/model_gateway/rehearse_model_gateway.py`" in markdown
     assert "--evidence-file <reviewed-evidence.json>" in markdown
     assert "TODO" not in markdown

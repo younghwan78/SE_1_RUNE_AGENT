@@ -304,6 +304,7 @@ def render_markdown(plan: Mapping[str, Any]) -> str:
                 "",
                 f"- Status: `{gate['status']}`",
                 f"- Summary: {gate['summary']}",
+                f"- Next action: {gate['next_action'] or 'review the gate summary'}",
                 f"- Required env: {_inline_list(gate['required_env'])}",
                 "- Commands:",
                 *[f"  - `{command}`" for command in gate["commands"]],

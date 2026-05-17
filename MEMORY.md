@@ -2148,3 +2148,25 @@ Remaining production gap is unchanged:
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     `blocker_summary.company_or_staging_evidence_required=20`, and
     `summary.prompt_to_artifact_missing_count=0`.
+
+## 2026-05-17 Staging Evidence Markdown Next Actions
+
+- `ops/rehearsal/build_staging_evidence_plan.py` now renders each unresolved
+  gate's `next_action` in the markdown evidence plan.
+- Rationale: company/staging blockers were already available as structured
+  JSON, but the operator-facing markdown should expose the exact next action
+  beside summary, env, commands, required evidence, and docs.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_markdown_is_operator_readable -q`
+    failed while the markdown omitted `- Next action:`, then passed after
+    adding the line to `render_markdown`.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`:
+    `9 passed`
+  - `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py tests/unit/ops/test_staging_evidence_plan.py`:
+    passed
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
