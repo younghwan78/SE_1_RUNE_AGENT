@@ -1,6 +1,7 @@
 """Validate a generated production handoff bundle."""
 
 import argparse
+import hashlib
 import json
 from collections.abc import Mapping
 from pathlib import Path
@@ -33,6 +34,7 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
         failures.append("manifest_schema_version_not_v1")
 
     declared_artifacts = set(_string_list(manifest.get("artifacts")))
+    artifact_hashes = _string_mapping(manifest.get("artifact_hashes"))
     missing_declarations = EXPECTED_ARTIFACTS - declared_artifacts
     extra_declarations = declared_artifacts - EXPECTED_ARTIFACTS
     failures.extend(
@@ -41,6 +43,10 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
     failures.extend(
         f"unexpected_manifest_artifact:{artifact}" for artifact in sorted(extra_declarations)
     )
+    for artifact in sorted(EXPECTED_ARTIFACTS - set(artifact_hashes)):
+        failures.append(f"missing_artifact_hash:{artifact}")
+    for artifact in sorted(set(artifact_hashes) - EXPECTED_ARTIFACTS):
+        failures.append(f"unexpected_artifact_hash:{artifact}")
 
     for artifact in sorted(EXPECTED_ARTIFACTS):
         artifact_path = bundle_dir / artifact
@@ -49,6 +55,9 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
             continue
         if artifact_path.stat().st_size == 0:
             failures.append(f"empty_artifact:{artifact}")
+        expected_hash = artifact_hashes.get(artifact)
+        if expected_hash and _sha256_file(artifact_path) != expected_hash:
+            failures.append(f"artifact_hash_mismatch:{artifact}")
 
     readiness_report = _load_json(
         bundle_dir / "production-readiness-report.json",
@@ -185,6 +194,20 @@ def _string_list(value: object) -> list[str]:
     if not isinstance(value, list):
         return []
     return [item for item in value if isinstance(item, str)]
+
+
+def _string_mapping(value: object) -> dict[str, str]:
+    if not isinstance(value, Mapping):
+        return {}
+    return {
+        key: item
+        for key, item in value.items()
+        if isinstance(key, str) and isinstance(item, str)
+    }
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _report(bundle_dir: Path, failures: list[str], *, artifact_count: int) -> dict[str, Any]:

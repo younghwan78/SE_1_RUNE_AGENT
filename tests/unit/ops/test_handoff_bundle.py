@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -45,6 +46,11 @@ def test_handoff_bundle_writes_required_artifacts_without_secrets(tmp_path) -> N
     assert manifest["goal_complete"] is False
     assert manifest["readiness_passed"] is False
     assert set(manifest["artifacts"]) == expected_files - {"manifest.json"}
+    assert set(manifest["artifact_hashes"]) == expected_files - {"manifest.json"}
+    assert all(
+        re.fullmatch(r"[0-9a-f]{64}", value)
+        for value in manifest["artifact_hashes"].values()
+    )
     assert manifest["remaining_blocker_count"] == manifest["goal_summary"][
         "remaining_blocker_count"
     ]

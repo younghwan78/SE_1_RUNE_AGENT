@@ -78,6 +78,26 @@ def test_handoff_bundle_validator_rejects_manifest_blocker_drift(tmp_path) -> No
     assert "remaining_blockers_mismatch" in report["failures"]
 
 
+def test_handoff_bundle_validator_rejects_artifact_hash_drift(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
+    validator = _load_module(
+        "validate_handoff_bundle",
+        "ops/rehearsal/validate_handoff_bundle.py",
+    )
+    bundle_dir = tmp_path / "bundle"
+    builder.build_handoff_bundle(bundle_dir, run_local_gates=False)
+    plan_path = bundle_dir / "staging-evidence-plan.md"
+    plan_path.write_text(
+        plan_path.read_text(encoding="utf-8") + "\n# tampered after manifest\n",
+        encoding="utf-8",
+    )
+
+    report = validator.validate_handoff_bundle(bundle_dir)
+
+    assert report["passed"] is False
+    assert "artifact_hash_mismatch:staging-evidence-plan.md" in report["failures"]
+
+
 def test_handoff_bundle_validator_rejects_missing_manual_template_gate(tmp_path) -> None:  # type: ignore[no-untyped-def]
     builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
     validator = _load_module(

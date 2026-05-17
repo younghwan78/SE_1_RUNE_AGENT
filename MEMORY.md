@@ -1394,3 +1394,29 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
+
+## 2026-05-17 Handoff Bundle Artifact Hash Guard
+
+- Strengthened `ops/rehearsal/build_handoff_bundle.py` so each handoff
+  artifact listed in `manifest.json` is recorded with a SHA-256 artifact hash.
+- Strengthened `ops/rehearsal/validate_handoff_bundle.py` so stale or tampered
+  bundle artifacts fail validation with `artifact_hash_mismatch:<artifact>`.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_artifact_hash_drift -q`
+    failed while a modified `staging-evidence-plan.md` still passed validation
+    after bundle generation.
+  - The focused test passed after the validator compared the current artifact
+    hash against the manifest hash.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py -q`:
+    `11 passed`
+  - `uv run ruff check ops/rehearsal/build_handoff_bundle.py ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed and emitted hashes for all four bundle artifacts.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with no failures.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.

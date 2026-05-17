@@ -5,6 +5,7 @@ review without printing or copying secret environment values.
 """
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import os
@@ -72,6 +73,10 @@ def build_handoff_bundle(
         "evidence_file": evidence_file.name if evidence_file else None,
         "run_local_gates": run_local_gates,
         "artifacts": sorted(artifacts),
+        "artifact_hashes": {
+            filename: _sha256_file(output_dir / filename)
+            for filename in sorted(artifacts)
+        },
         "readiness_passed": readiness_report["passed"],
         "goal_complete": goal_report["goal_complete"],
         "readiness_summary": readiness_report["summary"],
@@ -85,6 +90,10 @@ def build_handoff_bundle(
 
 def _render_json(payload: Mapping[str, Any]) -> str:
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _build_manual_evidence_template(readiness_report: Mapping[str, Any]) -> dict[str, Any]:

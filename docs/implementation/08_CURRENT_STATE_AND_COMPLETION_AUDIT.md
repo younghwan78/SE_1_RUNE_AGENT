@@ -796,6 +796,28 @@ blocking:
   - RED/GREEN: `uv run pytest tests/unit/ops/test_release_scope_artifacts.py::test_release_scope_items_have_completion_audit_coverage -q`
     failed before audit coverage was reported and passed after adding
     `audit_markers`, `audit_covered`, and `audit_coverage_missing`.
+- 2026-05-17 handoff bundle artifact hash guard:
+  - `ops/rehearsal/build_handoff_bundle.py` now records SHA-256 hashes for all
+    bundle artifacts listed in `manifest.json`.
+  - `ops/rehearsal/validate_handoff_bundle.py` now rejects missing,
+    unexpected, or drifted artifact hashes so post-generation edits to
+    `staging-evidence-plan.md`, readiness reports, or goal reports cannot pass
+    as the original bundle.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_artifact_hash_drift -q`
+    failed while a tampered `staging-evidence-plan.md` still passed validation,
+    then passed after hash verification was added.
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py -q`:
+    `11 passed`
+  - `uv run ruff check ops/rehearsal/build_handoff_bundle.py ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed and generated artifact hashes for the staging handoff bundle.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with no failures.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
 
 ## 5. Completion Gate
 
