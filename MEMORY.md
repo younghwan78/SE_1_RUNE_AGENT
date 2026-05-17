@@ -2305,3 +2305,20 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+
+## 2026-05-17 Latest Local Handoff Baseline
+
+- Latest pushed commit: `847aceb Document missing env handoff fields`.
+- Latest GitHub Actions CI run: `25989238272`, passed.
+- Latest local handoff bundle run:
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates --output-dir .local_artifacts/staging-handoff-bundle`
+  - Output summary: `goal_complete=false`, `remaining_blocker_count=20`,
+    `blocker_summary.local_action_required=0`, `missing_env_count=19`.
+- Latest local handoff verification:
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    `passed=true`, `failures=[]`.
+  - `uv run python ops/rehearsal/assert_local_handoff_complete.py .local_artifacts/staging-handoff-bundle`:
+    `passed=true`, `failures=[]`.
+- Current boundary: no workstation-local blockers remain in the generated
+  handoff bundle; full production goal remains blocked by company/staging
+  endpoint configuration and reviewed manual evidence.

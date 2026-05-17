@@ -1381,6 +1381,19 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+- 2026-05-17 latest local handoff baseline:
+  - Latest pushed commit: `847aceb Document missing env handoff fields`.
+  - Latest GitHub Actions CI run: `25989238272`, passed.
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates --output-dir .local_artifacts/staging-handoff-bundle`
+    passed with `goal_complete=false`, `remaining_blocker_count=20`,
+    `blocker_summary.local_action_required=0`, and `missing_env_count=19`.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`
+    passed with `passed=true` and `failures=[]`.
+  - `uv run python ops/rehearsal/assert_local_handoff_complete.py .local_artifacts/staging-handoff-bundle`
+    passed with `passed=true` and `failures=[]`.
+  - This confirms the current repository has no workstation-local handoff
+    blockers; full production completion still requires company/staging
+    endpoints and reviewed manual evidence.
 
 ## 5. Completion Gate
 
