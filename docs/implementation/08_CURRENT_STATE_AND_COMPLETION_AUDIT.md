@@ -307,6 +307,13 @@ Latest local verification:
 
 Latest implementation GitHub Actions verification:
 
+- GitHub Actions `CI` run `25980477607` for implementation commit `5cc4c20`
+  (`Guard readiness evidence example against gate drift`): completed
+  successfully
+- GitHub Actions `CI` run `25980385129` for handoff commit `6ed3640`
+  (`Set Ubuntu target in staging env template`): completed successfully
+- GitHub Actions `CI` run `25980248459` for handoff commit `4822e2c`
+  (`Add staging readiness env template`): completed successfully
 - GitHub Actions `CI` run `25969313834` for implementation commit `f16b991`
   (`Accept manual evidence in goal audit`): completed successfully
 - GitHub Actions `CI` run `25968150339` for documentation commit `ee3dea2`
