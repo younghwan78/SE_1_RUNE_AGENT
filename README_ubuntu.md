@@ -267,6 +267,8 @@ Run masking policy rehearsal:
 uv run python ops/security/rehearse_masking_policy.py
 ```
 
+### Production Readiness
+
 Check release-readiness gates:
 
 ```bash

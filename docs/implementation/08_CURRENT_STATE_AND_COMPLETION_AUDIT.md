@@ -273,6 +273,9 @@ Latest local verification:
 - `uv run pytest`: 273 passed, 3 skipped after adding the readiness evidence example drift guard
 - `uv run pytest`: 274 passed, 3 skipped after adding handoff manifest remaining-blocker summary and validator drift checks
 - `uv run pytest`: 275 passed, 3 skipped after fixing final reviewed-evidence handoff bundles so stale manual-evidence TODO gates are not emitted after reviewed evidence has resolved them
+- `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`: 6 passed after adding a documentation-reference guard that verifies every staging evidence plan doc reference points to an existing Markdown file and, when a fragment is present, an existing heading anchor
+- `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`: passed after adding the `README_ubuntu.md#production-readiness` anchor used by company/staging evidence guidance
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`: passed structurally after the staging evidence plan doc-reference guard, reporting `goal_complete=false`, `remaining_blocker_count=20`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`
 - GitHub Actions JavaScript actions were updated to Node 24-backed tags:
   `actions/checkout@v6` and `actions/setup-python@v6`; the temporary
   `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` compatibility env was removed

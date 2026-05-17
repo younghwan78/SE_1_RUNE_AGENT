@@ -1257,6 +1257,32 @@ Remaining production gap is unchanged:
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
 
+## 2026-05-17 Staging Evidence Plan Doc Reference Guard
+
+- Added a regression guard in
+  `tests/unit/ops/test_staging_evidence_plan.py` so every documentation
+  reference emitted by `ops/rehearsal/build_staging_evidence_plan.py` must
+  point to an existing Markdown file and, when a fragment is present, an
+  existing heading anchor.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_doc_refs_exist -q`
+    failed because `README_ubuntu.md#production-readiness` did not exist.
+  - Added `### Production Readiness` to `README_ubuntu.md`.
+  - The same focused test passed after the runbook anchor existed.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`:
+    `6 passed`
+  - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`:
+    passed and rendered company/staging gate guidance with the now-valid
+    `README_ubuntu.md#production-readiness` references.
+  - `uv run ruff check tests/unit/ops/test_staging_evidence_plan.py`: passed
+  - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
+  - `git diff --check`: passed
+
 ## 2026-05-17 Readiness Evidence Example Drift Guard
 
 - Strengthened `ops/rehearsal/validate_evidence_example.py` so the committed

@@ -96,6 +96,24 @@ def test_staging_evidence_plan_guides_every_unresolved_gate() -> None:
         assert gate["docs"], gate["check_id"]
 
 
+def test_staging_evidence_plan_doc_refs_exist() -> None:
+    module = _load_module()
+
+    plan = module.build_staging_evidence_plan({})
+
+    for gate in plan["gates"]:
+        for doc_ref in gate["docs"]:
+            path_text, _, anchor = doc_ref.partition("#")
+            path = Path(path_text)
+            assert path.exists(), f"{gate['check_id']} references missing doc {doc_ref}"
+            if anchor:
+                anchors = _markdown_anchors(path)
+                assert anchor in anchors, (
+                    f"{gate['check_id']} references missing anchor {doc_ref}; "
+                    f"available={sorted(anchors)}"
+                )
+
+
 def _load_module() -> ModuleType:
     module_path = Path("ops/rehearsal/build_staging_evidence_plan.py")
     spec = importlib.util.spec_from_file_location("build_staging_evidence_plan", module_path)
@@ -104,3 +122,30 @@ def _load_module() -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _markdown_anchors(path: Path) -> set[str]:
+    anchors: set[str] = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("#"):
+            continue
+        heading = stripped.lstrip("#").strip()
+        if heading:
+            anchors.add(_github_anchor(heading))
+    return anchors
+
+
+def _github_anchor(heading: str) -> str:
+    result: list[str] = []
+    previous_dash = False
+    for character in heading.lower():
+        if character.isalnum():
+            result.append(character)
+            previous_dash = False
+            continue
+        if character.isspace() or character == "-":
+            if not previous_dash:
+                result.append("-")
+                previous_dash = True
+    return "".join(result).strip("-")
