@@ -1210,6 +1210,21 @@ blocking:
     `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, and `blocker_summary.local_action_required=0`.
+- 2026-05-17 company/staging runbook artifact mapping:
+  - `company_staging_readiness.artifacts` now includes `README.md`,
+    `README_ubuntu.md`, and
+    `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`, matching the runbook
+    documents that define final handoff, Ubuntu staging operation, and reviewed
+    evidence collection.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the runbooks were absent from the company/staging checklist,
+    then passed after adding them.
+  - Verification: `uv run pytest tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_runbook_docs.py -q`
+    passed with `10 passed`; `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`
+    passed; `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, and `blocker_summary.local_action_required=0`.
 
 ## 5. Completion Gate
 

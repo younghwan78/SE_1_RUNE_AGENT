@@ -1572,6 +1572,30 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, and `blocker_summary.local_action_required=0`.
 
+## 2026-05-17 Company/Staging Runbook Artifact Mapping
+
+- Updated `ops/rehearsal/check_goal_completion.py` so
+  `company_staging_readiness.artifacts` includes:
+  - `README.md`
+  - `README_ubuntu.md`
+  - `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`
+- Rationale: these runbooks define the final handoff workflow, Ubuntu staging
+  operation, reviewed evidence collection, and local-vs-company blocker split,
+  so they must appear in the prompt-to-artifact checklist.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the runbooks were absent from the company/staging checklist,
+    then passed after adding them.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_runbook_docs.py -q`:
+    `10 passed`
+  - `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, and `blocker_summary.local_action_required=0`.
+
 ## 2026-05-17 Goal Audit Scope Item Artifact Drill-Down
 
 - Updated `ops/rehearsal/check_goal_completion.py` so

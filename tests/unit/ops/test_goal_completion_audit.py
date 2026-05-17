@@ -87,6 +87,12 @@ def test_goal_completion_audit_maps_prompt_requirements_to_artifacts() -> None:
     assert "ops/rehearsal/final_validation_commands.py" in company_item["artifacts"]
     assert "ops/rehearsal/validate_handoff_bundle.py" in company_item["artifacts"]
     assert "ops/rehearsal/assert_local_handoff_complete.py" in company_item["artifacts"]
+    assert "README.md" in company_item["artifacts"]
+    assert "README_ubuntu.md" in company_item["artifacts"]
+    assert (
+        "docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md"
+        in company_item["artifacts"]
+    )
     assert any(
         check["check_id"] == "company_jira_sandbox_rehearsal"
         for check in company_item["checks"]
