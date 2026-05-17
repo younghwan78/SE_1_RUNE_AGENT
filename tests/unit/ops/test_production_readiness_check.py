@@ -170,6 +170,45 @@ def test_load_manual_evidence_from_json(tmp_path) -> None:  # type: ignore[no-un
     assert evidence[0].status == "passed"
 
 
+def test_load_env_file_merges_staging_values_without_printing_secrets(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    env_path = tmp_path / "staging.env"
+    env_path.write_text(
+        "\n".join(
+            [
+                "# company staging values",
+                "STATE_STORE=postgres",
+                "POSTGRES_DSN='postgresql://rune:secret@db/rune_agent'",
+                'MODEL_GATEWAY_ENDPOINT_URL="https://models.example.test/v1/complete"',
+                "export OTEL_ENABLED=true",
+                "UNCHANGED=from-file",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    env = checker.load_env_file(env_path, {"UNCHANGED": "from-base", "BASE_ONLY": "1"})
+    report = checker.build_readiness_report(env)
+
+    checks = {check["check_id"]: check for check in report["checks"]}
+    assert env["POSTGRES_DSN"] == "postgresql://rune:secret@db/rune_agent"
+    assert env["MODEL_GATEWAY_ENDPOINT_URL"] == "https://models.example.test/v1/complete"
+    assert env["OTEL_ENABLED"] == "true"
+    assert env["UNCHANGED"] == "from-file"
+    assert env["BASE_ONLY"] == "1"
+    assert checks["postgres_state_store"]["status"] == "passed"
+    assert "secret" not in str(report)
+
+
+def test_load_env_file_rejects_invalid_lines(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    checker = _load_checker_module()
+    env_path = tmp_path / "staging.env"
+    env_path.write_text("NOT_A_KEY_VALUE_LINE\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="must be KEY=VALUE"):
+        checker.load_env_file(env_path)
+
+
 def test_load_manual_evidence_rejects_passed_without_review_metadata(tmp_path) -> None:  # type: ignore[no-untyped-def]
     checker = _load_checker_module()
     evidence_path = tmp_path / "evidence.json"

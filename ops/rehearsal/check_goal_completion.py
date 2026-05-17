@@ -341,14 +341,25 @@ def main() -> int:
         default=None,
         help="Optional reviewed manual-gate evidence JSON file.",
     )
+    parser.add_argument(
+        "--env-file",
+        type=Path,
+        default=None,
+        help="Optional KEY=VALUE environment file for company/staging checks.",
+    )
     args = parser.parse_args()
+    env = (
+        READINESS_MODULE.load_env_file(args.env_file, os.environ)
+        if args.env_file
+        else dict(os.environ)
+    )
     manual_evidence = (
         READINESS_MODULE.load_manual_evidence(args.evidence_file)
         if args.evidence_file
         else []
     )
     report = build_goal_completion_audit(
-        dict(os.environ),
+        env,
         run_local_gates=args.run_local_gates,
         manual_evidence=manual_evidence,
     )

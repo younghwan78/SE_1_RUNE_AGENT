@@ -157,6 +157,31 @@ def load_manual_evidence(path: Path) -> list[ManualEvidence]:
     return records
 
 
+def load_env_file(path: Path, base_env: Mapping[str, str] | None = None) -> dict[str, str]:
+    """Load KEY=VALUE lines from an env file without printing secret values."""
+    merged = dict(base_env or {})
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("export "):
+            stripped = stripped.removeprefix("export ").strip()
+        if "=" not in stripped:
+            raise ValueError(f"{path}:{line_number} must be KEY=VALUE")
+        key, value = stripped.split("=", 1)
+        key = key.strip()
+        if not key or any(character.isspace() for character in key):
+            raise ValueError(f"{path}:{line_number} has an invalid env key")
+        merged[key] = _strip_env_quotes(value.strip())
+    return merged
+
+
+def _strip_env_quotes(value: str) -> str:
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1]
+    return value
+
+
 def _validate_review_metadata(
     payload: Mapping[str, Any],
     records: Sequence[ManualEvidence],
@@ -679,6 +704,12 @@ def main() -> int:
     parser.add_argument("--run-local-gates", action="store_true")
     parser.add_argument("--command-timeout-seconds", type=int, default=300)
     parser.add_argument(
+        "--env-file",
+        type=Path,
+        default=None,
+        help="Optional KEY=VALUE environment file for company/staging checks.",
+    )
+    parser.add_argument(
         "--evidence-file",
         type=Path,
         default=None,
@@ -694,8 +725,9 @@ def main() -> int:
         ),
     )
     args = parser.parse_args()
+    env = load_env_file(args.env_file, os.environ) if args.env_file else dict(os.environ)
     if args.write_evidence_template is not None:
-        template = build_manual_evidence_template(os.environ)
+        template = build_manual_evidence_template(env)
         template_json = json.dumps(template, indent=2, sort_keys=True)
         if str(args.write_evidence_template) == "-":
             print(template_json)
@@ -707,7 +739,7 @@ def main() -> int:
         return 0
     manual_evidence = load_manual_evidence(args.evidence_file) if args.evidence_file else []
     report = build_readiness_report(
-        os.environ,
+        env,
         run_local_gates=args.run_local_gates,
         command_timeout_seconds=args.command_timeout_seconds,
         manual_evidence=manual_evidence,

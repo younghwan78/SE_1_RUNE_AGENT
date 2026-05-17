@@ -155,6 +155,7 @@ After replacing TODO entries with reviewed evidence:
 
 ```bash
 uv run python ops/rehearsal/check_production_readiness.py \
+  --env-file /secure/path/staging.env \
   --evidence-file /secure/path/production_readiness_evidence.json
 ```
 
@@ -163,6 +164,7 @@ completion audit with the same reviewed evidence file:
 
 ```bash
 uv run python ops/rehearsal/check_goal_completion.py \
+  --env-file /secure/path/staging.env \
   --run-local-gates \
   --evidence-file /secure/path/production_readiness_evidence.json
 ```

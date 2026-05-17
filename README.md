@@ -99,6 +99,7 @@ failed, warning, or manual-required checks:
 
 ```powershell
 uv run python ops/rehearsal/check_production_readiness.py `
+  --env-file .env.example `
   --evidence-file ops/rehearsal/production_readiness_evidence.example.json
 ```
 
@@ -107,6 +108,7 @@ complete. Use the same reviewed evidence file after company/staging rehearsals:
 
 ```powershell
 uv run python ops/rehearsal/check_goal_completion.py `
+  --env-file .env.example `
   --run-local-gates `
   --evidence-file ops/rehearsal/production_readiness_evidence.example.json
 ```

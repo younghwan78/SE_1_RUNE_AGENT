@@ -150,7 +150,7 @@ Latest local verification:
 
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
-- `uv run pytest`: 258 passed, 3 skipped
+- `uv run pytest`: 260 passed, 3 skipped
 - `uv run pytest tests/unit/model_gateway -q`: 16 passed, validating dummy
   provider calls, policy enforcement, structured validation retry, fallback
   trace recording, provider usage metadata, and same-input model/prompt
@@ -264,6 +264,12 @@ Latest local verification:
   Confluence, and restricted decision/email export handoff
 - `uv run pytest tests/unit/config/test_env_example.py -q`: 1 passed, validating
   that `.env.example` covers production-readiness input variables
+- `ops/rehearsal/check_production_readiness.py` and
+  `ops/rehearsal/check_goal_completion.py` accept `--env-file` so release owners
+  can load a secure KEY=VALUE staging env file together with reviewed evidence
+  without printing secret values
+- `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_load_env_file_merges_staging_values_without_printing_secrets tests/unit/ops/test_production_readiness_check.py::test_load_env_file_rejects_invalid_lines -q`: 2 passed
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example`: passed structurally with `goal_complete=false`, validating the env-file audit input path
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment

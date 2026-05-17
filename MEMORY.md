@@ -844,6 +844,25 @@ Validation evidence:
   `manual_required=10`, `passed=2`, `warning=0`; local regression gates are now
   passed, leaving company/staging environment configuration and reviewed manual
   evidence as the remaining blockers.
+- Added `--env-file` support to `ops/rehearsal/check_production_readiness.py`
+  and `ops/rehearsal/check_goal_completion.py` so company/staging operators can
+  pass a secure KEY=VALUE env file alongside reviewed manual evidence without
+  exporting every variable in the shell.
+- Added env-file parser coverage in
+  `tests/unit/ops/test_production_readiness_check.py`, including quote/export
+  handling, base-env merge behavior, invalid-line rejection, and secret masking
+  in readiness reports.
+- Updated `README.md` and `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`
+  with `--env-file` examples for readiness and goal-completion audits.
+- `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_load_env_file_merges_staging_values_without_printing_secrets tests/unit/ops/test_production_readiness_check.py::test_load_env_file_rejects_invalid_lines -q`:
+  `2 passed`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `260 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example`:
+  passed structurally with `goal_complete=false`, proving the new env-file input
+  path works; local gates were not run in this smoke, so the local regression
+  gate remains `manual_required` in that specific report.
 
 Remaining production gap is unchanged:
 
