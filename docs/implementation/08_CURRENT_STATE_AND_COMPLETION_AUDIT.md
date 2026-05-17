@@ -1361,6 +1361,26 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+- 2026-05-17 handoff runbook missing env documentation:
+  - `README.md`, `README_ubuntu.md`, and
+    `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` now document
+    `missing_env`, `missing_env_count`, `missing_env_mismatch`, and
+    `missing_env_count_mismatch`.
+  - The runbooks explain that the manifest, validator output, and local handoff
+    assertion expose unresolved staging environment keys.
+  - RED/GREEN:
+    `uv run pytest tests/unit/ops/test_runbook_docs.py::test_handoff_runbooks_document_missing_env_summary -q`
+    failed while the runbooks omitted `missing_env`, then passed after the
+    handoff sections were updated.
+  - Verification:
+    `uv run pytest tests/unit/ops/test_runbook_docs.py -q` passed with
+    `5 passed`;
+    `uv run ruff check tests/unit/ops/test_runbook_docs.py` passed;
+    `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
 
 ## 5. Completion Gate
 

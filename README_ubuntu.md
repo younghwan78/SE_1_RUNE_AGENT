@@ -374,7 +374,11 @@ and `company_or_staging_evidence_required` shows the blockers that still need
 company/staging endpoints or reviewed evidence. The validator rejects
 `blocker_summary_mismatch` when the manifest and goal-completion report differ,
 and prints `goal_complete`, `remaining_blocker_count`, and `blocker_summary`
-in its own JSON output.
+in its own JSON output. The manifest, validator output, and local handoff
+assertion also include `missing_env` and `missing_env_count`, which summarize
+unresolved staging environment keys. The validator rejects
+`missing_env_mismatch` and `missing_env_count_mismatch` when those fields drift
+from `staging-evidence-plan.md`.
 
 After real staging rehearsals, run:
 

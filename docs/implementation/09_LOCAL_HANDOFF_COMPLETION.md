@@ -237,7 +237,11 @@ and the Markdown evidence-plan heading. In `manifest.json`,
 requires company/staging endpoints or reviewed evidence. A manifest that drifts
 from `goal-completion-report.json` fails with `blocker_summary_mismatch`. The
 validator output also prints `goal_complete`, `remaining_blocker_count`, and
-`blocker_summary` directly.
+`blocker_summary` directly. `manifest.json`, the validator output, and
+`assert_local_handoff_complete.py` also print `missing_env` and
+`missing_env_count`, which summarize unresolved staging environment keys. The
+validator fails with `missing_env_mismatch` or `missing_env_count_mismatch` if
+those fields drift from `staging-evidence-plan.md`.
 
 ## 5. Source Skill Export Dry-Run
 

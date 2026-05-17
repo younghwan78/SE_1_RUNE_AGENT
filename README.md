@@ -164,7 +164,11 @@ also carries `blocker_summary` from `goal-completion-report.json`; use
 company/staging systems. The validator rejects `blocker_summary_mismatch` if
 the manifest drifts from the goal-completion report, and prints
 `goal_complete`, `remaining_blocker_count`, and `blocker_summary` in its own
-JSON output.
+JSON output. The manifest, validator output, and local handoff assertion also
+include `missing_env` and `missing_env_count` so operators can see unresolved
+staging configuration keys without opening each gate section. The validator
+rejects `missing_env_mismatch` and `missing_env_count_mismatch` if those fields
+drift from `staging-evidence-plan.md`.
 
 Run the API locally:
 
