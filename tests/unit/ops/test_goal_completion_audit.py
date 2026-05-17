@@ -108,3 +108,76 @@ def test_goal_completion_audit_applies_manual_evidence() -> None:
     assert "production_readiness:company_postgres_rehearsal" not in blocker_ids
     assert "production_readiness:company_neo4j_rehearsal" in blocker_ids
     assert report["production_readiness"]["manual_evidence_count"] == 1
+
+
+def test_goal_completion_audit_can_complete_with_reviewed_company_evidence() -> None:
+    namespace = run_path("ops/rehearsal/check_goal_completion.py")
+
+    report = namespace["build_goal_completion_audit"](
+        _complete_production_env(),
+        manual_evidence=[
+            namespace["READINESS_MODULE"].ManualEvidence(
+                check_id=check_id,
+                status="passed",
+                summary=f"{check_id} reviewed and passed.",
+                evidence=[f"artifact:{check_id}.json"],
+            )
+            for check_id in _manual_gate_ids()
+        ],
+    )
+
+    assert report["goal_complete"] is True
+    assert report["summary"]["release_scope_passed"] is True
+    assert report["summary"]["release_scope_ready"] is False
+    assert report["summary"]["release_scope_goal_ready"] is True
+    assert report["release_scope"]["goal_ready"] is True
+    assert report["production_readiness"]["passed"] is True
+    assert report["remaining_blockers"] == []
+
+
+def _complete_production_env() -> dict[str, str]:
+    return {
+        "STATE_STORE": "postgres",
+        "POSTGRES_DSN": "postgresql://rune:secret-value@db/rune_agent",
+        "POSTGRES_TEST_DSN": "postgresql://rune:secret-value@db/rune_agent_test",
+        "GRAPH_BACKEND": "neo4j",
+        "NEO4J_URI": "bolt://neo4j:7687",
+        "NEO4J_TEST_URI": "bolt://neo4j:7687",
+        "NEO4J_USERNAME": "neo4j",
+        "NEO4J_PASSWORD": "secret-value",
+        "VECTOR_BACKEND": "qdrant",
+        "QDRANT_URL": "http://qdrant:6333",
+        "QDRANT_TEST_URL": "http://qdrant:6333",
+        "QDRANT_COLLECTION": "rune_chunks",
+        "MODEL_GATEWAY_MODE": "http_json",
+        "MODEL_GATEWAY_ENDPOINT_URL": "https://models.example.test/v1/complete",
+        "AUTH_MODE": "trusted_proxy",
+        "TRUSTED_PROXY_SECRET": "secret-value",
+        "TRUSTED_GROUP_ROLE_MAP": '{"rune-admins":"admin"}',
+        "OTEL_ENABLED": "true",
+        "OTEL_EXPORTER_OTLP_ENDPOINT": "http://otel-collector:4317",
+        "PROMETHEUS_BASE_URL": "https://prometheus.example.test",
+        "GRAFANA_DASHBOARD_UID": "rune-agent-ops",
+        "RUNE_API_BASE_URL": "https://rune-agent.example.test",
+        "ARTIFACT_ROOT": "/var/lib/rune-agent/artifacts",
+        "JIRA_BASE_URL": "https://jira.example.test",
+        "CONFLUENCE_BASE_URL": "https://confluence.example.test",
+        "RUNE_EMAIL_EXPORT_PATH": "/secure/exports/decision_email.jsonl",
+        "BACKUP_ROOT": "/var/backups/rune-agent/20260512T000000Z",
+    }
+
+
+def _manual_gate_ids() -> tuple[str, ...]:
+    return (
+        "company_postgres_rehearsal",
+        "company_neo4j_rehearsal",
+        "company_qdrant_rehearsal",
+        "company_model_gateway_rehearsal",
+        "company_jira_sandbox_rehearsal",
+        "company_confluence_sandbox_rehearsal",
+        "company_email_policy_rehearsal",
+        "backup_restore_load_rehearsal",
+        "observability_dashboard_rehearsal",
+        "trusted_proxy_rbac_rehearsal",
+        "local_regression_gates",
+    )

@@ -897,6 +897,23 @@ Validation evidence:
 - `uv run ruff check .`: passed
 - `uv run mypy src`: passed
 - `uv run pytest`: `261 passed, 3 skipped`
+- Fixed the top-level goal-completion semantics so `company_evidence_required`
+  release-scope items are resolved through mapped production-readiness checks
+  instead of permanently blocking `goal_complete` through the local-only
+  `release_ready=false` flag. This preserves `release_scope.release_ready=false`
+  as the local artifact verifier's status, while adding
+  `release_scope_goal_ready` / `release_scope.goal_ready` for the actual
+  completion decision.
+- Added `test_goal_completion_audit_can_complete_with_reviewed_company_evidence`
+  to prove that complete company/staging env values plus reviewed manual
+  evidence can drive the top-level audit to `goal_complete=true`.
+- `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`: `5 passed`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `262 passed, 3 skipped`
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`:
+  passed structurally with `goal_complete=false`, `remaining_blocker_count=20`,
+  `release_scope_goal_ready=false`, and `production_readiness_passed=false`.
 
 Remaining production gap is unchanged:
 

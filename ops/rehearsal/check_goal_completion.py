@@ -45,6 +45,16 @@ SUCCESS_CRITERIA: tuple[dict[str, str], ...] = (
     },
 )
 
+RELEASE_SCOPE_READINESS_DEPENDENCIES: dict[str, tuple[str, ...]] = {
+    "jira_incremental_sync": ("company_jira_sandbox_rehearsal",),
+    "model_gateway_prompt_registry": (
+        "model_gateway_profile",
+        "company_model_gateway_rehearsal",
+    ),
+    "llm_assisted_suggestions": ("company_model_gateway_rehearsal",),
+    "sso_rbac_basic": ("trusted_proxy_auth", "trusted_proxy_rbac_rehearsal"),
+}
+
 
 def _load_script_module(module_name: str, path: Path) -> ModuleType:
     spec = importlib.util.spec_from_file_location(module_name, path)
@@ -78,10 +88,15 @@ def build_goal_completion_audit(
         run_local_gates=run_local_gates,
         manual_evidence=manual_evidence,
     )
+    release_scope_blockers = _release_scope_blockers(
+        release_scope,
+        production_readiness,
+    )
     remaining_blockers = [
-        *_release_scope_blockers(release_scope),
+        *release_scope_blockers,
         *_production_readiness_blockers(production_readiness),
     ]
+    release_scope_goal_ready = release_scope["passed"] and not release_scope_blockers
     prompt_to_artifact_checklist = _build_prompt_to_artifact_checklist(
         release_scope,
         production_readiness,
@@ -91,7 +106,7 @@ def build_goal_completion_audit(
         "schema_version": "v1",
         "objective": OBJECTIVE,
         "goal_complete": (
-            release_scope["release_ready"]
+            release_scope_goal_ready
             and production_readiness["passed"]
             and not remaining_blockers
         ),
@@ -101,6 +116,7 @@ def build_goal_completion_audit(
             "remaining_blocker_count": len(remaining_blockers),
             "release_scope_passed": release_scope["passed"],
             "release_scope_ready": release_scope["release_ready"],
+            "release_scope_goal_ready": release_scope_goal_ready,
             "production_readiness_passed": production_readiness["passed"],
         },
         "success_criteria": list(SUCCESS_CRITERIA),
@@ -108,6 +124,7 @@ def build_goal_completion_audit(
         "release_scope": {
             "passed": release_scope["passed"],
             "release_ready": release_scope["release_ready"],
+            "goal_ready": release_scope_goal_ready,
             "summary": release_scope["summary"],
         },
         "production_readiness": {
@@ -276,18 +293,36 @@ def _build_prompt_to_artifact_checklist(
     ]
 
 
-def _release_scope_blockers(report: Mapping[str, Any]) -> list[dict[str, str]]:
+def _release_scope_blockers(
+    report: Mapping[str, Any],
+    production_readiness: Mapping[str, Any],
+) -> list[dict[str, str]]:
     blockers: list[dict[str, str]] = []
+    readiness_statuses = {
+        check["check_id"]: check["status"] for check in production_readiness["checks"]
+    }
     for item in report["items"]:
         if item["status"] != "local_complete":
-            blockers.append(
-                {
-                    "blocker_id": f"release_scope:{item['item_id']}",
-                    "status": item["status"],
-                    "summary": item["notes"],
-                    "next_action": "Collect company/staging evidence for this first-release item.",
-                }
-            )
+            dependencies = RELEASE_SCOPE_READINESS_DEPENDENCIES.get(item["item_id"], ())
+            unresolved_dependencies = [
+                check_id
+                for check_id in dependencies
+                if readiness_statuses.get(check_id) != "passed"
+            ]
+            if unresolved_dependencies or not dependencies:
+                blockers.append(
+                    {
+                        "blocker_id": f"release_scope:{item['item_id']}",
+                        "status": item["status"],
+                        "summary": (
+                            f"{item['notes']} Required readiness checks: "
+                            f"{', '.join(dependencies) or '<unmapped>'}."
+                        ),
+                        "next_action": (
+                            "Collect company/staging evidence for this first-release item."
+                        ),
+                    }
+                )
         for failure in item["missing_paths"]:
             blockers.append(
                 {
