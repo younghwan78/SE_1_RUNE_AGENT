@@ -1598,3 +1598,19 @@ Remaining production gap is unchanged:
     failed while the final handoff bundle command lacked
     `--run-local-gates`.
   - The focused test passed after adding `--run-local-gates` to that command.
+
+## 2026-05-17 Korean Model Gateway UTF-8 Compatibility
+
+- Investigated a Korean chat/non-ASCII compatibility issue at the
+  model-gateway HTTP boundary.
+- Root cause found locally: `HttpJsonModelProvider` sent
+  `content-type: application/json` without an explicit charset, and
+  `_urllib_transport()` used Python's default `json.dumps()` behavior, escaping
+  Korean text as `\u....` sequences before UTF-8 encoding.
+- Updated `src/req_tracker/model_gateway/http_provider.py` to send
+  `content-type: application/json; charset=utf-8` and serialize HTTP payloads
+  with `ensure_ascii=False`.
+- RED/GREEN:
+  - `uv run pytest tests/unit/model_gateway/test_http_provider_and_registry.py::test_http_json_model_provider_sends_provider_neutral_payload tests/unit/model_gateway/test_http_provider_and_registry.py::test_http_json_transport_preserves_korean_text_as_utf8 -q`
+    failed while Korean text was escaped and charset was missing.
+  - The focused tests passed after preserving Korean text as UTF-8 bytes.

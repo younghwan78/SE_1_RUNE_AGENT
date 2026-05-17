@@ -55,7 +55,7 @@ class HttpJsonModelProvider:
         """Send a provider-neutral JSON request to a model gateway."""
         headers = {
             "accept": "application/json",
-            "content-type": "application/json",
+            "content-type": "application/json; charset=utf-8",
             "x-model-profile-id": profile.model_profile_id,
             "x-prompt-version-id": prompt.prompt_version_id,
         }
@@ -98,7 +98,7 @@ def _urllib_transport(
     payload: dict[str, Any],
     timeout_seconds: int,
 ) -> dict[str, Any]:
-    data = json.dumps(payload).encode("utf-8")
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = request.Request(endpoint_url, data=data, headers=headers, method="POST")
     try:
         with request.urlopen(req, timeout=timeout_seconds) as response:

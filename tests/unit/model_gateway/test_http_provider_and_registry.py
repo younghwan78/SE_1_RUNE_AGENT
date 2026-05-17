@@ -1,11 +1,13 @@
 """HTTP provider and file-backed model registry tests."""
 
+import json
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from req_tracker.config.settings import Settings
+from req_tracker.model_gateway import http_provider
 from req_tracker.model_gateway.factory import provider_for_profile
 from req_tracker.model_gateway.http_provider import HttpJsonModelProvider
 from req_tracker.model_gateway.models import ModelProfile, ModelRequest, PromptVersion
@@ -58,6 +60,7 @@ def test_http_json_model_provider_sends_provider_neutral_payload() -> None:
 
     assert calls[0]["endpoint_url"] == "https://models.example.com/v1/complete"
     assert calls[0]["headers"]["authorization"] == "Bearer secret"
+    assert calls[0]["headers"]["content-type"] == "application/json; charset=utf-8"
     assert calls[0]["headers"]["x-model-profile-id"] == "internal-json"
     assert calls[0]["payload"]["provider"] == "internal"
     assert calls[0]["payload"]["prompt_template"] == "Extract nodes"
@@ -67,6 +70,48 @@ def test_http_json_model_provider_sends_provider_neutral_payload() -> None:
     assert response.input_tokens == 123
     assert response.output_tokens == 45
     assert response.cost_usd == 0.00123
+
+
+def test_http_json_transport_preserves_korean_text_as_utf8(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, Any] = {}
+
+    class FakeResponse:
+        def __enter__(self) -> "FakeResponse":
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        def read(self) -> bytes:
+            return b'{"output":{"answer":"ok"}}'
+
+    def fake_urlopen(req: Any, timeout: int) -> FakeResponse:
+        captured["data"] = req.data
+        captured["content_type"] = req.get_header("Content-type")
+        captured["timeout"] = timeout
+        return FakeResponse()
+
+    monkeypatch.setattr(http_provider.request, "urlopen", fake_urlopen)
+
+    loaded = http_provider._urllib_transport(
+        "https://models.example.com/v1/complete",
+        {"content-type": "application/json; charset=utf-8"},
+        {"payload": {"message": "한국어 요구사항을 설명해줘"}},
+        30,
+    )
+
+    raw_body = captured["data"]
+    assert isinstance(raw_body, bytes)
+    assert "한국어".encode() in raw_body
+    assert b"\\ud55c\\uad6d\\uc5b4" not in raw_body
+    assert captured["content_type"] == "application/json; charset=utf-8"
+    assert captured["timeout"] == 30
+    assert json.loads(raw_body.decode("utf-8"))["payload"]["message"] == (
+        "한국어 요구사항을 설명해줘"
+    )
+    assert loaded == {"output": {"answer": "ok"}}
 
 
 def test_http_json_model_provider_reads_openai_style_usage_aliases() -> None:
