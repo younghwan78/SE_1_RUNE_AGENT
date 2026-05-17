@@ -76,6 +76,8 @@ def build_handoff_bundle(
         "goal_complete": goal_report["goal_complete"],
         "readiness_summary": readiness_report["summary"],
         "goal_summary": goal_report["summary"],
+        "remaining_blocker_count": goal_report["summary"]["remaining_blocker_count"],
+        "remaining_blockers": _manifest_blockers(goal_report),
     }
     (output_dir / "manifest.json").write_text(_render_json(manifest), encoding="utf-8")
     return manifest
@@ -83,6 +85,29 @@ def build_handoff_bundle(
 
 def _render_json(payload: Mapping[str, Any]) -> str:
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
+def _manifest_blockers(goal_report: Mapping[str, Any]) -> list[dict[str, str]]:
+    blockers = goal_report.get("remaining_blockers")
+    if not isinstance(blockers, list):
+        return []
+    manifest_blockers: list[dict[str, str]] = []
+    for item in blockers:
+        if not isinstance(item, Mapping):
+            continue
+        blocker_id = item.get("blocker_id")
+        status = item.get("status")
+        next_action = item.get("next_action")
+        if not all(isinstance(value, str) for value in (blocker_id, status, next_action)):
+            continue
+        manifest_blockers.append(
+            {
+                "blocker_id": blocker_id,
+                "status": status,
+                "next_action": next_action,
+            }
+        )
+    return manifest_blockers
 
 
 def _load_script_module(module_name: str, path: Path) -> ModuleType:

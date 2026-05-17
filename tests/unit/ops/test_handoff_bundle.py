@@ -45,6 +45,15 @@ def test_handoff_bundle_writes_required_artifacts_without_secrets(tmp_path) -> N
     assert manifest["goal_complete"] is False
     assert manifest["readiness_passed"] is False
     assert set(manifest["artifacts"]) == expected_files - {"manifest.json"}
+    assert manifest["remaining_blocker_count"] == manifest["goal_summary"][
+        "remaining_blocker_count"
+    ]
+    assert manifest["remaining_blockers"]
+    assert {
+        "blocker_id",
+        "status",
+        "next_action",
+    } <= set(manifest["remaining_blockers"][0])
     assert manifest == json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
     assert "secret-value" not in _read_bundle(output_dir)
     assert "postgresql://rune" not in _read_bundle(output_dir)

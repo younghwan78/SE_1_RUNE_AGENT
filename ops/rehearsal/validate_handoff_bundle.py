@@ -71,6 +71,7 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
             failures.append("goal_complete_mismatch")
         if goal_report.get("summary") != manifest.get("goal_summary"):
             failures.append("goal_summary_mismatch")
+        _validate_manifest_blockers(goal_report, manifest, failures)
     if manual_template:
         _validate_schema(manual_template, "manual-evidence-template", failures)
     if readiness_report and manual_template:
@@ -124,6 +125,42 @@ def _validate_manual_template_coverage(
         failures.append(f"manual_template_missing_gate:{check_id}")
     for check_id in sorted(template_gate_ids - expected_gate_ids):
         failures.append(f"manual_template_unexpected_gate:{check_id}")
+
+
+def _validate_manifest_blockers(
+    goal_report: Mapping[str, Any],
+    manifest: Mapping[str, Any],
+    failures: list[str],
+) -> None:
+    expected_count = _summary_remaining_blocker_count(goal_report)
+    if manifest.get("remaining_blocker_count") != expected_count:
+        failures.append("remaining_blocker_count_mismatch")
+    if _manifest_blocker_fingerprint(manifest.get("remaining_blockers")) != (
+        _manifest_blocker_fingerprint(goal_report.get("remaining_blockers"))
+    ):
+        failures.append("remaining_blockers_mismatch")
+
+
+def _summary_remaining_blocker_count(goal_report: Mapping[str, Any]) -> int | None:
+    summary = goal_report.get("summary")
+    if not isinstance(summary, Mapping):
+        return None
+    value = summary.get("remaining_blocker_count")
+    return value if isinstance(value, int) else None
+
+
+def _manifest_blocker_fingerprint(value: object) -> list[tuple[str, str, str]]:
+    return sorted(
+        (
+            str(item["blocker_id"]),
+            str(item["status"]),
+            str(item["next_action"]),
+        )
+        for item in _object_list(value)
+        if isinstance(item.get("blocker_id"), str)
+        and isinstance(item.get("status"), str)
+        and isinstance(item.get("next_action"), str)
+    )
 
 
 def _object_list(value: object) -> list[Mapping[str, Any]]:

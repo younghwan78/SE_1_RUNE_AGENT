@@ -57,6 +57,27 @@ def test_handoff_bundle_validator_rejects_manifest_summary_drift(tmp_path) -> No
     assert "readiness_summary_mismatch" in report["failures"]
 
 
+def test_handoff_bundle_validator_rejects_manifest_blocker_drift(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
+    validator = _load_module(
+        "validate_handoff_bundle",
+        "ops/rehearsal/validate_handoff_bundle.py",
+    )
+    bundle_dir = tmp_path / "bundle"
+    builder.build_handoff_bundle(bundle_dir, run_local_gates=False)
+    manifest_path = bundle_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["remaining_blocker_count"] = 0
+    manifest["remaining_blockers"] = []
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = validator.validate_handoff_bundle(bundle_dir)
+
+    assert report["passed"] is False
+    assert "remaining_blocker_count_mismatch" in report["failures"]
+    assert "remaining_blockers_mismatch" in report["failures"]
+
+
 def test_handoff_bundle_validator_rejects_missing_manual_template_gate(tmp_path) -> None:  # type: ignore[no-untyped-def]
     builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
     validator = _load_module(

@@ -1197,6 +1197,36 @@ Remaining production gap is unchanged:
     `goal_complete=false`, `remaining_blocker_count=20`, readiness summary
     `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
 
+## 2026-05-17 Handoff Bundle Blocker Manifest
+
+- Enhanced `ops/rehearsal/build_handoff_bundle.py` so `manifest.json` carries
+  a review-friendly remaining blocker summary:
+  - `remaining_blocker_count`
+  - `remaining_blockers[]` with `blocker_id`, `status`, and `next_action`
+- Enhanced `ops/rehearsal/validate_handoff_bundle.py` to compare manifest
+  blocker count/list against `goal-completion-report.json` and fail on drift.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle.py::test_handoff_bundle_writes_required_artifacts_without_secrets -q`
+    failed before the manifest blocker fields existed and passed after
+    implementation.
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_manifest_blocker_drift -q`
+    failed before validator blocker drift checks existed and passed after
+    implementation.
+- Verification:
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed and printed `remaining_blocker_count=21` without `--run-local-gates`.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed after sequential bundle generation.
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `274 passed, 3 skipped`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=33`
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
+
 ## 2026-05-17 Readiness Evidence Example Drift Guard
 
 - Strengthened `ops/rehearsal/validate_evidence_example.py` so the committed
