@@ -271,10 +271,19 @@ def build_staging_evidence_plan(
         if check["status"] in {"failed", "manual_required", "warning"}
     ]
     gates = [_gate_plan(check) for check in unresolved]
+    missing_env = sorted(
+        {
+            env_name
+            for gate in gates
+            for env_name in gate["missing_env"]
+        }
+    )
     return {
         "schema_version": "v1",
         "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "unresolved_count": len(gates),
+        "missing_env_count": len(missing_env),
+        "missing_env": missing_env,
         "summary": report["summary"],
         "final_validation_commands": list(FINAL_VALIDATION_COMMANDS),
         "gates": gates,
@@ -288,6 +297,7 @@ def render_markdown(plan: Mapping[str, Any]) -> str:
         "",
         f"- Generated at: `{plan['generated_at']}`",
         f"- Unresolved gates: `{plan['unresolved_count']}`",
+        f"- Missing env total: `{plan['missing_env_count']}`",
         f"- Summary: `{json.dumps(plan['summary'], sort_keys=True)}`",
         "",
         "## Final Validation",

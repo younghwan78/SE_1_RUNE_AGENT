@@ -2194,3 +2194,25 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+
+## 2026-05-17 Staging Evidence Missing Env Summary
+
+- `ops/rehearsal/build_staging_evidence_plan.py` now emits a deduplicated
+  top-level `missing_env` list and `missing_env_count`.
+- The markdown evidence plan now renders `- Missing env total:` near the plan
+  header so release operators can estimate configuration work without reading
+  every gate section.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_lists_unresolved_gates_without_secrets tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_markdown_is_operator_readable -q`
+    failed with `KeyError: 'missing_env'` and missing markdown summary text,
+    then passed after adding the top-level fields and rendering.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`:
+    `9 passed`
+  - `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py tests/unit/ops/test_staging_evidence_plan.py`:
+    passed
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.

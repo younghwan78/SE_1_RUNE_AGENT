@@ -17,6 +17,9 @@ def test_staging_evidence_plan_lists_unresolved_gates_without_secrets() -> None:
 
     assert plan["schema_version"] == "v1"
     assert plan["unresolved_count"] > 0
+    assert "STATE_STORE" in plan["missing_env"]
+    assert "POSTGRES_DSN" not in plan["missing_env"]
+    assert plan["missing_env_count"] == len(plan["missing_env"])
     gates = {gate["check_id"]: gate for gate in plan["gates"]}
     assert "postgres_state_store" in gates
     assert "company_jira_sandbox_rehearsal" in gates
@@ -82,6 +85,7 @@ def test_staging_evidence_plan_markdown_is_operator_readable() -> None:
 
     assert "# Staging Evidence Collection Plan" in markdown
     assert "## Final Validation" in markdown
+    assert "- Missing env total:" in markdown
     assert "## company_model_gateway_rehearsal" in markdown
     assert "- Next action:" in markdown
     assert "- Missing env:" in markdown
