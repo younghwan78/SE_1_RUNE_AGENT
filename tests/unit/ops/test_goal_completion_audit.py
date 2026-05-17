@@ -61,6 +61,19 @@ def test_goal_completion_audit_maps_prompt_requirements_to_artifacts() -> None:
     assert "AI의 원본 시스템 write-back" in scope_item["first_release_exclusions"]
     assert "src/req_tracker/adapters/jira_rest.py" in scope_item["artifacts"]
     assert "tests/unit/adapters/test_jira_rest_adapter.py" in scope_item["artifacts"]
+    jira_scope_item = next(
+        item
+        for item in scope_item["scope_items"]
+        if item["item_id"] == "jira_incremental_sync"
+    )
+    assert (
+        "tests/unit/adapters/test_jira_rest_adapter.py"
+        in jira_scope_item["artifact_paths"]
+    )
+    assert (
+        "tests/unit/adapters/test_jira_rest_adapter.py"
+        in jira_scope_item["verification_artifact_paths"]
+    )
     assert any(
         command.startswith("uv run pytest tests/unit/adapters/test_jira_rest_adapter.py")
         for command in scope_item["commands"]

@@ -1571,6 +1571,29 @@ Remaining production gap is unchanged:
   - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, and `blocker_summary.local_action_required=0`.
+
+## 2026-05-17 Goal Audit Scope Item Artifact Drill-Down
+
+- Updated `ops/rehearsal/check_goal_completion.py` so
+  `first_release_scope_artifacts.scope_items` entries also include:
+  - `artifact_paths`
+  - `verification_artifact_paths`
+- This preserves release-scope verifier detail in the top-level goal audit, so
+  drill-down entries retain command-target artifacts such as
+  `tests/unit/adapters/test_jira_rest_adapter.py`.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed with missing `artifact_paths` in the JIRA scope item, then passed
+    after propagating the fields.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_release_scope_artifacts.py -q`:
+    `15 passed`
+  - `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, and `blocker_summary.local_action_required=0`.
   - `git diff --check`: passed
   - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
     passed structurally with `goal_complete=false`,

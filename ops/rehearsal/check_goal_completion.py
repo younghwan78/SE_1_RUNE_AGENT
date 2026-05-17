@@ -198,6 +198,11 @@ def _build_prompt_to_artifact_checklist(
                     "audit_covered": item["audit_covered"],
                     "missing_paths": item["missing_paths"],
                     "evidence_paths": item["evidence_paths"],
+                    "verification_artifact_paths": item.get(
+                        "verification_artifact_paths",
+                        [],
+                    ),
+                    "artifact_paths": item.get("artifact_paths", item["evidence_paths"]),
                     "verification_commands": item["verification_commands"],
                 }
                 for item in release_items
