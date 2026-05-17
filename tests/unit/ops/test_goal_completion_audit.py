@@ -43,6 +43,11 @@ def test_goal_completion_audit_lists_concrete_success_criteria() -> None:
     }
     assert checklist_ids == criteria_ids
     assert report["summary"]["prompt_to_artifact_checklist_count"] == len(criteria_ids)
+    assert report["summary"]["prompt_to_artifact_missing_count"] == 0
+    assert all(
+        item["missing_artifacts"] == []
+        for item in report["prompt_to_artifact_checklist"]
+    )
 
 
 def test_goal_completion_audit_maps_prompt_requirements_to_artifacts() -> None:
@@ -170,6 +175,42 @@ def test_goal_completion_audit_applies_manual_evidence() -> None:
     assert "production_readiness:company_postgres_rehearsal" not in blocker_ids
     assert "production_readiness:company_neo4j_rehearsal" in blocker_ids
     assert report["production_readiness"]["manual_evidence_count"] == 1
+
+
+def test_goal_completion_audit_blocks_missing_prompt_artifacts() -> None:
+    namespace = run_path("ops/rehearsal/check_goal_completion.py")
+    checklist = [
+        {
+            "criterion_id": "test_criterion",
+            "requirement": "test",
+            "status": "passed",
+            "artifacts": ["does/not/exist.md"],
+            "commands": [],
+            "evidence": [],
+            "gaps": [],
+        }
+    ]
+
+    enriched = namespace["_with_artifact_existence"](checklist)
+    blockers = namespace["_prompt_to_artifact_blockers"](enriched)
+
+    assert enriched[0]["missing_artifacts"] == ["does/not/exist.md"]
+    assert enriched[0]["gaps"] == [
+        "prompt_to_artifact:test_criterion:missing_artifact:does/not/exist.md"
+    ]
+    assert blockers == [
+        {
+            "blocker_id": (
+                "prompt_to_artifact:test_criterion:"
+                "missing_artifact:does/not/exist.md"
+            ),
+            "status": "failed",
+            "summary": (
+                "Prompt-to-artifact checklist path is missing: does/not/exist.md"
+            ),
+            "next_action": "Restore the missing artifact or update the checklist.",
+        }
+    ]
 
 
 def test_goal_completion_audit_classifies_local_gate_as_local_action() -> None:

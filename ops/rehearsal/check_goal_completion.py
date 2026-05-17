@@ -103,10 +103,18 @@ def build_goal_completion_audit(
         *_production_readiness_blockers(production_readiness),
     ]
     release_scope_goal_ready = release_scope["passed"] and not release_scope_blockers
-    prompt_to_artifact_checklist = _build_prompt_to_artifact_checklist(
-        release_scope,
-        production_readiness,
-        remaining_blockers,
+    prompt_to_artifact_checklist = _with_artifact_existence(
+        _build_prompt_to_artifact_checklist(
+            release_scope,
+            production_readiness,
+            remaining_blockers,
+        )
+    )
+    remaining_blockers.extend(
+        _prompt_to_artifact_blockers(prompt_to_artifact_checklist)
+    )
+    prompt_to_artifact_missing_count = sum(
+        len(item["missing_artifacts"]) for item in prompt_to_artifact_checklist
     )
     blocker_summary = _build_blocker_summary(remaining_blockers)
     return {
@@ -120,6 +128,7 @@ def build_goal_completion_audit(
         "summary": {
             "success_criteria_count": len(SUCCESS_CRITERIA),
             "prompt_to_artifact_checklist_count": len(prompt_to_artifact_checklist),
+            "prompt_to_artifact_missing_count": prompt_to_artifact_missing_count,
             "remaining_blocker_count": len(remaining_blockers),
             "release_scope_passed": release_scope["passed"],
             "release_scope_ready": release_scope["release_ready"],
@@ -308,6 +317,48 @@ def _build_prompt_to_artifact_checklist(
             "gaps": [],
         },
     ]
+
+
+def _with_artifact_existence(checklist: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    enriched: list[dict[str, Any]] = []
+    for item in checklist:
+        copied = dict(item)
+        missing_artifacts = sorted(
+            path
+            for path in copied.get("artifacts", [])
+            if not (ROOT / path).exists()
+        )
+        copied["missing_artifacts"] = missing_artifacts
+        if missing_artifacts:
+            copied["gaps"] = [
+                *copied.get("gaps", []),
+                *[
+                    f"prompt_to_artifact:{copied['criterion_id']}:missing_artifact:{path}"
+                    for path in missing_artifacts
+                ],
+            ]
+        enriched.append(copied)
+    return enriched
+
+
+def _prompt_to_artifact_blockers(
+    checklist: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    blockers: list[dict[str, str]] = []
+    for item in checklist:
+        for path in item["missing_artifacts"]:
+            blockers.append(
+                {
+                    "blocker_id": (
+                        f"prompt_to_artifact:{item['criterion_id']}:"
+                        f"missing_artifact:{path}"
+                    ),
+                    "status": "failed",
+                    "summary": f"Prompt-to-artifact checklist path is missing: {path}",
+                    "next_action": "Restore the missing artifact or update the checklist.",
+                }
+            )
+    return blockers
 
 
 def _local_regression_gate_artifacts() -> list[str]:

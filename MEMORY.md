@@ -2120,3 +2120,31 @@ Remaining production gap is unchanged:
     `15 passed`
   - `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`:
     passed
+
+## 2026-05-17 Prompt-to-Artifact Existence Guard
+
+- `ops/rehearsal/check_goal_completion.py` now verifies that every path listed
+  in each prompt-to-artifact checklist entry exists in the repository.
+- The goal audit now emits:
+  - `summary.prompt_to_artifact_missing_count`
+  - `prompt_to_artifact_checklist[*].missing_artifacts`
+- Missing checklist paths become explicit failed blockers with ids in the form
+  `prompt_to_artifact:<criterion_id>:missing_artifact:<path>`, so a stale
+  checklist cannot be hidden by passing proxy tests.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_lists_concrete_success_criteria -q`
+    failed with `KeyError: 'prompt_to_artifact_missing_count'`, then passed
+    after the summary field and per-item `missing_artifacts` field were added.
+  - Added `test_goal_completion_audit_blocks_missing_prompt_artifacts` to prove
+    a missing declared artifact becomes both a checklist gap and a failed
+    blocker.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`:
+    `7 passed`
+  - `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    `blocker_summary.company_or_staging_evidence_required=20`, and
+    `summary.prompt_to_artifact_missing_count=0`.
