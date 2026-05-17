@@ -123,6 +123,18 @@ uv run python ops/rehearsal/check_goal_completion.py `
   --output .local_artifacts/goal-completion-report.json
 ```
 
+Build a single handoff bundle for staging review. This writes the evidence
+plan, manual evidence template, production-readiness report, goal-completion
+report, and manifest to one directory. Use `--allow-incomplete` for dry-run or
+pre-review bundles that are expected to remain blocked:
+
+```powershell
+uv run python ops/rehearsal/build_handoff_bundle.py `
+  --allow-incomplete `
+  --env-file .env.example `
+  --output-dir .local_artifacts/handoff-bundle
+```
+
 Run the API locally:
 
 ```powershell
@@ -320,6 +332,7 @@ Current local implementation:
 - full-stack API rehearsal against PostgreSQL, Neo4j, and Qdrant
 - runtime state restore from persisted state after API restart
 - readiness API for non-destructive backend checks
+- handoff bundle generation for staging evidence review artifacts
 - periodic analysis scheduler for server operation with persisted schedule configuration
 
 Enable local SQLite persistence:

@@ -48,6 +48,7 @@ Concrete deliverables:
 | Incident response runbook | `docs/runbooks/INCIDENT_RESPONSE.md`, `tests/unit/ops/test_runbook_docs.py` | Complete locally |
 | Dashboard state RBAC | `docs/security/RBAC_MATRIX.md`, `tests/contract/test_dashboard_api.py` | Complete locally |
 | Readiness template | `ops/rehearsal/check_production_readiness.py --write-evidence-template -` | Complete |
+| Handoff bundle | `ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle` | Complete for generating review artifacts; real evidence remains external |
 | CI gate coverage | `.github/workflows/ci.yml`, `ops/rehearsal/validate_ci_gate_coverage.py` | Complete |
 
 ## 3. Local Gate Command Set
@@ -172,6 +173,21 @@ uv run python ops/rehearsal/check_goal_completion.py \
   --output /secure/path/goal_completion_report.json
 ```
 
+To generate the evidence plan, evidence template, readiness report,
+goal-completion report, and manifest together:
+
+```bash
+uv run python ops/rehearsal/build_handoff_bundle.py \
+  --allow-incomplete \
+  --env-file /secure/path/staging.env \
+  --evidence-file /secure/path/production_readiness_evidence.json \
+  --output-dir /secure/path/rune_handoff_bundle
+```
+
+Omit `--allow-incomplete` only when the bundle is expected to represent a final
+release decision. The command returns non-zero until the top-level
+goal-completion report is actually complete.
+
 ## 5. Source Skill Export Dry-Run
 
 Use this local command to prove that skill-produced source files can drive the
@@ -201,6 +217,7 @@ The current repository should be treated as:
 - complete for local/dummy production-shaped foundation
 - complete for source-skill/export handoff rehearsal
 - complete for deterministic CI/local release gates
+- complete for one-command handoff bundle generation of staging review artifacts
 - complete for Docker-backed disposable backend and full-stack rehearsal scripts,
   with latest 2026-05-17 local pass evidence after Docker Desktop Linux engine
   was started

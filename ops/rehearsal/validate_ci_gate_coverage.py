@@ -36,6 +36,11 @@ REQUIRED_CI_EXTRA_COMMANDS = {
         "uv run python ops/rehearsal/check_goal_completion.py "
         "--allow-incomplete --env-file .env.example"
     ),
+    (
+        "uv run python ops/rehearsal/build_handoff_bundle.py "
+        "--allow-incomplete --env-file .env.example "
+        "--output-dir .local_artifacts/handoff-bundle"
+    ),
 }
 
 

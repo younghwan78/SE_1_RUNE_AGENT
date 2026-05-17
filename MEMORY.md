@@ -934,3 +934,45 @@ Remaining production gap is unchanged:
   source sync, real model gateway execution, live model quality validation,
   company SSO/OIDC proxy, PostgreSQL, Neo4j, Qdrant, observability,
   backup/restore/load, and approved decision/email export validation.
+
+## 2026-05-17 Handoff Bundle Generation
+
+- Added `ops/rehearsal/build_handoff_bundle.py` to generate a single staging
+  review bundle containing:
+  - `manifest.json`
+  - `staging-evidence-plan.md`
+  - `manual-evidence-template.json`
+  - `production-readiness-report.json`
+  - `goal-completion-report.json`
+- The bundle accepts the same `--env-file` and `--evidence-file` inputs as the
+  readiness and goal-completion audits, without copying secret env values into
+  generated reports.
+- Added `--allow-incomplete` for pre-review/dry-run bundles. Without that flag,
+  the CLI exits non-zero until the top-level goal completion audit is actually
+  complete.
+- Added unit coverage in `tests/unit/ops/test_handoff_bundle.py` for artifact
+  generation, manifest contents, reviewed evidence input, incomplete CLI smoke,
+  and secret non-leakage.
+- Added GitHub Actions smoke coverage:
+  `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle`
+  and updated `ops/rehearsal/validate_ci_gate_coverage.py`.
+- Updated `README.md`,
+  `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`, and
+  `docs/implementation/08_CURRENT_STATE_AND_COMPLETION_AUDIT.md` with the
+  bundle command and handoff evidence role.
+- Verification so far:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle.py`: `3 passed`
+  - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py tests/unit/ops/test_handoff_bundle.py`:
+    `5 passed`
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle`:
+    passed, reporting `goal_complete=false`, readiness summary `failed=6`,
+    `manual_required=11`, `passed=2`, `warning=0`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=27`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `266 passed, 3 skipped`
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`

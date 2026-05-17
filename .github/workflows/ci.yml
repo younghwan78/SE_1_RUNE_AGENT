@@ -85,6 +85,9 @@ jobs:
       - name: Goal completion env-file audit
         run: uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example
 
+      - name: Handoff bundle env-file smoke
+        run: uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle
+
       - name: Readiness example safety validation
         run: uv run python ops/rehearsal/validate_evidence_example.py
 
