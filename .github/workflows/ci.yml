@@ -67,14 +67,23 @@ jobs:
       - name: Readiness evidence template smoke
         run: uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -
 
+      - name: Readiness env-file evidence template smoke
+        run: uv run python ops/rehearsal/check_production_readiness.py --env-file .env.example --write-evidence-template -
+
       - name: Staging evidence plan smoke
         run: uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown
+
+      - name: Staging evidence plan env-file smoke
+        run: uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file .env.example --format markdown
 
       - name: Release scope artifact validation
         run: uv run python ops/rehearsal/validate_release_scope_artifacts.py
 
       - name: Goal completion audit
         run: uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete
+
+      - name: Goal completion env-file audit
+        run: uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example
 
       - name: Readiness example safety validation
         run: uv run python ops/rehearsal/validate_evidence_example.py

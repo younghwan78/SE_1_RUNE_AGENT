@@ -21,9 +21,21 @@ ALLOWED_CI_OMISSIONS = {
 
 REQUIRED_CI_EXTRA_COMMANDS = {
     "uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -",
+    (
+        "uv run python ops/rehearsal/check_production_readiness.py "
+        "--env-file .env.example --write-evidence-template -"
+    ),
     "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown",
+    (
+        "uv run python ops/rehearsal/build_staging_evidence_plan.py "
+        "--env-file .env.example --format markdown"
+    ),
     "uv run python ops/rehearsal/validate_release_scope_artifacts.py",
     "uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete",
+    (
+        "uv run python ops/rehearsal/check_goal_completion.py "
+        "--allow-incomplete --env-file .env.example"
+    ),
 }
 
 

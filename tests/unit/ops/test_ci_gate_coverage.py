@@ -54,11 +54,21 @@ def test_ci_gate_coverage_reports_missing_required_command(tmp_path) -> None:  #
         in report["missing_required"]
     )
     assert (
+        "uv run python ops/rehearsal/build_staging_evidence_plan.py "
+        "--env-file .env.example --format markdown"
+        in report["missing_required"]
+    )
+    assert (
         "uv run python ops/rehearsal/validate_release_scope_artifacts.py"
         in report["missing_required"]
     )
     assert (
         "uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete"
+        in report["missing_required"]
+    )
+    assert (
+        "uv run python ops/rehearsal/check_goal_completion.py "
+        "--allow-incomplete --env-file .env.example"
         in report["missing_required"]
     )
 

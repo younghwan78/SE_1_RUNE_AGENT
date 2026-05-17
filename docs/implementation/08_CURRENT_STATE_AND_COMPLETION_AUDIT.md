@@ -276,6 +276,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file .env.example --format markdown`: passed, reporting `Unresolved gates: 17` and summary `failed=6`, `manual_required=11`, `passed=2`, `warning=0`
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example`: passed structurally with `goal_complete=false`, validating the env-file audit input path
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`: passed structurally with `goal_complete=false`, `remaining_blocker_count=20`, `prompt_to_artifact_checklist_count=6`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`
+- GitHub Actions `CI` now includes env-file smoke gates for readiness evidence template generation, staging evidence plan generation, and goal-completion audit; `uv run python ops/rehearsal/validate_ci_gate_coverage.py` passed with `ci_command_count=26`
 - `uv run pytest tests/unit/ops/test_helm_chart.py`: 4 passed, validating chart artifact presence, production environment mapping, secret references, no hardcoded secret/MCP transport names, and local chart validator behavior
 - `uv run python ops/helm/validate_chart.py`: passed, validating required Helm chart files, production env defaults, secret references, and forbidden snippets without requiring a local Helm binary
 - `helm version --short`: not available in this local shell; run `helm lint` and `helm template` in the target Kubernetes environment

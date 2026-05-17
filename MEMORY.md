@@ -885,6 +885,18 @@ Validation evidence:
   passed structurally with `goal_complete=false`, `remaining_blocker_count=20`,
   `prompt_to_artifact_checklist_count=6`, readiness summary `failed=6`,
   `manual_required=10`, `passed=3`, `warning=0`.
+- Added env-file CLI smoke gates to GitHub Actions `CI`:
+  `check_production_readiness.py --env-file .env.example --write-evidence-template -`,
+  `build_staging_evidence_plan.py --env-file .env.example --format markdown`,
+  and `check_goal_completion.py --allow-incomplete --env-file .env.example`.
+- Updated `ops/rehearsal/validate_ci_gate_coverage.py` so those env-file smoke
+  commands are required CI coverage.
+- `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+  `ci_command_count=26`
+- `uv run pytest tests/unit/ops/test_ci_gate_coverage.py -q`: `2 passed`
+- `uv run ruff check .`: passed
+- `uv run mypy src`: passed
+- `uv run pytest`: `261 passed, 3 skipped`
 
 Remaining production gap is unchanged:
 
