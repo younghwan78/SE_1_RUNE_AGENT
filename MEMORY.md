@@ -1050,6 +1050,32 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`
+
+## 2026-05-17 Ubuntu Handoff Bundle Runbook Update
+
+- Updated `README_ubuntu.md` production-readiness instructions with the
+  staging handoff bundle workflow:
+  - `ops/rehearsal/build_handoff_bundle.py`
+  - `ops/rehearsal/validate_handoff_bundle.py`
+  - guidance for using `--allow-incomplete` before final release decision
+  - manual-evidence-template coverage validation description
+- Added `test_ubuntu_runbook_covers_handoff_bundle_workflow` to
+  `tests/unit/ops/test_runbook_docs.py`.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_runbook_docs.py::test_ubuntu_runbook_covers_handoff_bundle_workflow -q`
+    failed before the Ubuntu runbook mentioned the handoff bundle workflow and
+    passed after the runbook update.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_runbook_docs.py -q`: `2 passed`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `271 passed, 3 skipped`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=28`
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`
 - Added RED/GREEN coverage for stale manual-evidence templates:
   - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_missing_manual_template_gate -q`
     failed before the template/readiness comparison existed and passed after

@@ -325,6 +325,29 @@ Validate observability assets:
 uv run python ops/observability/validate_observability_assets.py
 ```
 
+Build a single release handoff bundle for review:
+
+```bash
+uv run python ops/rehearsal/build_handoff_bundle.py \
+  --allow-incomplete \
+  --env-file /secure/path/staging.env \
+  --evidence-file /secure/path/production_readiness_evidence.json \
+  --output-dir /secure/path/rune_handoff_bundle
+```
+
+Use `--allow-incomplete` while the bundle is still collecting company/staging
+evidence. Remove it only when the bundle is expected to represent a final
+release decision. Validate the generated bundle before review:
+
+```bash
+uv run python ops/rehearsal/validate_handoff_bundle.py \
+  /secure/path/rune_handoff_bundle
+```
+
+The validator checks manifest/report consistency, required artifact presence,
+JSON schema shape, staging evidence plan structure, and
+manual-evidence-template coverage for every `manual_required` readiness gate.
+
 After real staging rehearsals, run:
 
 ```bash

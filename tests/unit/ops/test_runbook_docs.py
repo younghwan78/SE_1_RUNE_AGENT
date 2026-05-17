@@ -22,3 +22,17 @@ def test_incident_response_runbook_covers_required_operations() -> None:
         "post-incident review",
     ]:
         assert required in content
+
+
+def test_ubuntu_runbook_covers_handoff_bundle_workflow() -> None:
+    runbook = Path("README_ubuntu.md")
+
+    assert runbook.exists()
+
+    content = runbook.read_text(encoding="utf-8")
+    for required in [
+        "ops/rehearsal/build_handoff_bundle.py",
+        "ops/rehearsal/validate_handoff_bundle.py",
+        "manual-evidence-template coverage",
+    ]:
+        assert required in content
