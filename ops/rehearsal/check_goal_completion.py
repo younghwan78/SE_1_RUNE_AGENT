@@ -244,6 +244,9 @@ def _build_prompt_to_artifact_checklist(
                 "ops/rehearsal/production_readiness_evidence.example.json",
                 "ops/rehearsal/build_staging_evidence_plan.py",
                 "ops/rehearsal/check_production_readiness.py",
+                "ops/rehearsal/check_goal_completion.py",
+                "ops/rehearsal/build_handoff_bundle.py",
+                "ops/rehearsal/validate_handoff_bundle.py",
             ],
             "commands": [
                 "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown",

@@ -904,6 +904,26 @@ blocking:
     summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
   - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
     passed with no failures.
+- 2026-05-17 goal completion final validation artifact mapping:
+  - `ops/rehearsal/check_goal_completion.py` now maps the final
+    company/staging validation commands back to their owning artifacts:
+    `ops/rehearsal/check_goal_completion.py`,
+    `ops/rehearsal/build_handoff_bundle.py`, and
+    `ops/rehearsal/validate_handoff_bundle.py`.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while those artifacts were absent from the
+    `company_staging_readiness` checklist, then passed after adding them.
+  - Verification: `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`,
+    `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`,
+    `uv run python ops/rehearsal/validate_release_scope_artifacts.py`,
+    `uv run python ops/rehearsal/validate_ci_gate_coverage.py`,
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`,
+    `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`,
+    `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`,
+    `uv run ruff check .`, `uv run mypy src`, `uv run pytest -q`, and
+    `git diff --check` passed. The goal audit remains intentionally incomplete
+    with `goal_complete=false`, `remaining_blocker_count=20`, and readiness
+    summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
 
 ## 5. Completion Gate
 

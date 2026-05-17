@@ -1547,3 +1547,41 @@ Remaining production gap is unchanged:
     passed with no failures.
   - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
     `ci_command_count=36`.
+
+## 2026-05-17 Goal Completion Final Validation Artifact Mapping
+
+- Strengthened the `company_staging_readiness` prompt-to-artifact checklist so
+  the artifacts list now names the scripts that own the final staging
+  validation commands:
+  - `ops/rehearsal/check_goal_completion.py`
+  - `ops/rehearsal/build_handoff_bundle.py`
+  - `ops/rehearsal/validate_handoff_bundle.py`
+- This closes a traceability gap where final validation commands were present
+  but their owning executable artifacts were not listed in the checklist.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while those artifacts were absent from
+    `company_staging_readiness`.
+  - The focused test passed after adding the final validation scripts to the
+    artifact list.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`:
+    `5 passed`
+  - `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
+  - `uv run python ops/rehearsal/validate_release_scope_artifacts.py`:
+    passed with no failures and `audit_coverage_missing=0`.
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=36`.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed and generated artifact hashes for the staging handoff bundle.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with no failures.
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest -q`: passed with the expected skipped tests.
+  - `git diff --check`: passed
