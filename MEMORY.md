@@ -1960,3 +1960,37 @@ Remaining production gap is unchanged:
     passed and printed `goal_complete=false`, `remaining_blocker_count=20`,
     `blocker_summary.local_action_required=0`, and
     `blocker_summary.company_or_staging_evidence_required=20`.
+
+## 2026-05-17 Local Handoff Completion Assertion
+
+- Added `ops/rehearsal/assert_local_handoff_complete.py`.
+- The script reads a handoff bundle `manifest.json` and fails if:
+  - `blocker_summary.local_action_required` is not zero
+  - `blocker_summary.local_action_blockers` is non-empty
+  - `remaining_blocker_count` does not match the blocker summary counts
+- Added the assertion command to `ops/rehearsal/final_validation_commands.py`,
+  which propagates it into staging evidence plans and the goal-completion
+  company/staging checklist.
+- Updated `README.md`, `README_ubuntu.md`, and
+  `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` to include the command.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_local_handoff_assertion.py -q` failed
+    while the assertion script did not exist, then passed after implementation.
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_includes_final_validation_commands -q`
+    failed until the shared final-validation command set included the new
+    assertion command.
+  - `uv run pytest tests/unit/ops/test_runbook_docs.py::test_readme_handoff_examples_match_final_audit_commands -q`
+    failed until the handoff command examples included the assertion command.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_local_handoff_assertion.py tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_runbook_docs.py -q`:
+    `33 passed`
+  - `uv run ruff check ops/rehearsal/assert_local_handoff_complete.py ops/rehearsal/final_validation_commands.py tests/unit/ops/test_local_handoff_assertion.py tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_runbook_docs.py`:
+    passed
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed and emitted `local_action_required=0`.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with `failures=[]`.
+  - `uv run python ops/rehearsal/assert_local_handoff_complete.py .local_artifacts/staging-handoff-bundle`:
+    passed with `failures=[]`, `remaining_blocker_count=20`,
+    `local_action_required=0`, and
+    `company_or_staging_evidence_required=20`.

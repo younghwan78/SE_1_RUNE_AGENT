@@ -96,6 +96,27 @@ def test_readme_handoff_examples_match_final_audit_commands() -> None:
                 "--run-local-gates --output-dir /secure/path/rune_handoff_bundle"
             ),
         ),
+        (
+            readme_content,
+            (
+                "uv run python ops/rehearsal/assert_local_handoff_complete.py "
+                ".local_artifacts/staging-handoff-bundle"
+            ),
+        ),
+        (
+            ubuntu_content,
+            (
+                "uv run python ops/rehearsal/assert_local_handoff_complete.py "
+                "/secure/path/rune_handoff_bundle"
+            ),
+        ),
+        (
+            handoff_content,
+            (
+                "uv run python ops/rehearsal/assert_local_handoff_complete.py "
+                "/secure/path/rune_handoff_bundle"
+            ),
+        ),
     ]:
         assert required in content
 

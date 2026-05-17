@@ -358,6 +358,13 @@ uv run python ops/rehearsal/validate_handoff_bundle.py \
   /secure/path/rune_handoff_bundle
 ```
 
+Assert that no workstation-local blockers remain in the bundle:
+
+```bash
+uv run python ops/rehearsal/assert_local_handoff_complete.py \
+  /secure/path/rune_handoff_bundle
+```
+
 The validator checks manifest/report consistency, required artifact presence,
 JSON schema shape, staging evidence plan structure, and
 manual-evidence-template coverage for every `manual_required` readiness gate.

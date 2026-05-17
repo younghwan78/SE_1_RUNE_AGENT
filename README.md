@@ -149,6 +149,13 @@ uv run python ops/rehearsal/validate_handoff_bundle.py `
   .local_artifacts/staging-handoff-bundle
 ```
 
+Assert that the bundle has no workstation-local blockers left:
+
+```powershell
+uv run python ops/rehearsal/assert_local_handoff_complete.py `
+  .local_artifacts/staging-handoff-bundle
+```
+
 The validator also checks that `manual-evidence-template.json` covers every
 `manual_required` gate from `production-readiness-report.json`. The manifest
 also carries `blocker_summary` from `goal-completion-report.json`; use

@@ -1114,6 +1114,29 @@ blocking:
     passed and printed `goal_complete=false`, `remaining_blocker_count=20`,
     `blocker_summary.local_action_required=0`, and
     `blocker_summary.company_or_staging_evidence_required=20`.
+- 2026-05-17 local handoff completion assertion:
+  - Added `ops/rehearsal/assert_local_handoff_complete.py` to fail a handoff
+    bundle when `blocker_summary.local_action_required` is non-zero, local
+    blocker ids remain, or `remaining_blocker_count` drifts from the blocker
+    summary counts.
+  - Added the command to `ops/rehearsal/final_validation_commands.py`, so it
+    appears in the staging evidence plan and the goal-completion
+    company/staging checklist.
+  - Updated `README.md`, `README_ubuntu.md`, and
+    `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` with the command.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_local_handoff_assertion.py -q`
+    failed while the assertion script was missing, then passed after
+    implementation. `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_includes_final_validation_commands -q`
+    failed until the shared final command list included the assertion command.
+    `uv run pytest tests/unit/ops/test_runbook_docs.py::test_readme_handoff_examples_match_final_audit_commands -q`
+    failed until the command examples were updated.
+  - Verification: `uv run pytest tests/unit/ops/test_local_handoff_assertion.py tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_runbook_docs.py -q`
+    passed with `33 passed`; ruff passed on the touched assertion/final-command
+    files; regenerated `.local_artifacts/staging-handoff-bundle` with
+    `--run-local-gates`; `validate_handoff_bundle.py` passed with `failures=[]`;
+    `assert_local_handoff_complete.py` passed with `failures=[]`,
+    `remaining_blocker_count=20`, `local_action_required=0`, and
+    `company_or_staging_evidence_required=20`.
 
 ## 5. Completion Gate
 

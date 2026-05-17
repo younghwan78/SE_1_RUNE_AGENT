@@ -17,4 +17,5 @@ FINAL_VALIDATION_COMMANDS: tuple[str, ...] = (
         "--run-local-gates --output-dir <handoff-bundle-dir>"
     ),
     "uv run python ops/rehearsal/validate_handoff_bundle.py <handoff-bundle-dir>",
+    "uv run python ops/rehearsal/assert_local_handoff_complete.py <handoff-bundle-dir>",
 )
