@@ -279,6 +279,8 @@ Latest local verification:
 - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py -q`: 7 passed after adding `final_validation_commands` to the staging evidence plan and rendering the `## Final Validation` Markdown section with readiness, goal-completion, handoff-bundle, and bundle-validation commands
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`: passed after the final validation command sequence was added to the company/staging evidence guidance
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`: passed structurally after the staging evidence final-validation command addition, reporting `goal_complete=false`, `remaining_blocker_count=20`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`
+- `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_staging_evidence_plan.py -q`: 17 passed after strengthening the handoff bundle validator to reject a stale `staging-evidence-plan.md` that omits the `## Final Validation` section or final validation command references
+- `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`: passed after the final validation section guard was added
 - GitHub Actions JavaScript actions were updated to Node 24-backed tags:
   `actions/checkout@v6` and `actions/setup-python@v6`; the temporary
   `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` compatibility env was removed

@@ -13,6 +13,13 @@ EXPECTED_ARTIFACTS = {
     "staging-evidence-plan.md",
 }
 
+EXPECTED_STAGING_PLAN_SNIPPETS = (
+    "ops/rehearsal/check_production_readiness.py",
+    "ops/rehearsal/check_goal_completion.py",
+    "ops/rehearsal/build_handoff_bundle.py",
+    "ops/rehearsal/validate_handoff_bundle.py",
+)
+
 
 def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
     """Return a structured validation report for a handoff bundle directory."""
@@ -82,6 +89,11 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
         content = staging_plan_path.read_text(encoding="utf-8")
         if "# Staging Evidence Collection Plan" not in content:
             failures.append("staging_evidence_plan_heading_missing")
+        for snippet in EXPECTED_STAGING_PLAN_SNIPPETS:
+            if snippet not in content:
+                failures.append(f"staging_evidence_plan_missing:{snippet}")
+        if "## Final Validation" not in content:
+            failures.append("staging_evidence_plan_final_validation_missing")
 
     return _report(bundle_dir, failures, artifact_count=len(EXPECTED_ARTIFACTS))
 

@@ -1310,6 +1310,32 @@ Remaining production gap is unchanged:
     `manual_required=10`, `passed=3`, `warning=0`.
   - `git diff --check`: passed
 
+## 2026-05-17 Handoff Bundle Final Validation Guard
+
+- Strengthened `ops/rehearsal/validate_handoff_bundle.py` so generated handoff
+  bundles must include the staging evidence plan `## Final Validation` section
+  and the final readiness, goal-completion, handoff build, and bundle validation
+  command references.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_missing_final_validation_section -q`
+    failed while a stale `staging-evidence-plan.md` without the final validation
+    section still passed bundle validation.
+  - The focused test passed after the validator checked the final validation
+    section and command snippets.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_staging_evidence_plan.py -q`:
+    `17 passed`
+  - `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
+
 ## 2026-05-17 Readiness Evidence Example Drift Guard
 
 - Strengthened `ops/rehearsal/validate_evidence_example.py` so the committed

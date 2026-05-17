@@ -104,6 +104,27 @@ def test_handoff_bundle_validator_rejects_missing_manual_template_gate(tmp_path)
     )
 
 
+def test_handoff_bundle_validator_rejects_missing_final_validation_section(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
+    validator = _load_module(
+        "validate_handoff_bundle",
+        "ops/rehearsal/validate_handoff_bundle.py",
+    )
+    bundle_dir = tmp_path / "bundle"
+    builder.build_handoff_bundle(bundle_dir, run_local_gates=False)
+    plan_path = bundle_dir / "staging-evidence-plan.md"
+    content = plan_path.read_text(encoding="utf-8")
+    stale_content = (
+        content.split("## Final Validation", maxsplit=1)[0] + "## postgres_state_store\n"
+    )
+    plan_path.write_text(stale_content, encoding="utf-8")
+
+    report = validator.validate_handoff_bundle(bundle_dir)
+
+    assert report["passed"] is False
+    assert "staging_evidence_plan_final_validation_missing" in report["failures"]
+
+
 def test_handoff_bundle_validator_accepts_complete_reviewed_evidence_bundle(tmp_path) -> None:  # type: ignore[no-untyped-def]
     builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
     validator = _load_module(
