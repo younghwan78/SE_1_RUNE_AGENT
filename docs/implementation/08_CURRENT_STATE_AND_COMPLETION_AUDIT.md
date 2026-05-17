@@ -1156,6 +1156,25 @@ blocking:
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `company_staging_readiness.artifacts` including the local handoff
     assertion script.
+- 2026-05-17 local regression gate artifact expansion:
+  - `ops/rehearsal/check_goal_completion.py` now derives
+    `local_regression_gates.artifacts` from
+    `check_production_readiness.LOCAL_GATE_COMMANDS`, so Python gate scripts
+    such as `ops/rehearsal/run_full_stack_rehearsal.py`,
+    `ops/rehearsal/validate_ci_gate_coverage.py`, and
+    `ops/security/rehearse_masking_policy.py` are directly represented in the
+    prompt-to-artifact checklist.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while those local gate scripts were absent from
+    `local_regression_gates.artifacts`, then passed after deriving the artifact
+    list from the local gate command set.
+  - Verification: `uv run pytest tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_production_readiness_check.py tests/unit/ops/test_ci_gate_coverage.py -q`
+    passed with `34 passed`; `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`
+    passed; `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `local_regression_gates.artifacts` including the local gate script set.
 
 ## 5. Completion Gate
 

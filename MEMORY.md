@@ -1541,8 +1541,34 @@ Remaining production gap is unchanged:
   - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `local_regression_gates.artifacts` including the local gate script set.
+  - `git diff --check`: passed
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and the `company_staging_readiness.artifacts` list including
     `ops/rehearsal/assert_local_handoff_complete.py`.
+
+## 2026-05-17 Local Regression Gate Artifact Expansion
+
+- Updated `ops/rehearsal/check_goal_completion.py` so
+  `local_regression_gates.artifacts` is derived from
+  `check_production_readiness.LOCAL_GATE_COMMANDS`.
+- This makes the prompt-to-artifact checklist directly trace Python gate scripts
+  such as `ops/rehearsal/run_full_stack_rehearsal.py`,
+  `ops/rehearsal/validate_ci_gate_coverage.py`, and
+  `ops/security/rehearse_masking_policy.py`, instead of only naming the CI
+  workflow and readiness checker.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while those local gate scripts were absent from
+    `local_regression_gates.artifacts`, then passed after deriving the artifact
+    list from local gate commands.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py tests/unit/ops/test_production_readiness_check.py tests/unit/ops/test_ci_gate_coverage.py -q`:
+    `34 passed`
+  - `uv run ruff check ops/rehearsal/check_goal_completion.py tests/unit/ops/test_goal_completion_audit.py`:
+    passed
   - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
     passed structurally with the final validation commands present in the
     checklist; `goal_complete=false`, `remaining_blocker_count=20`, readiness

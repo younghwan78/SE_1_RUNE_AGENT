@@ -106,6 +106,11 @@ def test_goal_completion_audit_maps_prompt_requirements_to_artifacts() -> None:
         in company_item["commands"]
     )
 
+    local_item = checklist["local_regression_gates"]
+    assert "ops/rehearsal/run_full_stack_rehearsal.py" in local_item["artifacts"]
+    assert "ops/rehearsal/validate_ci_gate_coverage.py" in local_item["artifacts"]
+    assert "ops/security/rehearse_masking_policy.py" in local_item["artifacts"]
+
 
 def test_goal_completion_audit_applies_manual_evidence() -> None:
     namespace = run_path("ops/rehearsal/check_goal_completion.py")

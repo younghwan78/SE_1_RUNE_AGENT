@@ -233,10 +233,7 @@ def _build_prompt_to_artifact_checklist(
             "criterion_id": "local_regression_gates",
             "requirement": "Run deterministic local regression and release gates.",
             "status": readiness_by_id["local_regression_gates"]["status"],
-            "artifacts": [
-                ".github/workflows/ci.yml",
-                "ops/rehearsal/check_production_readiness.py",
-            ],
+            "artifacts": _local_regression_gate_artifacts(),
             "commands": production_readiness["local_gate_commands"],
             "evidence": readiness_by_id["local_regression_gates"]["evidence"],
             "gaps": (
@@ -303,6 +300,16 @@ def _build_prompt_to_artifact_checklist(
             "gaps": [],
         },
     ]
+
+
+def _local_regression_gate_artifacts() -> list[str]:
+    artifacts = {
+        ".github/workflows/ci.yml",
+        "ops/rehearsal/check_production_readiness.py",
+    }
+    for command in READINESS_MODULE.LOCAL_GATE_COMMANDS:
+        artifacts.update(token for token in command if token.endswith(".py"))
+    return sorted(artifacts)
 
 
 def _release_scope_blockers(
