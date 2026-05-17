@@ -818,6 +818,31 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
+- 2026-05-17 staging evidence plan reviewed-evidence alignment:
+  - `ops/rehearsal/build_staging_evidence_plan.py` now accepts reviewed manual
+    evidence and optional local-gate execution input, matching the readiness
+    and goal-completion report inputs.
+  - `ops/rehearsal/build_handoff_bundle.py` now passes `--evidence-file` and
+    `--run-local-gates` into `staging-evidence-plan.md`, so a handoff bundle
+    does not ask release owners to recollect gates that reviewed evidence has
+    already passed.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_applies_reviewed_manual_evidence -q`
+    failed before the plan builder accepted reviewed evidence, then passed
+    after the readiness-report inputs were wired through.
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_production_readiness_check.py -q`:
+    `44 passed`
+  - `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py ops/rehearsal/build_handoff_bundle.py tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_handoff_bundle.py`:
+    passed
+  - `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown --evidence-file ops/rehearsal/production_readiness_evidence.example.json`:
+    passed.
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --evidence-file ops/rehearsal/production_readiness_evidence.example.json --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with no failures.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
 
 ## 5. Completion Gate
 

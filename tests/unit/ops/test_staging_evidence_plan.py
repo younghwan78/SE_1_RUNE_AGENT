@@ -112,6 +112,26 @@ def test_staging_evidence_plan_includes_final_validation_commands() -> None:
     ]
 
 
+def test_staging_evidence_plan_applies_reviewed_manual_evidence() -> None:
+    module = _load_module()
+    checker = _load_checker_module()
+
+    plan = module.build_staging_evidence_plan(
+        {},
+        manual_evidence=[
+            checker.ManualEvidence(
+                check_id="local_regression_gates",
+                status="passed",
+                summary="Local gates passed in reviewed CI.",
+                evidence=["github-actions:CI:run-25981321130"],
+            )
+        ],
+    )
+
+    gates = {gate["check_id"]: gate for gate in plan["gates"]}
+    assert "local_regression_gates" not in gates
+
+
 def test_staging_evidence_plan_guides_every_unresolved_gate() -> None:
     module = _load_module()
 
@@ -144,6 +164,16 @@ def test_staging_evidence_plan_doc_refs_exist() -> None:
 def _load_module() -> ModuleType:
     module_path = Path("ops/rehearsal/build_staging_evidence_plan.py")
     spec = importlib.util.spec_from_file_location("build_staging_evidence_plan", module_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_checker_module() -> ModuleType:
+    module_path = Path("ops/rehearsal/check_production_readiness.py")
+    spec = importlib.util.spec_from_file_location("check_production_readiness", module_path)
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)

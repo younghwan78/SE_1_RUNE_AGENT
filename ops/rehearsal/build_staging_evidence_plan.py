@@ -213,9 +213,28 @@ def main() -> int:
         default=None,
         help="Optional KEY=VALUE environment file for company/staging checks.",
     )
+    parser.add_argument(
+        "--evidence-file",
+        type=Path,
+        default=None,
+        help="Optional reviewed manual evidence JSON file.",
+    )
+    parser.add_argument(
+        "--run-local-gates",
+        action="store_true",
+        help="Execute local regression gates while building the plan.",
+    )
     args = parser.parse_args()
+    checker = _load_readiness_checker()
     env = load_plan_env(args.env_file, os.environ) if args.env_file else dict(os.environ)
-    plan = build_staging_evidence_plan(env)
+    manual_evidence = (
+        checker.load_manual_evidence(args.evidence_file) if args.evidence_file else []
+    )
+    plan = build_staging_evidence_plan(
+        env,
+        run_local_gates=args.run_local_gates,
+        manual_evidence=manual_evidence,
+    )
     rendered = (
         json.dumps(plan, indent=2, sort_keys=True)
         if args.format == "json"
@@ -234,10 +253,19 @@ def load_plan_env(path: Path, base_env: Mapping[str, str] | None = None) -> dict
     return checker.load_env_file(path, base_env or {})
 
 
-def build_staging_evidence_plan(env: Mapping[str, str]) -> dict[str, Any]:
+def build_staging_evidence_plan(
+    env: Mapping[str, str],
+    *,
+    run_local_gates: bool = False,
+    manual_evidence: Any = (),
+) -> dict[str, Any]:
     """Return unresolved readiness gates with concrete collection guidance."""
     checker = _load_readiness_checker()
-    report = checker.build_readiness_report(env)
+    report = checker.build_readiness_report(
+        env,
+        run_local_gates=run_local_gates,
+        manual_evidence=manual_evidence,
+    )
     unresolved = [
         check
         for check in report["checks"]

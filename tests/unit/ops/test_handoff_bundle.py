@@ -99,6 +99,9 @@ def test_handoff_bundle_can_include_reviewed_evidence_file(tmp_path) -> None:  #
     )
     assert manifest["evidence_file"] == "evidence.json"
     assert readiness["manual_evidence_count"] == 1
+    assert "## local_regression_gates" not in (
+        output_dir / "staging-evidence-plan.md"
+    ).read_text(encoding="utf-8")
     assert "github-actions:CI:run-1" in _read_bundle(output_dir)
 
 

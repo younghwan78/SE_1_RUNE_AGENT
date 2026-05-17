@@ -43,7 +43,11 @@ def build_handoff_bundle(
         readiness.load_manual_evidence(evidence_file) if evidence_file else []
     )
 
-    plan = staging_plan.build_staging_evidence_plan(env)
+    plan = staging_plan.build_staging_evidence_plan(
+        env,
+        run_local_gates=run_local_gates,
+        manual_evidence=manual_evidence,
+    )
     readiness_report = readiness.build_readiness_report(
         env,
         run_local_gates=run_local_gates,

@@ -1420,3 +1420,38 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
+
+## 2026-05-17 Staging Evidence Plan Reviewed Evidence Alignment
+
+- Fixed `ops/rehearsal/build_staging_evidence_plan.py` so the staging evidence
+  collection plan can apply the same reviewed manual evidence and optional
+  local-gate execution inputs as the production-readiness and goal-completion
+  reports.
+- Updated `ops/rehearsal/build_handoff_bundle.py` so `--evidence-file` and
+  `--run-local-gates` influence `staging-evidence-plan.md`, not only
+  `production-readiness-report.json` and `goal-completion-report.json`.
+- This prevents a final or partial handoff bundle from asking release owners to
+  recollect a gate that is already passed by reviewed evidence.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py::test_staging_evidence_plan_applies_reviewed_manual_evidence -q`
+    first failed because `build_staging_evidence_plan()` had no
+    `manual_evidence` input.
+  - The focused test passed after the plan builder passed reviewed evidence
+    through to `check_production_readiness.build_readiness_report()`.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_handoff_bundle.py -q`:
+    `11 passed`
+  - `uv run pytest tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_production_readiness_check.py -q`:
+    `44 passed`
+  - `uv run ruff check ops/rehearsal/build_staging_evidence_plan.py ops/rehearsal/build_handoff_bundle.py tests/unit/ops/test_staging_evidence_plan.py tests/unit/ops/test_handoff_bundle.py`:
+    passed
+  - `uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown --evidence-file ops/rehearsal/production_readiness_evidence.example.json`:
+    passed.
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --evidence-file ops/rehearsal/production_readiness_evidence.example.json --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed.
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with no failures.
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
