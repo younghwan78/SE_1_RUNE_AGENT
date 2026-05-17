@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed implementation and gate commits:
 
+- `735e2e9 Fix final handoff evidence template`
 - `c3f9a36 Add staging handoff bundle generator`
 - `c52572d Persist scheduler configuration state`
 - `19d58a1 Add work queue feedback reason controls`
