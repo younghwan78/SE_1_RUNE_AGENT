@@ -972,6 +972,20 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, and readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
+- 2026-05-17 local handoff completion command refresh:
+  - `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` now uses the same
+    final company/staging readiness and handoff bundle command shape as the
+    README runbooks: reviewed staging env, reviewed evidence file, and
+    `--run-local-gates`.
+  - `tests/unit/ops/test_runbook_docs.py` now covers this handoff completion
+    document directly.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_runbook_docs.py -q` failed
+    while `09_LOCAL_HANDOFF_COMPLETION.md` still showed stale final commands,
+    then passed after the command refresh.
+  - Verification: `uv run pytest tests/unit/ops/test_runbook_docs.py tests/unit/ops/test_ci_gate_coverage.py -q`
+    passed with `6 passed`; `uv run ruff check tests/unit/ops/test_runbook_docs.py`
+    passed; `uv run python ops/rehearsal/validate_ci_gate_coverage.py` passed
+    with no missing required commands; `git diff --check` passed.
 
 ## 5. Completion Gate
 

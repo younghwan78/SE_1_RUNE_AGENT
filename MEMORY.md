@@ -1748,3 +1748,23 @@ Remaining production gap is unchanged:
     passed structurally after the runbook command refresh, with
     `goal_complete=false`, `remaining_blocker_count=20`, readiness summary
     `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
+
+## 2026-05-17 Local Handoff Completion Command Refresh
+
+- Extended the runbook command regression test to cover
+  `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md`, not only README files.
+- Updated the final company/staging readiness and handoff bundle commands in
+  `09_LOCAL_HANDOFF_COMPLETION.md` to include `--run-local-gates` alongside
+  the reviewed staging env and evidence file.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_runbook_docs.py -q` failed while
+    `09_LOCAL_HANDOFF_COMPLETION.md` still showed stale final commands.
+  - The focused test passed after adding `--run-local-gates` to those final
+    company/staging examples.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_runbook_docs.py tests/unit/ops/test_ci_gate_coverage.py -q`:
+    `6 passed`
+  - `uv run ruff check tests/unit/ops/test_runbook_docs.py`: passed
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `missing_required=[]` and `unexpected_omissions=[]`
+  - `git diff --check`: passed

@@ -42,30 +42,59 @@ def test_ubuntu_runbook_covers_handoff_bundle_workflow() -> None:
 def test_readme_handoff_examples_match_final_audit_commands() -> None:
     readme = Path("README.md")
     ubuntu_runbook = Path("README_ubuntu.md")
+    local_handoff = Path("docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md")
 
     assert readme.exists()
     assert ubuntu_runbook.exists()
+    assert local_handoff.exists()
 
-    content = _normalize_runbook_commands(
-        f"{readme.read_text(encoding='utf-8')}\n{ubuntu_runbook.read_text(encoding='utf-8')}"
-    )
-    for required in [
+    readme_content = _normalize_runbook_commands(readme.read_text(encoding="utf-8"))
+    ubuntu_content = _normalize_runbook_commands(ubuntu_runbook.read_text(encoding="utf-8"))
+    handoff_content = _normalize_runbook_commands(local_handoff.read_text(encoding="utf-8"))
+
+    for content, required in [
         (
-            "uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete "
-            "--env-file ops/rehearsal/staging.env.example "
-            "--evidence-file ops/rehearsal/production_readiness_evidence.example.json "
-            "--run-local-gates --output-dir .local_artifacts/staging-handoff-bundle"
+            readme_content,
+            (
+                "uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete "
+                "--env-file ops/rehearsal/staging.env.example "
+                "--evidence-file ops/rehearsal/production_readiness_evidence.example.json "
+                "--run-local-gates --output-dir .local_artifacts/staging-handoff-bundle"
+            ),
         ),
         (
-            "uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete "
-            "--env-file /secure/path/staging.env "
-            "--evidence-file /secure/path/production_readiness_evidence.json "
-            "--run-local-gates --output-dir /secure/path/rune_handoff_bundle"
+            ubuntu_content,
+            (
+                "uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete "
+                "--env-file /secure/path/staging.env "
+                "--evidence-file /secure/path/production_readiness_evidence.json "
+                "--run-local-gates --output-dir /secure/path/rune_handoff_bundle"
+            ),
         ),
         (
-            "uv run python ops/rehearsal/check_production_readiness.py "
-            "--run-local-gates --env-file /secure/path/staging.env "
-            "--evidence-file /secure/path/production_readiness_evidence.json"
+            ubuntu_content,
+            (
+                "uv run python ops/rehearsal/check_production_readiness.py "
+                "--run-local-gates --env-file /secure/path/staging.env "
+                "--evidence-file /secure/path/production_readiness_evidence.json"
+            ),
+        ),
+        (
+            handoff_content,
+            (
+                "uv run python ops/rehearsal/check_production_readiness.py "
+                "--run-local-gates --env-file /secure/path/staging.env "
+                "--evidence-file /secure/path/production_readiness_evidence.json"
+            ),
+        ),
+        (
+            handoff_content,
+            (
+                "uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete "
+                "--env-file /secure/path/staging.env "
+                "--evidence-file /secure/path/production_readiness_evidence.json "
+                "--run-local-gates --output-dir /secure/path/rune_handoff_bundle"
+            ),
         ),
     ]:
         assert required in content
