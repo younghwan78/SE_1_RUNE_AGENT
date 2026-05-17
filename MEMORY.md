@@ -976,3 +976,7 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`
+  - Commit `c3f9a36 Add staging handoff bundle generator` pushed to
+    `origin/main`
+  - GitHub Actions `CI` run `25979725389`: success, including the new
+    `Handoff bundle env-file smoke` step

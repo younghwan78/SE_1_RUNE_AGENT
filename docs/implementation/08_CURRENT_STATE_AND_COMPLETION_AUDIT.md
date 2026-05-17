@@ -10,6 +10,7 @@ implementation and a relevant verification path exist in the repository.
 
 Latest confirmed implementation and gate commits:
 
+- `c3f9a36 Add staging handoff bundle generator`
 - `c52572d Persist scheduler configuration state`
 - `19d58a1 Add work queue feedback reason controls`
 - `360b68e Trace node and finding LLM stages`
@@ -256,6 +257,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle`: passed, generating `manifest.json`, `staging-evidence-plan.md`, `manual-evidence-template.json`, `production-readiness-report.json`, and `goal-completion-report.json` for staging review; reports remain incomplete until real company/staging evidence is supplied
 - `uv run pytest`: 266 passed, 3 skipped after handoff bundle coverage was added
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`: passed structurally with `goal_complete=false`, `remaining_blocker_count=20`, `prompt_to_artifact_checklist_count=6`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`; local gates pass and remaining blockers require real company/staging evidence
+- GitHub Actions `CI` run `25979725389` for commit `c3f9a36`: success, including `Handoff bundle env-file smoke`
 - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`: passed after first verifying the new staging evidence plan CI smoke requirement failed when absent
 - `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q`: passed after first verifying `LOCAL_GATE_COMMANDS` did not include the staging evidence plan smoke
 - `uv run python ops/rehearsal/check_production_readiness.py --evidence-file ops/rehearsal/production_readiness_evidence.example.json`: failed as expected because the committed example evidence uses `failed` TODO placeholders and production env checks are unset; fake `run-123*` and `status: passed` examples are not present in the committed template
