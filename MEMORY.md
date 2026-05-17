@@ -831,9 +831,12 @@ Validation evidence:
 - `uv run mypy src`: passed
 - `uv run pytest`: `258 passed, 3 skipped`
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --run-local-gates`:
-  was started after the checklist change but interrupted by the user before
-  completion; rerun this command first in the next session before making a
-  release/goal-completion decision.
+  rerun after the checklist change and passed structurally with
+  `goal_complete=false`, `remaining_blocker_count=22`,
+  `prompt_to_artifact_checklist_count=6`, `failed=7`,
+  `manual_required=11`, `passed=1`, `warning=0`. Non-Docker local gates passed,
+  but Docker-backed local gates were classified as `manual_required` because
+  Docker is unavailable in this workstation shell.
 
 Remaining production gap is unchanged:
 
