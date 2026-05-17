@@ -980,3 +980,30 @@ Remaining production gap is unchanged:
     `origin/main`
   - GitHub Actions `CI` run `25979725389`: success, including the new
     `Handoff bundle env-file smoke` step
+
+## 2026-05-17 Handoff Bundle Local Gate Coverage
+
+- Added the handoff bundle smoke command to
+  `ops/rehearsal/check_production_readiness.py` `LOCAL_GATE_COMMANDS`:
+  `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle`
+- This aligns release-style local gate runs with GitHub Actions coverage, so
+  `check_goal_completion.py --run-local-gates` also executes the handoff bundle
+  generator.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q`
+    failed before the command was added and passed after updating
+    `LOCAL_GATE_COMMANDS`.
+  - `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke tests/unit/ops/test_ci_gate_coverage.py tests/unit/ops/test_handoff_bundle.py -q`:
+    `6 passed`
+- Verification after adding the local gate command:
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `266 passed, 3 skipped`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=27`
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`; the local regression gate
+    evidence now includes
+    `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle`

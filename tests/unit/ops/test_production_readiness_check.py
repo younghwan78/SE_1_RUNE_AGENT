@@ -59,6 +59,11 @@ def test_local_gate_commands_include_staging_evidence_plan_smoke() -> None:
         "uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete"
         in commands
     )
+    assert (
+        "uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete "
+        "--env-file .env.example --output-dir .local_artifacts/handoff-bundle"
+        in commands
+    )
 
 
 def test_readiness_report_requires_helm_evidence_for_kubernetes_target() -> None:
