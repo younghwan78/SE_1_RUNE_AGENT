@@ -2322,3 +2322,18 @@ Remaining production gap is unchanged:
 - Current boundary: no workstation-local blockers remain in the generated
   handoff bundle; full production goal remains blocked by company/staging
   endpoint configuration and reviewed manual evidence.
+
+## 2026-05-17 Completion Gate Blocks Premature Goal Closure
+
+- Latest pushed commit before this check: `e8d49ee Record latest local handoff
+  baseline`; GitHub Actions CI run `25989355958` passed.
+- Ran the top-level completion gate without `--allow-incomplete`:
+  - `uv run python ops/rehearsal/check_goal_completion.py --env-file ops/rehearsal/staging.env.example --run-local-gates`
+- Result: exit code `1` with `goal_complete=false`,
+  `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+  `blocker_summary.company_or_staging_evidence_required=20`, and
+  `summary.prompt_to_artifact_missing_count=0`.
+- Interpretation: local implementation and handoff evidence are complete for
+  the current workstation boundary, but the overall goal must remain active
+  until company/staging endpoint configuration and reviewed manual evidence
+  are supplied.

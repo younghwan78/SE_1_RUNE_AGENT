@@ -1394,6 +1394,19 @@ blocking:
   - This confirms the current repository has no workstation-local handoff
     blockers; full production completion still requires company/staging
     endpoints and reviewed manual evidence.
+- 2026-05-17 completion gate blocks premature goal closure:
+  - Latest pushed commit before this check: `e8d49ee Record latest local
+    handoff baseline`.
+  - GitHub Actions CI run `25989355958` passed.
+  - `uv run python ops/rehearsal/check_goal_completion.py --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    exited `1` and reported `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    `blocker_summary.company_or_staging_evidence_required=20`, and
+    `summary.prompt_to_artifact_missing_count=0`.
+  - This is the expected production completion guard: the current workstation
+    has no local-action blockers, but full production completion remains
+    blocked by company/staging endpoint configuration and reviewed manual
+    evidence.
 
 ## 5. Completion Gate
 
