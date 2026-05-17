@@ -80,7 +80,7 @@ def test_goal_completion_audit_maps_prompt_requirements_to_artifacts() -> None:
     assert (
         "uv run python ops/rehearsal/build_handoff_bundle.py "
         "--env-file <staging.env> --evidence-file <reviewed-evidence.json> "
-        "--output-dir <handoff-bundle-dir>"
+        "--run-local-gates --output-dir <handoff-bundle-dir>"
         in company_item["commands"]
     )
     assert (

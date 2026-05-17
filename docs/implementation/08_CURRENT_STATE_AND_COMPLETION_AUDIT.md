@@ -924,6 +924,14 @@ blocking:
     `git diff --check` passed. The goal audit remains intentionally incomplete
     with `goal_complete=false`, `remaining_blocker_count=20`, and readiness
     summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
+- 2026-05-17 goal completion handoff local gate alignment:
+  - The final `company_staging_readiness` handoff bundle command now includes
+    `--run-local-gates`, matching the final goal-completion audit command and
+    preventing local regression gates from being left as a manual follow-up in
+    final handoff evidence.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the final handoff bundle command lacked `--run-local-gates`,
+    then passed after adding it.
 
 ## 5. Completion Gate
 

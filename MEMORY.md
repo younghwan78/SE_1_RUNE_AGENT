@@ -1585,3 +1585,16 @@ Remaining production gap is unchanged:
   - `uv run mypy src`: passed
   - `uv run pytest -q`: passed with the expected skipped tests.
   - `git diff --check`: passed
+
+## 2026-05-17 Goal Completion Handoff Local Gate Alignment
+
+- Updated the final `company_staging_readiness` handoff bundle command in
+  `ops/rehearsal/check_goal_completion.py` to include `--run-local-gates`.
+- This keeps the final goal-completion command and final handoff bundle command
+  aligned so the bundle can carry local gate evidence instead of reporting
+  `local_regression_gates` as a manual follow-up.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_goal_completion_audit.py::test_goal_completion_audit_maps_prompt_requirements_to_artifacts -q`
+    failed while the final handoff bundle command lacked
+    `--run-local-gates`.
+  - The focused test passed after adding `--run-local-gates` to that command.
