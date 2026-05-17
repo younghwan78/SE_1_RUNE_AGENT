@@ -843,6 +843,20 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
+- 2026-05-17 reviewed-evidence CI smoke coverage:
+  - `.github/workflows/ci.yml` now runs reviewed-evidence smoke paths for
+    staging evidence plan generation, handoff bundle generation, and handoff
+    bundle validation.
+  - `ops/rehearsal/validate_ci_gate_coverage.py` now requires the reviewed
+    evidence smoke commands so this CI coverage cannot silently drift.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_requires_reviewed_evidence_handoff_smokes -q`
+    failed while the reviewed-evidence smoke commands were not required, then
+    passed after the required command set and workflow were updated.
+  - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py -q`: `3 passed`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=36`
+  - `uv run ruff check ops/rehearsal/validate_ci_gate_coverage.py tests/unit/ops/test_ci_gate_coverage.py`:
+    passed
 
 ## 5. Completion Gate
 

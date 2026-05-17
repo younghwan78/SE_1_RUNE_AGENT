@@ -38,6 +38,12 @@ REQUIRED_CI_EXTRA_COMMANDS = {
         "uv run python ops/rehearsal/build_staging_evidence_plan.py "
         "--env-file ops/rehearsal/staging.env.example --format markdown"
     ),
+    (
+        "uv run python ops/rehearsal/build_staging_evidence_plan.py "
+        "--env-file ops/rehearsal/staging.env.example "
+        "--evidence-file ops/rehearsal/production_readiness_evidence.example.json "
+        "--format markdown"
+    ),
     "uv run python ops/rehearsal/validate_release_scope_artifacts.py",
     "uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete",
     (
@@ -62,6 +68,16 @@ REQUIRED_CI_EXTRA_COMMANDS = {
     (
         "uv run python ops/rehearsal/validate_handoff_bundle.py "
         ".local_artifacts/staging-handoff-bundle"
+    ),
+    (
+        "uv run python ops/rehearsal/build_handoff_bundle.py "
+        "--allow-incomplete --env-file ops/rehearsal/staging.env.example "
+        "--evidence-file ops/rehearsal/production_readiness_evidence.example.json "
+        "--output-dir .local_artifacts/staging-handoff-bundle-reviewed"
+    ),
+    (
+        "uv run python ops/rehearsal/validate_handoff_bundle.py "
+        ".local_artifacts/staging-handoff-bundle-reviewed"
     ),
 }
 

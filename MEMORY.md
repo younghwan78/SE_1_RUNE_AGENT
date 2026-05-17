@@ -1455,3 +1455,23 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
+
+## 2026-05-17 Reviewed Evidence CI Smoke Coverage
+
+- Added GitHub Actions smoke coverage for reviewed-evidence handoff paths:
+  - `build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --evidence-file ops/rehearsal/production_readiness_evidence.example.json --format markdown`
+  - `build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --evidence-file ops/rehearsal/production_readiness_evidence.example.json --output-dir .local_artifacts/staging-handoff-bundle-reviewed`
+  - `validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle-reviewed`
+- Strengthened `ops/rehearsal/validate_ci_gate_coverage.py` so those reviewed
+  evidence smoke commands remain required in CI.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_requires_reviewed_evidence_handoff_smokes -q`
+    failed while the reviewed-evidence smoke commands were not required.
+  - The CI gate coverage tests passed after adding the required commands and
+    matching workflow steps.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py -q`: `3 passed`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=36`
+  - `uv run ruff check ops/rehearsal/validate_ci_gate_coverage.py tests/unit/ops/test_ci_gate_coverage.py`:
+    passed

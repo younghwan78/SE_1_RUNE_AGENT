@@ -18,6 +18,30 @@ def test_current_ci_gate_coverage_passes() -> None:
     ]
 
 
+def test_ci_gate_coverage_requires_reviewed_evidence_handoff_smokes() -> None:
+    validator = _load_validator_module()
+
+    assert (
+        "uv run python ops/rehearsal/build_staging_evidence_plan.py "
+        "--env-file ops/rehearsal/staging.env.example "
+        "--evidence-file ops/rehearsal/production_readiness_evidence.example.json "
+        "--format markdown"
+        in validator.REQUIRED_CI_EXTRA_COMMANDS
+    )
+    assert (
+        "uv run python ops/rehearsal/build_handoff_bundle.py "
+        "--allow-incomplete --env-file ops/rehearsal/staging.env.example "
+        "--evidence-file ops/rehearsal/production_readiness_evidence.example.json "
+        "--output-dir .local_artifacts/staging-handoff-bundle-reviewed"
+        in validator.REQUIRED_CI_EXTRA_COMMANDS
+    )
+    assert (
+        "uv run python ops/rehearsal/validate_handoff_bundle.py "
+        ".local_artifacts/staging-handoff-bundle-reviewed"
+        in validator.REQUIRED_CI_EXTRA_COMMANDS
+    )
+
+
 def test_ci_gate_coverage_reports_missing_required_command(tmp_path) -> None:  # type: ignore[no-untyped-def]
     validator = _load_validator_module()
     workflow_path = tmp_path / "ci.yml"
