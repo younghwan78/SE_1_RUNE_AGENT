@@ -32,7 +32,9 @@ mkdir -p /var/lib/rune-agent/artifacts
 
 Use `.env` for the running service. Use `/secure/path/staging.env` for
 readiness, evidence-plan, and handoff-bundle rehearsals after filling endpoint
-and secret values from the company secret store.
+and secret values from the company secret store. The staging template sets
+`DEPLOYMENT_TARGET=ubuntu` and `KUBERNETES_DEPLOYMENT=false`; change those only
+when preparing Kubernetes-specific Helm evidence.
 
 Recommended initial server `.env`:
 

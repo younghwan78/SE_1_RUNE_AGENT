@@ -1090,6 +1090,9 @@ Remaining production gap is unchanged:
   - `AUTH_MODE=trusted_proxy`
   - `OTEL_ENABLED=true`
   - `ARTIFACT_ROOT=/var/lib/rune-agent/artifacts`
+- The template explicitly targets the intended Ubuntu server handoff path with
+  `DEPLOYMENT_TARGET=ubuntu` and `KUBERNETES_DEPLOYMENT=false`; change those
+  only for a future Kubernetes/Helm evidence pass.
 - Added config test coverage to ensure required staging modes are set and fake
   secret values are not committed in the template.
 - Added GitHub Actions smoke coverage:
@@ -1136,3 +1139,18 @@ Remaining production gap is unchanged:
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`; local regression evidence
     includes both handoff bundle generation and validation commands.
+- Verification after making the staging template explicitly Ubuntu-targeted:
+  - `uv run pytest tests/unit/config/test_env_example.py`: `2 passed`
+  - `uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --write-evidence-template -`:
+    passed
+  - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`:
+    passed with unresolved gate output
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `272 passed, 3 skipped`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=29`
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.

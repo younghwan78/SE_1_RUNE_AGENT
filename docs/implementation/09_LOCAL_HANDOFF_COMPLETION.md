@@ -157,7 +157,9 @@ uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown \
 
 Create `/secure/path/staging.env` by copying
 `ops/rehearsal/staging.env.example` and filling endpoint/secret values from the
-company secret store. Do not commit the filled file.
+company secret store. The template is explicitly Ubuntu-targeted through
+`DEPLOYMENT_TARGET=ubuntu` and `KUBERNETES_DEPLOYMENT=false`; only change those
+for Kubernetes-specific Helm evidence. Do not commit the filled file.
 
 After replacing TODO entries with reviewed evidence:
 

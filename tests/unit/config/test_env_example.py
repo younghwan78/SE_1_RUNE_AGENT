@@ -80,6 +80,8 @@ def test_staging_env_example_sets_production_modes_without_fake_secrets() -> Non
     assert values["AUTH_MODE"] == "trusted_proxy"
     assert values["OTEL_ENABLED"] == "true"
     assert values["ARTIFACT_ROOT"] == "/var/lib/rune-agent/artifacts"
+    assert values["DEPLOYMENT_TARGET"] == "ubuntu"
+    assert values["KUBERNETES_DEPLOYMENT"] == "false"
 
     for secret_key in [
         "POSTGRES_DSN",

@@ -262,7 +262,7 @@ Latest local verification:
 - `uv run pytest`: 272 passed, 3 skipped after staging env template coverage was added
 - `uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --write-evidence-template -`: passed, validating staging template parsing and review-safe evidence template generation
 - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle` plus `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`: passed, validating staging-template bundle generation and bundle integrity checks
-- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`: passed structurally with `goal_complete=false`, `remaining_blocker_count=20`, `prompt_to_artifact_checklist_count=6`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`; local gates pass, local-gate evidence includes the handoff bundle smoke and validation commands, and remaining blockers require real company/staging evidence
+- `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`: passed structurally with `goal_complete=false`, `remaining_blocker_count=20`, `prompt_to_artifact_checklist_count=6`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`; local gates pass, local-gate evidence includes the handoff bundle smoke and validation commands, and remaining blockers require real company/staging evidence
 - GitHub Actions `CI` run `25979725389` for commit `c3f9a36`: success, including `Handoff bundle env-file smoke`
 - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`: passed after first verifying the new staging evidence plan CI smoke requirement failed when absent
 - `uv run pytest tests/unit/ops/test_production_readiness_check.py::test_local_gate_commands_include_staging_evidence_plan_smoke -q`: passed after first verifying `LOCAL_GATE_COMMANDS` did not include the staging evidence plan smoke
@@ -275,10 +275,11 @@ Latest local verification:
   PostgreSQL, Neo4j, Qdrant, model gateway, trusted proxy, observability, JIRA,
   Confluence, and restricted decision/email export handoff
 - `ops/rehearsal/staging.env.example` now provides a staging/release rehearsal
-  env template with production-oriented modes and empty endpoint/secret values
+  env template with production-oriented modes, empty endpoint/secret values,
+  `DEPLOYMENT_TARGET=ubuntu`, and `KUBERNETES_DEPLOYMENT=false`
 - `uv run pytest tests/unit/config/test_env_example.py -q`: 2 passed,
   validating `.env.example` production-readiness key coverage and
-  `staging.env.example` production-mode/no-fake-secret behavior
+  `staging.env.example` production-mode/no-fake-secret/Ubuntu-target behavior
 - `ops/rehearsal/check_production_readiness.py` and
   `ops/rehearsal/check_goal_completion.py` accept `--env-file` so release owners
   can load a secure KEY=VALUE staging env file together with reviewed evidence
