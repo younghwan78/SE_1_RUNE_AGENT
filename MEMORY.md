@@ -1614,3 +1614,16 @@ Remaining production gap is unchanged:
   - `uv run pytest tests/unit/model_gateway/test_http_provider_and_registry.py::test_http_json_model_provider_sends_provider_neutral_payload tests/unit/model_gateway/test_http_provider_and_registry.py::test_http_json_transport_preserves_korean_text_as_utf8 -q`
     failed while Korean text was escaped and charset was missing.
   - The focused tests passed after preserving Korean text as UTF-8 bytes.
+- Verification:
+  - `uv run pytest tests/unit/model_gateway -q`: `17 passed`
+  - `uv run pytest tests/unit/model_gateway/test_http_provider_and_registry.py tests/unit/model_gateway/test_dummy_gateway.py tests/unit/ops/test_model_gateway_smoke.py -q`:
+    `18 passed`
+  - `uv run ruff check src/req_tracker/model_gateway/http_provider.py tests/unit/model_gateway/test_http_provider_and_registry.py`:
+    passed
+  - `uv run mypy src`: passed
+  - GitHub Actions `CI` run `25986199459` for commit `b8cbb20`: passed.
+  - Post-fix goal audit:
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`.
