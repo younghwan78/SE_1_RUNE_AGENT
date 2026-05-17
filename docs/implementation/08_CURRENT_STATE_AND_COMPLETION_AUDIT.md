@@ -1098,6 +1098,22 @@ blocking:
   - Verification: `uv run pytest tests/unit/ops/test_runbook_docs.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py -q`
     passed with `18 passed`; `uv run ruff check tests/unit/ops/test_runbook_docs.py`
     passed; `git diff --check` passed.
+- 2026-05-17 handoff validator summary output:
+  - `ops/rehearsal/validate_handoff_bundle.py` now echoes manifest completion
+    status in its own structured output: `goal_complete`,
+    `remaining_blocker_count`, and `blocker_summary`.
+  - This makes the reviewer-facing validator output sufficient to see that the
+    latest local handoff has zero local-action blockers while still requiring
+    company/staging evidence.
+  - RED/GREEN: `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_accepts_generated_bundle -q`
+    failed with `KeyError: 'blocker_summary'`, then passed after the validator
+    report copied the manifest summary fields.
+  - Verification: `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py -q`
+    passed with `14 passed`; ruff passed on the touched validator files;
+    `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`
+    passed and printed `goal_complete=false`, `remaining_blocker_count=20`,
+    `blocker_summary.local_action_required=0`, and
+    `blocker_summary.company_or_staging_evidence_required=20`.
 
 ## 5. Completion Gate
 

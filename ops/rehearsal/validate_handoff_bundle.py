@@ -42,7 +42,12 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
     manifest_path = bundle_dir / "manifest.json"
     manifest = _load_json(manifest_path, failures, "manifest")
     if not manifest:
-        return _report(bundle_dir, failures, artifact_count=0)
+        return _report(
+            bundle_dir,
+            failures,
+            artifact_count=0,
+            manifest_summary={},
+        )
 
     if manifest.get("schema_version") != "v1":
         failures.append("manifest_schema_version_not_v1")
@@ -118,7 +123,12 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
         if "## Final Validation" not in content:
             failures.append("staging_evidence_plan_final_validation_missing")
 
-    return _report(bundle_dir, failures, artifact_count=len(EXPECTED_ARTIFACTS))
+    return _report(
+        bundle_dir,
+        failures,
+        artifact_count=len(EXPECTED_ARTIFACTS),
+        manifest_summary=_manifest_summary(manifest),
+    )
 
 
 def _load_json(path: Path, failures: list[str], label: str) -> dict[str, Any] | None:
@@ -226,11 +236,28 @@ def _sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _report(bundle_dir: Path, failures: list[str], *, artifact_count: int) -> dict[str, Any]:
+def _manifest_summary(manifest: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "goal_complete": manifest.get("goal_complete"),
+        "remaining_blocker_count": manifest.get("remaining_blocker_count"),
+        "blocker_summary": manifest.get("blocker_summary"),
+    }
+
+
+def _report(
+    bundle_dir: Path,
+    failures: list[str],
+    *,
+    artifact_count: int,
+    manifest_summary: Mapping[str, Any],
+) -> dict[str, Any]:
     return {
         "schema_version": "v1",
         "bundle_dir": str(bundle_dir),
         "artifact_count": artifact_count,
+        "goal_complete": manifest_summary.get("goal_complete"),
+        "remaining_blocker_count": manifest_summary.get("remaining_blocker_count"),
+        "blocker_summary": manifest_summary.get("blocker_summary"),
         "failures": failures,
         "summary": {
             "failed": len(failures),

@@ -365,7 +365,9 @@ The manifest includes `blocker_summary` from the goal-completion report:
 `local_action_required` should be zero before handoff from a local workstation,
 and `company_or_staging_evidence_required` shows the blockers that still need
 company/staging endpoints or reviewed evidence. The validator rejects
-`blocker_summary_mismatch` when the manifest and goal-completion report differ.
+`blocker_summary_mismatch` when the manifest and goal-completion report differ,
+and prints `goal_complete`, `remaining_blocker_count`, and `blocker_summary`
+in its own JSON output.
 
 After real staging rehearsals, run:
 

@@ -21,6 +21,8 @@ def test_handoff_bundle_validator_accepts_generated_bundle(tmp_path) -> None:  #
     assert report["passed"] is True
     assert report["summary"]["failed"] == 0
     assert report["artifact_count"] == 4
+    assert report["blocker_summary"]["local_action_required"] > 0
+    assert report["blocker_summary"]["company_or_staging_evidence_required"] > 0
 
 
 def test_handoff_bundle_validator_rejects_missing_artifact(tmp_path) -> None:  # type: ignore[no-untyped-def]

@@ -228,7 +228,9 @@ and the Markdown evidence-plan heading. In `manifest.json`,
 `blocker_summary.local_action_required` should be zero before local handoff;
 `blocker_summary.company_or_staging_evidence_required` is the count that still
 requires company/staging endpoints or reviewed evidence. A manifest that drifts
-from `goal-completion-report.json` fails with `blocker_summary_mismatch`.
+from `goal-completion-report.json` fails with `blocker_summary_mismatch`. The
+validator output also prints `goal_complete`, `remaining_blocker_count`, and
+`blocker_summary` directly.
 
 ## 5. Source Skill Export Dry-Run
 

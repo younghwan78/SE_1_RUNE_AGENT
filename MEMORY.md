@@ -1937,3 +1937,26 @@ Remaining production gap is unchanged:
     `18 passed`
   - `uv run ruff check tests/unit/ops/test_runbook_docs.py`: passed
   - `git diff --check`: passed
+
+## 2026-05-17 Handoff Validator Summary Output
+
+- `ops/rehearsal/validate_handoff_bundle.py` now echoes the handoff manifest
+  completion state in its own structured output:
+  - `goal_complete`
+  - `remaining_blocker_count`
+  - `blocker_summary`
+- This lets release reviewers inspect validator output directly without
+  opening `manifest.json` or `goal-completion-report.json`.
+- RED/GREEN:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_accepts_generated_bundle -q`
+    failed with `KeyError: 'blocker_summary'`, then passed after the validator
+    report copied the manifest summary fields.
+- Verification:
+  - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py tests/unit/ops/test_handoff_bundle.py -q`:
+    `14 passed`
+  - `uv run ruff check ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`:
+    passed
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed and printed `goal_complete=false`, `remaining_blocker_count=20`,
+    `blocker_summary.local_action_required=0`, and
+    `blocker_summary.company_or_staging_evidence_required=20`.

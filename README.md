@@ -155,7 +155,9 @@ also carries `blocker_summary` from `goal-completion-report.json`; use
 `local_action_required` to see whether any workstation-local tasks remain and
 `company_or_staging_evidence_required` to see the count that still depends on
 company/staging systems. The validator rejects `blocker_summary_mismatch` if
-the manifest drifts from the goal-completion report.
+the manifest drifts from the goal-completion report, and prints
+`goal_complete`, `remaining_blocker_count`, and `blocker_summary` in its own
+JSON output.
 
 Run the API locally:
 
