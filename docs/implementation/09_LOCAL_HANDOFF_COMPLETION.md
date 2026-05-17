@@ -155,6 +155,10 @@ uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown \
   --output /secure/path/staging_evidence_plan.md
 ```
 
+Create `/secure/path/staging.env` by copying
+`ops/rehearsal/staging.env.example` and filling endpoint/secret values from the
+company secret store. Do not commit the filled file.
+
 After replacing TODO entries with reviewed evidence:
 
 ```bash

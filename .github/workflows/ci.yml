@@ -70,6 +70,9 @@ jobs:
       - name: Readiness env-file evidence template smoke
         run: uv run python ops/rehearsal/check_production_readiness.py --env-file .env.example --write-evidence-template -
 
+      - name: Staging env-template readiness smoke
+        run: uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --write-evidence-template -
+
       - name: Staging evidence plan smoke
         run: uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown
 

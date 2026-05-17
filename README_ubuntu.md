@@ -25,8 +25,14 @@ uv sync
 
 ```bash
 cp .env.example .env
+cp ops/rehearsal/staging.env.example /secure/path/staging.env
+chmod 600 .env /secure/path/staging.env
 mkdir -p /var/lib/rune-agent/artifacts
 ```
+
+Use `.env` for the running service. Use `/secure/path/staging.env` for
+readiness, evidence-plan, and handoff-bundle rehearsals after filling endpoint
+and secret values from the company secret store.
 
 Recommended initial server `.env`:
 
@@ -286,6 +292,7 @@ gates:
 
 ```bash
 uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown \
+  --env-file /secure/path/staging.env \
   --output /secure/path/staging_evidence_plan.md
 ```
 
@@ -352,6 +359,7 @@ After real staging rehearsals, run:
 
 ```bash
 uv run python ops/rehearsal/check_production_readiness.py \
+  --env-file /secure/path/staging.env \
   --evidence-file /secure/path/production_readiness_evidence.json
 ```
 

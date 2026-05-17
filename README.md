@@ -112,6 +112,10 @@ uv run python ops/rehearsal/build_staging_evidence_plan.py `
   --format markdown
 ```
 
+For company/staging rehearsals, copy
+`ops/rehearsal/staging.env.example` to a secure, untracked path and fill it from
+the company secret store before passing it as `--env-file`.
+
 Run the top-level goal-completion audit before declaring this implementation
 complete. Use the same reviewed evidence file after company/staging rehearsals:
 

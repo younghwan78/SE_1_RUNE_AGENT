@@ -14,6 +14,17 @@ def _env_example_keys() -> set[str]:
     return keys
 
 
+def _env_file_values(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        values[key] = value
+    return values
+
+
 def test_env_example_covers_production_readiness_inputs() -> None:
     required_keys = {
         "STATE_STORE",
@@ -57,3 +68,26 @@ def test_env_example_covers_production_readiness_inputs() -> None:
     }
 
     assert required_keys <= _env_example_keys()
+
+
+def test_staging_env_example_sets_production_modes_without_fake_secrets() -> None:
+    values = _env_file_values(ROOT / "ops/rehearsal/staging.env.example")
+
+    assert values["STATE_STORE"] == "postgres"
+    assert values["GRAPH_BACKEND"] == "neo4j"
+    assert values["VECTOR_BACKEND"] == "qdrant"
+    assert values["MODEL_GATEWAY_MODE"] == "http_json"
+    assert values["AUTH_MODE"] == "trusted_proxy"
+    assert values["OTEL_ENABLED"] == "true"
+    assert values["ARTIFACT_ROOT"] == "/var/lib/rune-agent/artifacts"
+
+    for secret_key in [
+        "POSTGRES_DSN",
+        "NEO4J_PASSWORD",
+        "QDRANT_API_KEY",
+        "MODEL_GATEWAY_API_KEY",
+        "TRUSTED_PROXY_SECRET",
+        "JIRA_TOKEN",
+        "CONFLUENCE_TOKEN",
+    ]:
+        assert values[secret_key] == ""

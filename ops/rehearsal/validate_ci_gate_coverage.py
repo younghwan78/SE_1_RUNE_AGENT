@@ -25,6 +25,10 @@ REQUIRED_CI_EXTRA_COMMANDS = {
         "uv run python ops/rehearsal/check_production_readiness.py "
         "--env-file .env.example --write-evidence-template -"
     ),
+    (
+        "uv run python ops/rehearsal/check_production_readiness.py "
+        "--env-file ops/rehearsal/staging.env.example --write-evidence-template -"
+    ),
     "uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown",
     (
         "uv run python ops/rehearsal/build_staging_evidence_plan.py "

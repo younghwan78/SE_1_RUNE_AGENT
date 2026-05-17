@@ -1076,6 +1076,52 @@ Remaining production gap is unchanged:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`
+
+## 2026-05-17 Staging Env Template
+
+- Added `ops/rehearsal/staging.env.example` as a staging/release rehearsal
+  environment template separate from the local `.env.example`.
+- The template sets production-oriented modes while leaving endpoint/secret
+  values empty for secure injection:
+  - `STATE_STORE=postgres`
+  - `GRAPH_BACKEND=neo4j`
+  - `VECTOR_BACKEND=qdrant`
+  - `MODEL_GATEWAY_MODE=http_json`
+  - `AUTH_MODE=trusted_proxy`
+  - `OTEL_ENABLED=true`
+  - `ARTIFACT_ROOT=/var/lib/rune-agent/artifacts`
+- Added config test coverage to ensure required staging modes are set and fake
+  secret values are not committed in the template.
+- Added GitHub Actions smoke coverage:
+  `uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --write-evidence-template -`
+  and updated `ops/rehearsal/validate_ci_gate_coverage.py`.
+- Updated `README.md`, `README_ubuntu.md`, and
+  `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` to direct operators to
+  copy `ops/rehearsal/staging.env.example` to a secure untracked path before
+  filling company endpoint/secret values.
+- RED/GREEN:
+  - `uv run pytest tests/unit/config/test_env_example.py::test_staging_env_example_sets_production_modes_without_fake_secrets -q`
+    failed before the template existed and passed after adding it.
+- Verification:
+  - `uv run pytest tests/unit/config/test_env_example.py tests/unit/ops/test_runbook_docs.py tests/unit/ops/test_ci_gate_coverage.py -q`:
+    `6 passed`
+  - `uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --write-evidence-template -`:
+    passed
+  - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown`:
+    passed with unresolved gate plan output
+  - `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle`:
+    passed
+  - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`:
+    passed with `artifact_count=4`, `failed=0`
+  - `uv run ruff check .`: passed
+  - `uv run mypy src`: passed
+  - `uv run pytest`: `272 passed, 3 skipped`
+  - `uv run python ops/rehearsal/validate_ci_gate_coverage.py`: passed with
+    `ci_command_count=29`
+  - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, readiness summary `failed=6`,
+    `manual_required=10`, `passed=3`, `warning=0`
 - Added RED/GREEN coverage for stale manual-evidence templates:
   - `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_missing_manual_template_gate -q`
     failed before the template/readiness comparison existed and passed after

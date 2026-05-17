@@ -259,7 +259,9 @@ Latest local verification:
 - `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/handoff-bundle`: passed, validating required artifact presence, JSON parse/schema, manifest/report consistency, manual-evidence-template coverage for all `manual_required` readiness gates, and staging evidence plan heading
 - `uv run pytest tests/unit/ops/test_runbook_docs.py -q`: 2 passed, validating incident response runbook coverage and Ubuntu handoff bundle workflow documentation
 - `ops/rehearsal/check_production_readiness.py --run-local-gates` now includes the same handoff bundle smoke and validation commands, so release-style local gate runs and GitHub Actions exercise the same handoff artifact generator and verifier
-- `uv run pytest`: 271 passed, 3 skipped after Ubuntu handoff bundle runbook coverage was added
+- `uv run pytest`: 272 passed, 3 skipped after staging env template coverage was added
+- `uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --write-evidence-template -`: passed, validating staging template parsing and review-safe evidence template generation
+- `uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle` plus `uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle`: passed, validating staging-template bundle generation and bundle integrity checks
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`: passed structurally with `goal_complete=false`, `remaining_blocker_count=20`, `prompt_to_artifact_checklist_count=6`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`; local gates pass, local-gate evidence includes the handoff bundle smoke and validation commands, and remaining blockers require real company/staging evidence
 - GitHub Actions `CI` run `25979725389` for commit `c3f9a36`: success, including `Handoff bundle env-file smoke`
 - `uv run pytest tests/unit/ops/test_ci_gate_coverage.py::test_ci_gate_coverage_reports_missing_required_command -q`: passed after first verifying the new staging evidence plan CI smoke requirement failed when absent
@@ -272,8 +274,11 @@ Latest local verification:
 - `.env.example` now includes company/staging rehearsal variables for
   PostgreSQL, Neo4j, Qdrant, model gateway, trusted proxy, observability, JIRA,
   Confluence, and restricted decision/email export handoff
-- `uv run pytest tests/unit/config/test_env_example.py -q`: 1 passed, validating
-  that `.env.example` covers production-readiness input variables
+- `ops/rehearsal/staging.env.example` now provides a staging/release rehearsal
+  env template with production-oriented modes and empty endpoint/secret values
+- `uv run pytest tests/unit/config/test_env_example.py -q`: 2 passed,
+  validating `.env.example` production-readiness key coverage and
+  `staging.env.example` production-mode/no-fake-secret behavior
 - `ops/rehearsal/check_production_readiness.py` and
   `ops/rehearsal/check_goal_completion.py` accept `--env-file` so release owners
   can load a secure KEY=VALUE staging env file together with reviewed evidence
@@ -286,7 +291,7 @@ Latest local verification:
 - `uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file .env.example --format markdown`: passed, reporting `Unresolved gates: 17` and summary `failed=6`, `manual_required=11`, `passed=2`, `warning=0`
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example`: passed structurally with `goal_complete=false`, validating the env-file audit input path
 - `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file .env.example --run-local-gates`: passed structurally with `goal_complete=false`, `remaining_blocker_count=20`, `prompt_to_artifact_checklist_count=6`, and readiness summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`
-- GitHub Actions `CI` now includes env-file smoke gates for readiness evidence template generation, staging evidence plan generation, goal-completion audit, and handoff bundle generation; `uv run python ops/rehearsal/validate_ci_gate_coverage.py` passed with `ci_command_count=27`
+- GitHub Actions `CI` now includes env-file smoke gates for readiness evidence template generation, staging env-template parsing, staging evidence plan generation, goal-completion audit, handoff bundle generation, and handoff bundle validation; `uv run python ops/rehearsal/validate_ci_gate_coverage.py` passed with `ci_command_count=29`
 - `check_goal_completion.py` now resolves `company_evidence_required` release-scope items through mapped production-readiness checks, preserving local `release_ready=false` while allowing reviewed company/staging evidence to drive `release_scope_goal_ready=true` and ultimately `goal_complete=true`
 - `uv run pytest tests/unit/ops/test_goal_completion_audit.py -q`: 5 passed, including complete reviewed-evidence goal-completion coverage
 - `ops/rehearsal/check_production_readiness.py` and
