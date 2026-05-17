@@ -878,6 +878,14 @@ blocking:
     `local_regression_gates`; `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
+- 2026-05-17 local handoff document refresh:
+  - `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` now lists the current
+    local gate command set, including reviewed-evidence staging evidence plan
+    and handoff bundle smokes.
+  - The latest local evidence section now uses the fresh
+    `uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    result: local regression gates passed, overall readiness remains blocked
+    with summary `failed=6`, `manual_required=10`, `passed=3`, `warning=0`.
 
 ## 5. Completion Gate
 

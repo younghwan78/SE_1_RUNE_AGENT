@@ -1504,3 +1504,19 @@ Remaining production gap is unchanged:
     `local_regression_gates`; `goal_complete=false`,
     `remaining_blocker_count=20`, readiness summary `failed=6`,
     `manual_required=10`, `passed=3`, `warning=0`.
+
+## 2026-05-17 Local Handoff Document Refresh
+
+- Refreshed `docs/implementation/09_LOCAL_HANDOFF_COMPLETION.md` so the local
+  gate command set includes staging evidence plan, release scope validation,
+  goal completion audit, staging-template handoff bundle validation, and
+  reviewed-evidence handoff bundle validation.
+- Updated the latest readiness evidence in that document to the fresh
+  `ops/rehearsal/staging.env.example --run-local-gates` result:
+  `failed=6`, `manual_required=10`, `passed=3`, `warning=0`, with local gates
+  passed and company/staging evidence still external.
+- Verification:
+  - `uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --run-local-gates`:
+    returned non-zero as expected because production readiness is still blocked,
+    but `local_regression_gates` passed and the summary matched the updated
+    document.

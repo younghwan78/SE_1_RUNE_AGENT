@@ -70,8 +70,18 @@ uv run python ops/observability/validate_observability_assets.py
 uv run python ops/rehearsal/validate_postgres_migration_rollbacks.py
 uv run python ops/rehearsal/validate_postgres_typed_mirrors.py
 uv run python ops/rehearsal/validate_evidence_example.py
+uv run python ops/rehearsal/build_staging_evidence_plan.py --format markdown
+uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --format markdown
+uv run python ops/rehearsal/build_staging_evidence_plan.py --env-file ops/rehearsal/staging.env.example --evidence-file ops/rehearsal/production_readiness_evidence.example.json --format markdown
+uv run python ops/rehearsal/validate_release_scope_artifacts.py
+uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete
+uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example
 uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file .env.example --output-dir .local_artifacts/handoff-bundle
 uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/handoff-bundle
+uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --output-dir .local_artifacts/staging-handoff-bundle
+uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle
+uv run python ops/rehearsal/build_handoff_bundle.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --evidence-file ops/rehearsal/production_readiness_evidence.example.json --output-dir .local_artifacts/staging-handoff-bundle-reviewed
+uv run python ops/rehearsal/validate_handoff_bundle.py .local_artifacts/staging-handoff-bundle-reviewed
 uv run python ops/rehearsal/validate_ci_gate_coverage.py
 uv run python ops/ui/smoke_operator_ui.py
 uv run python ops/evals/run_feedback_eval_rehearsal.py
@@ -101,9 +111,9 @@ Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
 - `uv run python ops/rehearsal/run_full_stack_rehearsal.py`: passed with API
   restart restore, metrics surface check, audit event persistence, and local
   smoke-load threshold coverage.
-- `uv run python ops/rehearsal/check_production_readiness.py --run-local-gates`:
+- `uv run python ops/rehearsal/check_production_readiness.py --env-file ops/rehearsal/staging.env.example --run-local-gates`:
   local regression gates passed; overall readiness still failed with summary
-  `failed=7`, `manual_required=10`, `passed=2`, `warning=0` because
+  `failed=6`, `manual_required=10`, `passed=3`, `warning=0` because
   company/staging environment variables and manual evidence are not configured
   on this workstation.
 - Commit `c52572d Persist scheduler configuration state` added restart-safe
@@ -115,10 +125,11 @@ Latest 2026-05-17 local evidence with Docker Desktop Linux engine available:
   documentation for `PUT /api/v1/schedule` restart-safe persistence and the
   `schedule_configs` typed mirror; GitHub Actions `CI` run `25968150339`
   passed.
-- Latest full local regression after scheduler persistence: `uv run pytest`
-  reported `242 passed, 3 skipped`; readiness local regression gates passed,
+- Latest full local regression after reviewed-evidence gate coverage:
+  `uv run pytest` reported `282 passed, 3 skipped`; readiness local regression
+  gates passed,
   while the overall readiness summary remains
-  `failed=7`, `manual_required=10`, `passed=2`, `warning=0` until
+  `failed=6`, `manual_required=10`, `passed=3`, `warning=0` until
   company/staging evidence is supplied.
 
 ## 4. Company/Staging Gates
