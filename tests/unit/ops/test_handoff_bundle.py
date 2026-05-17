@@ -45,6 +45,9 @@ def test_handoff_bundle_writes_required_artifacts_without_secrets(tmp_path) -> N
     assert manifest["run_local_gates"] is False
     assert manifest["goal_complete"] is False
     assert manifest["readiness_passed"] is False
+    assert manifest["missing_env_count"] == len(manifest["missing_env"])
+    assert "VECTOR_BACKEND" in manifest["missing_env"]
+    assert "POSTGRES_DSN" not in manifest["missing_env"]
     assert set(manifest["artifacts"]) == expected_files - {"manifest.json"}
     assert set(manifest["artifact_hashes"]) == expected_files - {"manifest.json"}
     assert all(

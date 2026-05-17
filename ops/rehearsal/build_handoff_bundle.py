@@ -83,6 +83,8 @@ def build_handoff_bundle(
         },
         "readiness_passed": readiness_report["passed"],
         "goal_complete": goal_report["goal_complete"],
+        "missing_env_count": plan["missing_env_count"],
+        "missing_env": plan["missing_env"],
         "readiness_summary": readiness_report["summary"],
         "goal_summary": goal_report["summary"],
         "blocker_summary": goal_report["blocker_summary"],

@@ -1302,6 +1302,28 @@ blocking:
     passed structurally with `goal_complete=false`,
     `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
     and `summary.prompt_to_artifact_missing_count=0`.
+- 2026-05-17 handoff manifest missing env summary:
+  - `ops/rehearsal/build_handoff_bundle.py` now copies the staging evidence
+    plan's `missing_env` and `missing_env_count` into `manifest.json`.
+  - `ops/rehearsal/validate_handoff_bundle.py` now rejects manifest drift with
+    `missing_env_mismatch` and `missing_env_count_mismatch` by comparing the
+    manifest with the generated staging evidence plan markdown.
+  - RED/GREEN:
+    `uv run pytest tests/unit/ops/test_handoff_bundle.py::test_handoff_bundle_writes_required_artifacts_without_secrets -q`
+    failed with `KeyError: 'missing_env_count'`, then passed after manifest
+    propagation.
+    `uv run pytest tests/unit/ops/test_handoff_bundle_validator.py::test_handoff_bundle_validator_rejects_manifest_missing_env_drift -q`
+    failed while the validator accepted tampered missing-env fields, then
+    passed after adding drift checks.
+  - Verification:
+    `uv run pytest tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py -q`
+    passed with `15 passed`;
+    `uv run ruff check ops/rehearsal/build_handoff_bundle.py ops/rehearsal/validate_handoff_bundle.py tests/unit/ops/test_handoff_bundle.py tests/unit/ops/test_handoff_bundle_validator.py`
+    passed; `git diff --check` passed;
+    `uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete --env-file ops/rehearsal/staging.env.example --run-local-gates`
+    passed structurally with `goal_complete=false`,
+    `remaining_blocker_count=20`, `blocker_summary.local_action_required=0`,
+    and `summary.prompt_to_artifact_missing_count=0`.
 
 ## 5. Completion Gate
 

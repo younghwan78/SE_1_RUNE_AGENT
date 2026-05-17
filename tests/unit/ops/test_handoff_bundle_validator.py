@@ -105,6 +105,27 @@ def test_handoff_bundle_validator_rejects_manifest_blocker_summary_drift(tmp_pat
     assert "blocker_summary_mismatch" in report["failures"]
 
 
+def test_handoff_bundle_validator_rejects_manifest_missing_env_drift(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
+    validator = _load_module(
+        "validate_handoff_bundle",
+        "ops/rehearsal/validate_handoff_bundle.py",
+    )
+    bundle_dir = tmp_path / "bundle"
+    builder.build_handoff_bundle(bundle_dir, run_local_gates=False)
+    manifest_path = bundle_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["missing_env"] = []
+    manifest["missing_env_count"] = 0
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = validator.validate_handoff_bundle(bundle_dir)
+
+    assert report["passed"] is False
+    assert "missing_env_mismatch" in report["failures"]
+    assert "missing_env_count_mismatch" in report["failures"]
+
+
 def test_handoff_bundle_validator_rejects_artifact_hash_drift(tmp_path) -> None:  # type: ignore[no-untyped-def]
     builder = _load_module("build_handoff_bundle", "ops/rehearsal/build_handoff_bundle.py")
     validator = _load_module(

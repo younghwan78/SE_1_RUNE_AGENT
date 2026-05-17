@@ -122,6 +122,7 @@ def validate_handoff_bundle(bundle_dir: Path) -> dict[str, Any]:
                 failures.append(f"staging_evidence_plan_missing:{snippet}")
         if "## Final Validation" not in content:
             failures.append("staging_evidence_plan_final_validation_missing")
+        _validate_manifest_missing_env(content, manifest, failures)
 
     return _report(
         bundle_dir,
@@ -186,6 +187,34 @@ def _validate_manifest_blockers(
         _manifest_blocker_fingerprint(goal_report.get("remaining_blockers"))
     ):
         failures.append("remaining_blockers_mismatch")
+
+
+def _validate_manifest_missing_env(
+    staging_plan_markdown: str,
+    manifest: Mapping[str, Any],
+    failures: list[str],
+) -> None:
+    expected = _missing_env_from_staging_plan(staging_plan_markdown)
+    if _string_list(manifest.get("missing_env")) != expected:
+        failures.append("missing_env_mismatch")
+    if manifest.get("missing_env_count") != len(expected):
+        failures.append("missing_env_count_mismatch")
+
+
+def _missing_env_from_staging_plan(content: str) -> list[str]:
+    missing: set[str] = set()
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("- Missing env:"):
+            continue
+        value = stripped.removeprefix("- Missing env:").strip()
+        if value == "`none`":
+            continue
+        for token in value.split(","):
+            normalized = token.strip().strip("`")
+            if normalized:
+                missing.add(normalized)
+    return sorted(missing)
 
 
 def _summary_remaining_blocker_count(goal_report: Mapping[str, Any]) -> int | None:
