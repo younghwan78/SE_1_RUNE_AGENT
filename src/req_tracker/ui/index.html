@@ -28,6 +28,7 @@
         <button class="view-tab" data-view-target="debug" type="button">Run Debug</button>
         <button class="view-tab" data-view-target="source-health" type="button">Source Health</button>
         <button class="view-tab" data-view-target="eval" type="button">Eval</button>
+        <button class="view-tab" data-view-target="document" type="button">Document</button>
         <button class="view-tab" data-view-target="admin" type="button">Admin</button>
       </nav>
 
@@ -405,6 +406,392 @@
           <pre id="eval-gate">[]</pre>
         </article>
       </section>
+      </section>
+
+      <section class="app-view" id="view-document" data-app-view="document">
+        <section class="document-hero">
+          <div>
+            <p class="eyebrow">Operator Guide</p>
+            <h2>RUNE Agent 사용 가이드</h2>
+            <p>
+              이 문서는 RUNE Agent를 처음 실행한 사용자가 화면의 의미를 바로 이해하도록 만든
+              내장 설명서입니다. 각 메뉴가 어떤 의사결정을 돕는지, 어떤 값을 먼저 봐야 하는지,
+              문제가 생겼을 때 어디에서 원인을 추적해야 하는지 설명합니다.
+            </p>
+          </div>
+          <div class="document-hero-summary" aria-label="guide summary">
+            <span>Operator</span>
+            <span>Reviewer</span>
+            <span>Developer</span>
+            <span>Admin</span>
+          </div>
+        </section>
+
+        <section class="document-quickstart" aria-label="quick start guide">
+          <div class="document-quickstart-copy">
+            <p class="eyebrow">First 10 Minutes</p>
+            <h2>처음에는 이 순서로 확인합니다</h2>
+            <p>
+              이 시스템은 AI가 자동으로 graph를 바꾸는 도구가 아니라, source evidence를 기반으로
+              trace 후보를 만들고 사람이 승인하면서 품질을 높이는 workflow입니다.
+            </p>
+            <div class="document-principles" aria-label="operating principles">
+              <div>
+                <strong>Proposal first</strong>
+                <span>AI 결과는 승인 전까지 제안입니다.</span>
+              </div>
+              <div>
+                <strong>Evidence required</strong>
+                <span>모든 node, edge, finding은 근거를 가져야 합니다.</span>
+              </div>
+              <div>
+                <strong>Debuggable run</strong>
+                <span>틀린 결과는 Run Debug에서 원인을 추적합니다.</span>
+              </div>
+            </div>
+          </div>
+          <ol class="document-flow">
+            <li>
+              <strong>Run</strong>
+              <span>source를 읽고 분석 run을 만듭니다.</span>
+            </li>
+            <li>
+              <strong>Dashboard</strong>
+              <span>전체 health와 급한 review를 확인합니다.</span>
+            </li>
+            <li>
+              <strong>Work Queue</strong>
+              <span>AI proposal을 승인, 거부, 보류합니다.</span>
+            </li>
+            <li>
+              <strong>Traceability</strong>
+              <span>요구사항 연결 구조를 graph로 확인합니다.</span>
+            </li>
+            <li>
+              <strong>Run Debug</strong>
+              <span>이상한 결과의 원인을 단계별로 추적합니다.</span>
+            </li>
+            <li>
+              <strong>Eval</strong>
+              <span>feedback 기반 개선이 안전한지 검증합니다.</span>
+            </li>
+          </ol>
+        </section>
+
+        <section class="document-layout">
+          <aside class="document-toc" aria-label="document table of contents">
+            <strong>Guide Map</strong>
+            <a href="#document-actions">Top Actions</a>
+            <a href="#document-terms">Core Terms</a>
+            <a href="#document-dashboard">Dashboard</a>
+            <a href="#document-work-queue">Work Queue</a>
+            <a href="#document-traceability">Traceability</a>
+            <a href="#document-debug">Run Debug</a>
+            <a href="#document-source-health">Source Health</a>
+            <a href="#document-eval">Eval</a>
+            <a href="#document-admin">Admin</a>
+          </aside>
+
+          <div class="document-content">
+            <section class="document-section-pair">
+              <article class="panel document-panel document-panel-feature" id="document-actions">
+            <div class="panel-head">
+              <h2>Top Actions</h2>
+              <span>상단 버튼</span>
+            </div>
+            <div class="document-body">
+              <dl class="document-list">
+                <div>
+                  <dt>Run</dt>
+                  <dd>
+                    현재 runtime 설정으로 새 traceability analysis를 실행합니다. local dummy
+                    mode에서는 fixture artifact를 읽고 node, edge proposal, finding, approval
+                    item, debug trace를 생성합니다. 운영 환경에서는 JIRA, Confluence, decision
+                    archive, Email adapter가 같은 계약으로 연결됩니다.
+                    <span class="doc-inline-note">Run 결과는 승인 전까지 pending proposal입니다.</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Refresh</dt>
+                  <dd>
+                    Refresh는 화면 캐시를 다시 읽습니다. Dashboard metric, graph projection,
+                    Work Queue, Run Debug, Eval gate, scheduler, audit event를 API에서 다시
+                    불러옵니다. 다른 사용자가 approval을 처리했거나 schedule run이 끝난 뒤에는
+                    Refresh로 최신 상태를 확인합니다.
+                  </dd>
+                </div>
+                <div>
+                  <dt>Replay</dt>
+                  <dd>
+                    Replay는 최근 run을 같은 model profile과 prompt version으로 다시 실행해
+                    결과 차이를 비교합니다. 모델, prompt, retrieval, rule 변경 전후에 결과가
+                    흔들리는지 확인하기 위한 debugging 기능입니다.
+                    <span class="doc-inline-note">Replay는 신뢰성 확인용이며 graph를 직접 변경하지 않습니다.</span>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+          </article>
+
+              <article class="panel document-panel document-panel-feature" id="document-terms">
+            <div class="panel-head">
+              <h2>Core Terms</h2>
+              <span>기본 용어</span>
+            </div>
+            <div class="document-body">
+              <div class="term-grid">
+                <div><strong>Node</strong><span>Requirement, Design, Verification, Issue 같은 추적 대상입니다.</span></div>
+                <div><strong>Edge</strong><span>Node 사이의 관계입니다. satisfies, implements, verifies, affects 등이 있습니다.</span></div>
+                <div><strong>Pending</strong><span>AI나 rule이 제안했지만 아직 사람이 승인하지 않은 상태입니다.</span></div>
+                <div><strong>Approved</strong><span>리뷰어가 승인해 graph 원장에 반영 가능한 상태입니다.</span></div>
+                <div><strong>Finding</strong><span>누락, 충돌, 위험, 보안 우려처럼 조치가 필요한 분석 결과입니다.</span></div>
+                <div><strong>Evidence</strong><span>결과를 뒷받침하는 source artifact, quote hash, prompt/model trace입니다.</span></div>
+              </div>
+            </div>
+          </article>
+            </section>
+
+            <section class="document-menu-grid">
+          <article class="panel document-panel document-menu-card" id="document-dashboard">
+            <div class="panel-head">
+              <h2>Dashboard</h2>
+              <span>전체 상태 요약</span>
+            </div>
+            <div class="document-body">
+              <div class="doc-section">
+                <h3>무엇을 보는가</h3>
+                <p>
+                  Dashboard is the command center. 마지막 run 상태, traceability health,
+                  pending approval 수, high/critical finding, node/edge 수, source freshness,
+                  eval gate, schedule 상태를 한 화면에서 보여줍니다.
+                </p>
+              </div>
+              <div class="doc-section">
+                <h3>언제 쓰는가</h3>
+                <p>
+                  시스템에 들어왔을 때 가장 먼저 봅니다. 분석이 성공했는지, 어떤 review가
+                  밀려 있는지, graph가 finding 때문에 blocked 상태인지 판단합니다.
+                </p>
+              </div>
+              <div class="doc-callout">
+                핵심 판단: Pending Approvals가 높으면 Work Queue로, High Findings가 높으면
+                Finding detail로, Last Run이 실패하면 Run Debug로 이동합니다.
+              </div>
+              <div class="doc-next-action">
+                <strong>Next:</strong>
+                <span>문제가 있으면 Work Queue 또는 Run Debug로 이동합니다.</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel document-panel document-menu-card" id="document-work-queue">
+            <div class="panel-head">
+              <h2>Work Queue</h2>
+              <span>리뷰와 승인</span>
+            </div>
+            <div class="document-body">
+              <div class="doc-section">
+                <h3>무엇을 보는가</h3>
+                <p>
+                  사람이 판단해야 하는 항목을 모읍니다. Trace link approval, finding,
+                  failed run, source warning, eval gate issue가 이곳에 쌓입니다.
+                </p>
+              </div>
+              <div class="doc-section">
+                <h3>주요 액션</h3>
+                <ul class="doc-bullets">
+                  <li>Approve: 제안이 맞다고 판단해 승인합니다.</li>
+                  <li>Reject: 관계나 evidence가 틀렸다고 판단해 거부합니다.</li>
+                  <li>Hold 또는 Comment: 추가 확인이 필요할 때 reason code와 함께 남깁니다.</li>
+                </ul>
+              </div>
+              <div class="doc-callout">
+                중요한 원칙: AI proposal은 승인 전까지 approved graph와 분리됩니다.
+                feedback은 즉시 운영 behavior를 바꾸지 않고 eval 후보 데이터가 됩니다.
+              </div>
+              <div class="doc-next-action">
+                <strong>Next:</strong>
+                <span>관계 구조를 직접 확인하려면 Traceability로 이동합니다.</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel document-panel document-menu-card" id="document-traceability">
+            <div class="panel-head">
+              <h2>Traceability</h2>
+              <span>관계 그래프</span>
+            </div>
+            <div class="document-body">
+              <div class="doc-section">
+                <h3>무엇을 보는가</h3>
+                <p>
+                  요구사항, architecture block, design spec, verification, issue 사이의 연결을
+                  graph로 봅니다. approved edge와 pending edge를 구분해 실제 확정된 관계와
+                  검토 중인 관계를 분리해서 볼 수 있습니다.
+                </p>
+              </div>
+              <div class="mode-grid">
+                <div><strong>Overview</strong><span>전체 구조와 주요 연결 밀도를 봅니다.</span></div>
+                <div><strong>Orphans</strong><span>연결이 없는 node를 찾아 누락 가능성을 봅니다.</span></div>
+                <div><strong>Pending</strong><span>승인 대기 중인 관계만 집중해서 봅니다.</span></div>
+                <div><strong>Neighborhood</strong><span>선택한 node 주변 관계를 hop 단위로 추적합니다.</span></div>
+                <div><strong>Full</strong><span>가능한 넓은 projection을 요청합니다. 큰 graph에서는 제한될 수 있습니다.</span></div>
+              </div>
+              <div class="doc-callout">
+                확대, 축소, pan, reset, search, node click을 사용해 100개 이상 node에서도
+                관심 node 주변부터 좁혀 보는 것이 기본 사용 방식입니다.
+              </div>
+              <div class="doc-next-action">
+                <strong>Next:</strong>
+                <span>관계가 납득되지 않으면 node detail과 Run Debug evidence를 같이 봅니다.</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel document-panel document-menu-card" id="document-debug">
+            <div class="panel-head">
+              <h2>Run Debug</h2>
+              <span>단계별 추적</span>
+            </div>
+            <div class="document-body">
+              <div class="doc-section">
+                <h3>무엇을 보는가</h3>
+                <p>
+                  Run Debug explains why a run produced its result. Ingestion, masking, chunking,
+                  node extraction, edge linking, finding reasoning 같은 단계별 trace를 확인합니다.
+                  각 단계는 input hash, output hash, prompt version, model profile, validation
+                  result와 연결됩니다.
+                </p>
+              </div>
+              <div class="doc-section">
+                <h3>언제 쓰는가</h3>
+                <p>
+                  관계가 이상하거나 finding이 납득되지 않을 때 사용합니다. source text가 잘못
+                  들어왔는지, masking 때문에 정보가 사라졌는지, retrieval context가 부족했는지,
+                  model output validation이 실패했는지 역추적합니다.
+                </p>
+              </div>
+              <div class="doc-callout">
+                Debug의 목적은 "AI가 틀렸다"에서 멈추지 않고, 어느 stage에서 왜 틀렸는지
+                재현 가능한 증거를 찾는 것입니다.
+              </div>
+              <div class="doc-next-action">
+                <strong>Next:</strong>
+                <span>반복되는 오류라면 Work Queue feedback을 남기고 Eval 후보로 모읍니다.</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel document-panel document-menu-card" id="document-source-health">
+            <div class="panel-head">
+              <h2>Source Health</h2>
+              <span>입력 데이터 상태</span>
+            </div>
+            <div class="document-body">
+              <div class="doc-section">
+                <h3>무엇을 보는가</h3>
+                <p>
+                  source adapter가 데이터를 정상적으로 읽고 있는지 보여줍니다. local dummy mode에서는
+                  dummy source가 fresh가 되어야 합니다. production에서는 JIRA, Confluence,
+                  decision archive, Email source의 freshness와 warning을 확인합니다.
+                </p>
+              </div>
+              <div class="doc-section">
+                <h3>먼저 확인할 것</h3>
+                <ul class="doc-bullets">
+                  <li>stale이면 sync가 오래되었거나 cursor가 멈춘 상태일 수 있습니다.</li>
+                  <li>blocked이면 인증, 권한, endpoint, rate limit 문제를 먼저 확인합니다.</li>
+                  <li>unknown이면 아직 run이 없거나 source health evidence가 부족한 상태입니다.</li>
+                </ul>
+              </div>
+              <div class="doc-next-action">
+                <strong>Next:</strong>
+                <span>source가 stale 또는 blocked이면 source connector와 credential을 먼저 봅니다.</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel document-panel document-menu-card" id="document-eval">
+            <div class="panel-head">
+              <h2>Eval</h2>
+              <span>개선 검증</span>
+            </div>
+            <div class="document-body">
+              <div class="doc-section">
+                <h3>무엇을 보는가</h3>
+                <p>
+                  Eval is the promotion gate for feedback-driven improvement. 사용자가 reject,
+                  modify, comment, low quality로 남긴 feedback은 dataset 후보가 되고,
+                  prompt/rule/retrieval/scoring/model profile 개선 후보로 이어질 수 있습니다.
+                </p>
+              </div>
+              <div class="doc-section">
+                <h3>중요한 이유</h3>
+                <p>
+                  시스템이 스스로 더 나아지는 구조를 만들더라도 운영 behavior는 즉시 바뀌면
+                  안 됩니다. Eval gate, reviewer approval, canary, rollback 경로를 통과해야
+                  active behavior로 승격할 수 있습니다.
+                </p>
+              </div>
+              <div class="doc-callout">
+                Eval이 blocked이면 개선 후보를 운영에 반영하지 말고 dataset, metric, regression
+                sample을 먼저 보강해야 합니다.
+              </div>
+              <div class="doc-next-action">
+                <strong>Next:</strong>
+                <span>Eval을 통과한 변경만 review, canary, rollback 계획과 함께 승격합니다.</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel document-panel document-menu-card" id="document-admin">
+            <div class="panel-head">
+              <h2>Admin</h2>
+              <span>운영 제어</span>
+            </div>
+            <div class="document-body">
+              <div class="doc-section">
+                <h3>무엇을 보는가</h3>
+                <p>
+                  Scheduler interval, project, scenario, enabled 상태를 설정합니다. Manual Run now는
+                  즉시 분석을 실행하고, enabled schedule은 Ubuntu server 같은 운영 환경에서 주기적으로
+                  분석을 수행하기 위한 설정입니다.
+                </p>
+              </div>
+              <div class="doc-section">
+                <h3>주의할 점</h3>
+                <p>
+                  운영 환경에서는 schedule 설정이 state store에 저장됩니다. 다중 instance에서는
+                  PostgreSQL lease가 필요하며, manual run-now는 operator command로 audit event에
+                  남아야 합니다.
+                </p>
+              </div>
+              <div class="doc-next-action">
+                <strong>Next:</strong>
+                <span>schedule 변경 후 Dashboard와 Audit Events에서 실행 결과를 확인합니다.</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel document-panel document-menu-card">
+            <div class="panel-head">
+              <h2>Reading Order</h2>
+              <span>추천 사용 순서</span>
+            </div>
+            <div class="document-body">
+              <ol class="doc-steps">
+                <li><strong>Dashboard</strong><span>전체 health와 가장 급한 review 항목을 확인합니다.</span></li>
+                <li><strong>Run 또는 Refresh</strong><span>필요하면 새 분석을 실행하거나 최신 상태를 읽습니다.</span></li>
+                <li><strong>Traceability</strong><span>요구사항 연결 구조와 orphan/pending node를 확인합니다.</span></li>
+                <li><strong>Work Queue</strong><span>AI 제안을 승인, 거부, 보류하고 reason code를 남깁니다.</span></li>
+                <li><strong>Run Debug</strong><span>이상한 결과의 source, model, prompt, validation 근거를 추적합니다.</span></li>
+                <li><strong>Eval</strong><span>반복되는 feedback을 개선 후보로 검증합니다.</span></li>
+              </ol>
+            </div>
+          </article>
+            </section>
+          </div>
+        </section>
       </section>
 
       <section class="app-view" id="view-admin" data-app-view="admin">

@@ -101,7 +101,22 @@ def run_operator_ui_smoke() -> dict[str, Any]:
                 'data-app-view="debug"',
                 'data-app-view="source-health"',
                 'data-app-view="eval"',
+                'data-app-view="document"',
                 'data-app-view="admin"',
+            ]
+        ),
+        "document_view_present": all(
+            snippet in index_text
+            for snippet in [
+                "Document",
+                "RUNE Agent 사용 가이드",
+                "First 10 Minutes",
+                "Guide Map",
+                "document-toc",
+                "Core Terms",
+                "Run Debug",
+                "Eval",
+                "AI proposal은 승인 전까지 approved graph와 분리됩니다.",
             ]
         ),
         "work_queue_detail_present": all(
