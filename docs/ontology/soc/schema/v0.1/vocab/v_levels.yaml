@@ -1,0 +1,19 @@
+v_levels:
+  - name: L0
+    description: Customer needs and field validation
+    primary_sources: [email, confluence]
+  - name: L1
+    description: System requirements and system validation
+    primary_sources: [confluence, jira]
+  - name: L2
+    description: SoC architecture and integration test
+    primary_sources: [confluence, jira]
+  - name: L3
+    description: Subsystem or IP architecture and subsystem integration
+    primary_sources: [jira, confluence]
+  - name: L4
+    description: IP or block design and IP verification
+    primary_sources: [jira]
+  - name: L5
+    description: RTL or software implementation and unit test
+    primary_sources: [jira]

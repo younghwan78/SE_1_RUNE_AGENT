@@ -34,6 +34,7 @@ def rehearsal_env(*, artifact_root: Path, api_port: int) -> dict[str, str]:
             "DATASOURCE_MODE": "dummy",
             "STATE_STORE": "postgres",
             "POSTGRES_DSN": env["POSTGRES_TEST_DSN"],
+            "POSTGRES_MIGRATION_PROFILE": "core",
             "GRAPH_BACKEND": "neo4j",
             "NEO4J_URI": env["NEO4J_TEST_URI"],
             "NEO4J_USERNAME": env["NEO4J_TEST_USERNAME"],
@@ -123,6 +124,19 @@ def run_full_stack_rehearsal(
                 "decided_by": "rehearsal_operator",
             },
         )
+        recorded_feedback = post_json(
+            f"{api_base_url}/api/v1/feedback",
+            {
+                "feedback_id": "fb_full_stack_rehearsal_answer",
+                "target_type": "answer",
+                "target_id": analyze["run"]["run_id"],
+                "action": "commented",
+                "user_id": "rehearsal_operator",
+                "user_role": "System Architect",
+                "reason_code": "weak_evidence",
+                "correction_text": "Full-stack rehearsal feedback persistence check.",
+            },
+        )
         projection = require_object(
             get_json(f"{api_base_url}/api/v1/graph/projection?project_key=RUNE_CAM_ALPHA")
         )
@@ -139,6 +153,13 @@ def run_full_stack_rehearsal(
         )
         restored_audit = require_array(
             get_json(f"{api_base_url}/api/v1/audit/events?project_key=RUNE_CAM_ALPHA")
+        )
+        restored_feedback_summary = require_object(
+            get_json(f"{api_base_url}/api/v1/feedback/summary")
+        )
+        feedback_persistence = feedback_persistence_summary(
+            recorded_feedback,
+            restored_feedback_summary,
         )
         load_smoke = run_load_smoke(
             api_base_url=api_base_url,
@@ -164,6 +185,7 @@ def run_full_stack_rehearsal(
             and audit_retention["total_events"] >= 2
             and metrics_ok
             and restart_restored
+            and feedback_persistence["passed"]
             and load_smoke["passed"]
         )
         return {
@@ -186,6 +208,7 @@ def run_full_stack_rehearsal(
                 ],
             },
             "restart_restored": restart_restored,
+            "feedback_persistence": feedback_persistence,
             "load_smoke": load_smoke,
             "schema_version": "v1",
         }
@@ -247,6 +270,22 @@ def run_load_smoke(*, api_base_url: str, runs: int, max_p95_ms: float) -> dict[s
         "approvals": approvals,
         "passed": p95_ms <= max_p95_ms and approvals > 0,
         "max_p95_ms": max_p95_ms,
+    }
+
+
+def feedback_persistence_summary(
+    recorded_feedback: dict[str, Any],
+    restored_summary: dict[str, Any],
+) -> dict[str, Any]:
+    """Summarize whether answer feedback survived API restart through the state store."""
+    reason_code = str(recorded_feedback.get("reason_code") or "")
+    restored_count = int(restored_summary.get(reason_code, 0) or 0)
+    return {
+        "feedback_id": str(recorded_feedback.get("feedback_id") or ""),
+        "passed": restored_count >= 1,
+        "reason_code": reason_code,
+        "restored_count": restored_count,
+        "target_type": str(recorded_feedback.get("target_type") or ""),
     }
 
 

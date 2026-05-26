@@ -1,0 +1,106 @@
+entities:
+  - name: Project
+    properties:
+      - {name: id, type: string, required: true, unique: true}
+      - {name: name, type: string, required: true}
+      - {name: phase, type: string}
+      - {name: start_date, type: datetime}
+      - {name: end_date, type: datetime}
+    indexes:
+      - {field: id, type: btree}
+
+  - name: Artifact
+    properties:
+      - {name: id, type: string, required: true, unique: true}
+      - {name: source_type, type: enum, required: true, values: [jira, confluence, email, decision_archive, dummy]}
+      - {name: source_url, type: string, required: true}
+      - {name: created_at, type: datetime}
+      - {name: last_synced_at, type: datetime}
+      - {name: raw_hash, type: string}
+    indexes:
+      - {field: source_type, type: btree}
+      - {field: raw_hash, type: btree}
+
+  - name: Issue
+    parent: Artifact
+    properties:
+      - {name: jira_key, type: string, required: true, unique: true}
+      - {name: status, type: string}
+      - {name: assignee, type: ref, target: Person}
+      - {name: reporter, type: ref, target: Person}
+      - {name: issue_type, type: string}
+    indexes:
+      - {field: jira_key, type: btree}
+      - {field: status, type: btree}
+
+  - name: Page
+    parent: Artifact
+    properties:
+      - {name: conf_page_id, type: string, required: true, unique: true}
+      - {name: space, type: string}
+      - {name: title, type: string, required: true}
+      - {name: version, type: integer}
+
+  - name: EmailThread
+    parent: Artifact
+    properties:
+      - {name: thread_id, type: string, required: true, unique: true}
+      - {name: subject, type: string, required: true}
+      - {name: participants, type: list}
+
+  - name: EmailMessage
+    parent: Artifact
+    properties:
+      - {name: message_id, type: string, required: true, unique: true}
+      - {name: from, type: ref, target: Person}
+      - {name: to, type: list}
+      - {name: cc, type: list}
+      - {name: sent_at, type: datetime}
+      - {name: in_reply_to, type: ref, target: EmailMessage}
+
+  - name: Concern
+    properties:
+      - {name: name, type: string, required: true, unique: true}
+      - {name: definition, type: string}
+      - {name: unit, type: string}
+
+  - name: Component
+    properties:
+      - {name: name, type: string, required: true, unique: true}
+      - {name: definition, type: string}
+      - {name: parent_component, type: ref, target: Component}
+
+  - name: Decision
+    parent: Artifact
+    properties:
+      - {name: description, type: string, required: true}
+      - {name: decided_by, type: ref, target: Person}
+      - {name: decided_at, type: datetime}
+
+  - name: Requirement
+    parent: Artifact
+    properties:
+      - {name: description, type: string, required: true}
+      - {name: source_type, type: enum, values: [customer, internal]}
+
+  - name: Person
+    properties:
+      - {name: name, type: string}
+      - {name: email, type: string}
+      - {name: role, type: string}
+
+  - name: Metric
+    parent: Artifact
+    properties:
+      - {name: type, type: string, required: true}
+      - {name: value, type: float, required: true}
+      - {name: unit, type: string}
+      - {name: measured_at, type: datetime}
+
+  - name: Event
+    properties:
+      - {name: entity_id, type: string, required: true}
+      - {name: change_type, type: string, required: true}
+      - {name: from, type: json}
+      - {name: to, type: json}
+      - {name: timestamp, type: datetime, required: true}

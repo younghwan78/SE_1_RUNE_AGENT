@@ -1,0 +1,181 @@
+queries:
+  - q_id: Q1
+    question: "이전 과제에서 power 관련 활동은?"
+    slice:
+      pattern: concern_slice
+      project_keys: [SOC-N-1]
+      concerns: [Power]
+    expected_artifact_ids: [SOC1-JIRA-001, SOC1-JIRA-009, SOC1-CONF-001, SOC1-MAIL-001]
+
+  - q_id: Q2
+    question: "Camera shot 성능 이슈는 무엇이 있었나?"
+    slice:
+      pattern: topic_intersection
+      concerns: [Performance]
+      components: [Camera]
+      keywords: [shot]
+    expected_artifact_ids: [SOC1-JIRA-002, SOC1-CONF-003, SOC2-JIRA-002, SOC2-CONF-003, SOC2-MAIL-002]
+
+  - q_id: Q3
+    question: "지난 두 과제에서 memory 절감 요청이 어떻게 처리됐나?"
+    slice:
+      pattern: timeline_slice
+      project_keys: [SOC-N-1, SOC-N-2]
+      concerns: [Memory]
+      lifecycle_states: [request, update, follow_up]
+    expected_artifact_ids:
+      - SOC1-JIRA-003
+      - SOC1-CONF-002
+      - SOC1-MAIL-003
+      - SOC2-JIRA-003
+      - SOC2-JIRA-006
+      - SOC2-CONF-002
+      - SOC2-MAIL-003
+
+  - q_id: Q4
+    question: "SOC1-JIRA-001 lifecycle를 보여줘"
+    slice:
+      pattern: lifecycle_trace
+      artifact_id: SOC1-JIRA-001
+    expected_artifact_ids: [SOC1-JIRA-001]
+
+  - q_id: Q5
+    question: "Bluetooth 관련 이슈가 있었나?"
+    slice:
+      pattern: unknown
+      keywords: [bluetooth]
+    expected_artifact_ids: []
+
+  - q_id: Q6
+    question: "SOC-N-2에서 thermal 관련 GPU/Display 이슈는?"
+    slice:
+      pattern: concern_slice
+      project_keys: [SOC-N-2]
+      concerns: [Thermal]
+      components: [GPU, Display]
+    expected_artifact_ids: [SOC2-JIRA-007, SOC2-MAIL-004]
+
+  - q_id: Q7
+    question: "NPU area tradeoff 자료를 찾아줘"
+    slice:
+      pattern: topic_intersection
+      concerns: [Area]
+      components: [NPU]
+    expected_artifact_ids: [SOC1-JIRA-004, SOC1-CONF-004, SOC2-JIRA-004, SOC2-CONF-004]
+
+  - q_id: Q8
+    question: "SOC-N-1에서 reliability 관련 고객 요청은?"
+    slice:
+      pattern: concern_slice
+      project_keys: [SOC-N-1]
+      concerns: [Reliability]
+      v_levels: [L0]
+    expected_artifact_ids: [SOC1-MAIL-005]
+
+  - q_id: Q9
+    question: "SOC2-JIRA-002 lifecycle와 관련 자료를 보여줘"
+    slice:
+      pattern: lifecycle_trace
+      artifact_id: SOC2-JIRA-002
+      keywords: [camera, performance]
+    expected_artifact_ids: [SOC2-JIRA-002]
+
+  - q_id: Q10
+    question: "SOC-N-2 camera power carryover 관련 자료는?"
+    slice:
+      pattern: topic_intersection
+      project_keys: [SOC-N-2]
+      concerns: [Power]
+      components: [Camera]
+    expected_artifact_ids: [SOC2-JIRA-001, SOC2-CONF-001, SOC2-MAIL-001]
+
+  - q_id: Q11
+    question: "SOC-N-2 display latency 수정 이력은?"
+    slice:
+      pattern: timeline_slice
+      project_keys: [SOC-N-2]
+      concerns: [Latency]
+      components: [Display]
+      lifecycle_states: [fix, implementation]
+    expected_artifact_ids: [SOC2-JIRA-005, SOC2-CONF-005]
+
+  - q_id: Q12
+    question: "SOC-N-1 GPU latency cleanup 자료를 찾아줘"
+    slice:
+      pattern: topic_intersection
+      project_keys: [SOC-N-1]
+      concerns: [Latency]
+      components: [GPU]
+    expected_artifact_ids: [SOC1-JIRA-005, SOC1-CONF-005]
+
+  - q_id: Q13
+    question: "SOC-N-1 memory bandwidth 이슈는?"
+    slice:
+      pattern: topic_intersection
+      project_keys: [SOC-N-1]
+      concerns: [Bandwidth]
+      components: [MemorySubsystem]
+    expected_artifact_ids: [SOC1-JIRA-007]
+
+  - q_id: Q14
+    question: "SOC-N-2 NoC bandwidth integration test는?"
+    slice:
+      pattern: topic_intersection
+      project_keys: [SOC-N-2]
+      concerns: [Bandwidth]
+      components: [NoC]
+    expected_artifact_ids: [SOC2-JIRA-008]
+
+  - q_id: Q15
+    question: "SOC-N-2 sensor reliability field issue 관련 자료는?"
+    slice:
+      pattern: concern_slice
+      project_keys: [SOC-N-2]
+      concerns: [Reliability]
+      components: [SensorHub]
+      v_levels: [L0]
+    expected_artifact_ids: [SOC2-JIRA-010, SOC2-MAIL-005]
+
+  - q_id: Q16
+    question: "SOC-N-1 PMU reliability requirement는?"
+    slice:
+      pattern: topic_intersection
+      project_keys: [SOC-N-1]
+      concerns: [Reliability]
+      components: [PMU]
+    expected_artifact_ids: [SOC1-JIRA-008]
+
+  - q_id: Q17
+    question: "SOC-N-1 display thermal review follow-up은?"
+    slice:
+      pattern: timeline_slice
+      project_keys: [SOC-N-1]
+      concerns: [Thermal]
+      components: [Display]
+      lifecycle_states: [review, follow_up]
+    expected_artifact_ids: [SOC1-JIRA-006, SOC1-MAIL-004]
+
+  - q_id: Q18
+    question: "SOC-N-2 PMU power sequencing design은?"
+    slice:
+      pattern: topic_intersection
+      project_keys: [SOC-N-2]
+      concerns: [Power]
+      components: [PMU]
+    expected_artifact_ids: [SOC2-JIRA-009]
+
+  - q_id: Q19
+    question: "SOC-N-2 NPU area decision 자료는?"
+    slice:
+      pattern: topic_intersection
+      project_keys: [SOC-N-2]
+      concerns: [Area]
+      components: [NPU]
+    expected_artifact_ids: [SOC2-JIRA-004, SOC2-CONF-004]
+
+  - q_id: Q20
+    question: "WiFi 관련 전력 이슈가 있었나?"
+    slice:
+      pattern: unknown
+      keywords: [wifi]
+    expected_artifact_ids: []

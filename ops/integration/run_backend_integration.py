@@ -37,6 +37,7 @@ def integration_env() -> dict[str, str]:
             "POSTGRES_TEST_DSN": (
                 f"postgresql://rune:rune@127.0.0.1:{postgres_port}/rune_agent_test"
             ),
+            "POSTGRES_MIGRATION_PROFILE": "core",
             "NEO4J_TEST_URI": f"bolt://127.0.0.1:{neo4j_bolt_port}",
             "NEO4J_TEST_USERNAME": "neo4j",
             "NEO4J_TEST_PASSWORD": "rune_integration_password",

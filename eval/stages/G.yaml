@@ -1,0 +1,115 @@
+stage: G
+name: "Real Data Switch"
+goal: "Prove fixture-to-real switch readiness while keeping source access behind approved source skills and adapters."
+
+subgoals:
+  - id: G1
+    name: "Connector abstraction validation"
+    artifacts:
+      - "src/req_tracker/adapters/base.py"
+      - "src/req_tracker/adapters/factory.py"
+      - "ops/rehearsal/run_soc_real_source_switch_rehearsal.py"
+    status: "implemented_seed"
+    note: "Readiness rehearsal checks stable source adapter boundaries without fetching live data by default."
+
+  - id: G2
+    name: "JIRA real source readiness"
+    artifacts:
+      - ".claude/skills/rune-source-jira/SKILL.md"
+      - "src/req_tracker/adapters/jira_rest.py"
+    status: "implemented_seed"
+    note: "JIRA source skill and REST adapter boundary exist; actual sample fetch requires approved environment variables and live run."
+
+  - id: G3
+    name: "Confluence real source readiness"
+    artifacts:
+      - ".claude/skills/rune-source-confluence/SKILL.md"
+      - "src/req_tracker/adapters/confluence_rest.py"
+    status: "implemented_seed"
+    note: "Confluence source skill and REST adapter boundary exist; actual sample fetch requires approved environment variables and live run."
+
+  - id: G4
+    name: "Email or decision archive readiness"
+    artifacts:
+      - ".claude/skills/rune-source-email/SKILL.md"
+      - "src/req_tracker/adapters/export_file.py"
+    status: "implemented_seed"
+    note: "Stage G uses restricted decision/email export readiness first. General mailbox access remains outside default PoC automation."
+
+  - id: G5
+    name: "Permission and authentication settings"
+    artifacts:
+      - "ops/rehearsal/run_soc_real_source_switch_rehearsal.py"
+      - "ops/rehearsal/staging.env.example"
+    status: "implemented_seed"
+    note: "Readiness rehearsal reports missing required variables without printing tokens, endpoint secrets, or database credentials."
+
+  - id: G6
+    name: "Real data sample 50 dry run"
+    artifacts:
+      - "ops/rehearsal/run_soc_real_source_switch_rehearsal.py"
+    status: "pending_live"
+    note: "Local gate is skip-safe; actual sample fetch remains a live, approved-source task."
+
+  - id: G7
+    name: "Real sample classification review"
+    artifacts:
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+    status: "pending_manual"
+    note: "Requires human review of real sample classification quality."
+
+  - id: G8
+    name: "Full real data ingest"
+    artifacts:
+      - "ops/rehearsal/run_soc_real_source_switch_rehearsal.py"
+    status: "pending_live"
+    note: "Blocked until G6/G7 pass and owner approves source scope."
+
+  - id: G9
+    name: "Incremental sync activation"
+    artifacts:
+      - "src/req_tracker/adapters/base.py"
+      - "src/req_tracker/storage/migrations/postgres/007_source_cursor_state_tables.sql"
+    status: "implemented_seed"
+    note: "Cursor infrastructure exists; real polling or webhook activation remains a live source task."
+
+  - id: G10
+    name: "Optional internal model integration"
+    artifacts:
+      - "src/req_tracker/model_gateway/"
+      - "config/model_profiles.json"
+    status: "deferred_optional"
+    note: "Default remains Claude Code through model gateway; internal model support is optional after Stage G."
+
+acceptance:
+  - id: ACC-G-SEED-01
+    description: "Stage G source skills are present and real source access remains procedure-driven."
+    check: "uv run python ops/rehearsal/run_soc_real_source_switch_rehearsal.py --dry-run --format json"
+    expected: "source_skills.status=passed"
+
+  - id: ACC-G-SEED-02
+    description: "Real source switch uses stable source adapter boundaries rather than product-layer transport details."
+    check: "uv run python ops/rehearsal/run_soc_real_source_switch_rehearsal.py --dry-run --format json"
+    expected: "adapter_boundaries.status=passed"
+
+  - id: ACC-G-SEED-03
+    description: "Dry-run gate is skip-safe and names required live external state without printing secrets."
+    check: "uv run python ops/rehearsal/run_soc_real_source_switch_rehearsal.py --dry-run --format json"
+    expected: "status=skipped, requires_live=true, live_source_access.status=skipped"
+
+  - id: ACC-G-LIVE-01
+    description: "fixture_to_real_switch_ready when approved JIRA, Confluence, decision/email export, and target DB settings are configured."
+    check: "POSTGRES_TEST_DSN=<target> uv run python ops/rehearsal/run_soc_real_source_switch_rehearsal.py --live --require-live --format json"
+    expected: "status=passed, source_skills.status=passed, adapter_boundaries.status=passed, live_source_access.status=passed, database_target.status=passed"
+
+  - id: ACC-G-LIVE-02
+    description: "Real source sample fetch and classification review are completed after owner-approved source access."
+    check: "operator-run live source rehearsal plus manual review record"
+    expected: "50 approved source artifacts sampled, source URLs reachable, classification review recorded"
+
+self_review:
+  - "Does Stage G keep live source access explicit instead of running by default?"
+  - "Does the readiness report avoid printing tokens, endpoint secrets, or database credentials?"
+  - "Are JIRA, Confluence, and decision/email source procedures represented as source skills?"
+  - "Is real source access still blocked until approved environment variables and owner scope are provided?"
+  - "Does Stage G distinguish local readiness from actual live evidence?"

@@ -7,13 +7,18 @@ from pydantic import BaseModel, ConfigDict, Field
 
 SCHEMA_VERSION = "v1"
 
-Provider = Literal["internal", "openai", "anthropic", "azure", "local", "dummy"]
+Provider = Literal["internal", "openai", "anthropic", "azure", "local", "dummy", "claude_code"]
 PromptTask = Literal[
     "node_extraction",
     "edge_linking",
     "finding_reasoning",
     "impact_analysis",
     "answer_generation",
+    "soc_axis_classification",
+    "soc_slice_planning",
+    "soc_query_tool_planning",
+    "soc_answer_assembly",
+    "soc_rerank",
 ]
 PromptStatus = Literal["draft", "eval_ready", "canary", "active", "retired"]
 

@@ -14,8 +14,17 @@ dependencies = [
     "psycopg[binary]>=3.2.0",
     "pydantic>=2.12.0",
     "pydantic-settings>=2.13.0",
+    "pyyaml>=6.0.3",
     "qdrant-client>=1.12.0",
     "uvicorn>=0.38.0",
+]
+
+[project.optional-dependencies]
+soc-models = [
+    "sentence-transformers>=5.1.0",
+]
+soc-ui = [
+    "streamlit>=1.41.0",
 ]
 
 [build-system]

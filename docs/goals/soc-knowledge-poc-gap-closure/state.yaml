@@ -1,0 +1,1653 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "SoC Knowledge PoC Gap Closure"
+  slug: "soc-knowledge-poc-gap-closure"
+  kind: existing_plan
+  tranche: "continuous execution: validate the current gap map, close successive safe verified SoC Knowledge PoC gaps, and continue until final audit proves the design target is satisfied or only named external blockers remain"
+  status: active
+  oracle:
+    signal: "Current files plus fresh verification outputs prove every material requirement in SoC_Knowledge_PoC_Design_v4.0.md is implemented, verified, reflected in the gap report, or explicitly blocked by named external evidence."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "Final Judge or PM receipt maps gap-report rows, design requirements, changed files, and verification commands to full_outcome_complete: true with no required queued Worker task."
+  intake:
+    original_request: "기존에 구현된 코드를 SoC_Knowledge_PoC_Design_v4.0.md 문서를 참조해서 수정하는 것을 goal로 진행하고 있어. 현재 정확한 구현 상황과 gap을 참조해서 단계별로 적절한 goal을 세우고 이를 기준으로 실행하게 상세 목표를 잡아줘"
+    interpreted_outcome: "Prepare a detailed GoalBuddy execution board that uses the current implementation and gap report to keep closing gaps against the SoC Knowledge PoC design."
+    input_shape: existing_plan
+    audience: "project owner and future /goal execution PM"
+    authority: requested
+    proof_type: test
+    completion_proof: "Fresh audit evidence shows SoC_Knowledge_PoC_Design_v4.0.md is satisfied by implementation, tests, live or skip-safe gates, and documented residual blockers."
+    likely_misfire: "Completing more small scaffolds or documentation while leaving high-risk design-critical behavior, live evidence, or integration gaps unresolved."
+    blind_spots_considered:
+      - "The current worktree may contain many uncommitted changes from prior iterations and user work."
+      - "Prior chat context may be stale; current files and command output are authoritative."
+      - "Some remaining gaps may require external credentials, live local models, Claude Code access, or target database services."
+      - "Existing implementation should be reused when it aligns with the production plan; avoid unnecessary rewrite."
+    existing_plan_facts:
+      - "Repository source of truth: PRODUCTION_EXECUTION_PLAN.md."
+      - "PoC target design: SoC_Knowledge_PoC_Design_v4.0.md."
+      - "Working gap report: docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md."
+      - "Approved graph data and pending AI proposals must stay logically separate."
+      - "All LLM calls must go through the model gateway and remain traceable."
+      - "Source-access procedures belong in Claude Code source skills; MCP tool names must not leak into product code."
+      - "Use Python 3.12+, uv, Pydantic, FastAPI, type hints, structured logs, and tests matched to blast radius."
+      - "Do not reintroduce removed PRD files."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://localhost:41737/soc-knowledge-poc-gap-closure/"
+    command: "npx goalbuddy board E:\\51_Codex_MBSE_Agent\\docs\\goals\\soc-knowledge-poc-gap-closure"
+
+active_task: T030
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: high
+    objective: "Map the current SoC Knowledge PoC implementation state and gap report against the design target."
+    inputs:
+      - "PRODUCTION_EXECUTION_PLAN.md"
+      - "SoC_Knowledge_PoC_Design_v4.0.md"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "git status --short"
+      - "Current source, tests, fixtures, eval, ops, docs, and CI files referenced by the gap report"
+    constraints:
+      - "Read-only."
+      - "Do not edit implementation files."
+      - "Treat current worktree and fresh command output as authoritative."
+      - "Preserve the user instruction to reuse existing implementation where practical."
+      - "Do not rely on prior chat memory without verifying current files."
+    expected_output:
+      - "Requirement-to-evidence map for the design and gap report."
+      - "Current implemented, partial, missing, blocked, and weak-evidence gaps."
+      - "Fresh verification command inventory and which requirements each command proves."
+      - "Ranked candidate Worker slices, prioritizing design-critical gaps and strongest verification impact."
+      - "External blockers separated from local implementation gaps."
+    receipt:
+      result: done
+      note: "notes/T001-current-gap-map.md"
+      summary: "Mapped current SoC PoC state against the design and gap report. Stage A-F seed baseline is present; the largest remaining gaps are target DB live proof, live local model proof, live Claude Code quality acceptance, Stage G real source switch, target UI evidence/usage guide, and manual curation."
+      evidence:
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "SoC_Knowledge_PoC_Design_v4.0.md"
+        - "PRODUCTION_EXECUTION_PLAN.md"
+        - "eval/stages/A.yaml"
+        - "eval/stages/D.yaml"
+        - "eval/stages/E.yaml"
+        - "eval/stages/F.yaml"
+        - ".claude/skills/rune-source-jira"
+        - ".claude/skills/rune-source-confluence"
+        - ".claude/skills/rune-source-email"
+      spawned_tasks:
+        - T002
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Choose the next largest safe implementation slice from the Scout evidence."
+    inputs:
+      - "T001 receipt"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "SoC_Knowledge_PoC_Design_v4.0.md"
+    constraints:
+      - "Do not implement."
+      - "Reject tiny scaffolding if a larger safe vertical slice is available."
+      - "Prefer local non-destructive work when external services or credentials are unavailable."
+      - "Require exact allowed_files, verification commands, and stop conditions for the Worker task."
+      - "If the best next slice is externally blocked, record the blocker and choose the next safe local slice."
+    expected_output:
+      - "Decision: approved Worker slice, blocked slice, or need more Scout evidence."
+      - "Exact Worker objective."
+      - "allowed_files."
+      - "verify commands."
+      - "stop_if conditions."
+      - "Why this slice closes the highest-value remaining gap."
+    receipt:
+      result: done
+      note: "notes/T002-judge-next-slice.md"
+      decision: "approved"
+      full_outcome_complete: false
+      summary: "Selected the skip-safe SoC Claude Code quality gate as the next largest safe local implementation slice."
+      allowed_files:
+        - "ops/evals/run_soc_claude_quality_gate.py"
+        - "tests/unit/ops/test_soc_claude_quality_gate.py"
+        - "eval/stages/A.yaml"
+        - "eval/stages/D.yaml"
+        - "tests/unit/ops/test_soc_stage_a_foundation.py"
+        - "tests/unit/ops/test_soc_stage_d_foundation.py"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      verify:
+        - "uv run pytest tests/unit/ops/test_soc_claude_quality_gate.py -q"
+        - "uv run pytest tests/unit/ops/test_soc_claude_quality_gate.py tests/unit/ops/test_soc_stage_a_foundation.py tests/unit/ops/test_soc_stage_d_foundation.py tests/unit/ops/test_claude_code_provider_smoke.py tests/unit/query/test_soc_query_planner.py tests/unit/query/test_soc_orchestration.py -q"
+        - "uv run python ops/evals/run_soc_claude_quality_gate.py --dry-run --format json"
+        - "uv run ruff check ."
+        - "uv run mypy src"
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a skip-safe SoC Claude Code quality gate for slice planning, typed query tool planning, and answer assembly."
+    inputs:
+      - "T002 receipt"
+      - "Files explicitly allowed by T002"
+    constraints:
+      - "Use TDD for behavior changes: write a failing test first, verify it fails for the expected reason, then implement."
+      - "Reuse existing modules and patterns unless the Judge receipt explicitly justifies replacement."
+      - "Update the gap report if the slice changes gap status."
+      - "Do not hardcode secrets, credentials, internal endpoints, or unmasked confidential data."
+      - "Do not write outside allowed_files without stopping for PM board update."
+    allowed_files:
+      - "ops/evals/run_soc_claude_quality_gate.py"
+      - "tests/unit/ops/test_soc_claude_quality_gate.py"
+      - "eval/stages/A.yaml"
+      - "eval/stages/D.yaml"
+      - "tests/unit/ops/test_soc_stage_a_foundation.py"
+      - "tests/unit/ops/test_soc_stage_d_foundation.py"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+    verify:
+      - "uv run pytest tests/unit/ops/test_soc_claude_quality_gate.py -q"
+      - "uv run pytest tests/unit/ops/test_soc_claude_quality_gate.py tests/unit/ops/test_soc_stage_a_foundation.py tests/unit/ops/test_soc_stage_d_foundation.py tests/unit/ops/test_claude_code_provider_smoke.py tests/unit/query/test_soc_query_planner.py tests/unit/query/test_soc_orchestration.py -q"
+      - "uv run python ops/evals/run_soc_claude_quality_gate.py --dry-run --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The selected behavior is ambiguous against the design or gap report."
+      - "Verification fails twice for different root causes."
+      - "A live external dependency is required and no skip-safe path exists."
+      - "The implementation would bypass model_gateway, approval separation, audit traceability, or source adapter boundaries."
+    receipt:
+      result: done
+      summary: "Added a skip-safe SoC Claude Code quality gate for slice planning, typed query tool planning, and answer assembly. Stage A/D acceptance and the gap report now track the gate; actual live Claude execution remains explicit through --live."
+      changed_files:
+        - "ops/evals/run_soc_claude_quality_gate.py"
+        - "tests/unit/ops/test_soc_claude_quality_gate.py"
+        - "eval/stages/A.yaml"
+        - "eval/stages/D.yaml"
+        - "tests/unit/ops/test_soc_stage_a_foundation.py"
+        - "tests/unit/ops/test_soc_stage_d_foundation.py"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      commands:
+        - cmd: "uv run pytest tests/unit/ops/test_soc_claude_quality_gate.py -q"
+          status: "pass"
+          evidence: "initial RED failed because ops/evals/run_soc_claude_quality_gate.py was missing; after implementation 2 passed"
+        - cmd: "uv run pytest tests/unit/ops/test_soc_claude_quality_gate.py tests/unit/ops/test_soc_stage_a_foundation.py tests/unit/ops/test_soc_stage_d_foundation.py tests/unit/ops/test_claude_code_provider_smoke.py tests/unit/query/test_soc_query_planner.py tests/unit/query/test_soc_orchestration.py -q"
+          status: "pass"
+          evidence: "18 passed"
+        - cmd: "uv run python ops/evals/run_soc_claude_quality_gate.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, requires_live=true, slice_planning/query_tool_planning/answer_assembly checks reported"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 133 source files"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "417 passed, 3 skipped"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+
+  - id: T004
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: "Record Worker receipt, refresh the board, and select whether to continue to another Worker slice or request Judge review."
+    inputs:
+      - "T003 receipt"
+      - "Current git diff"
+      - "Fresh verification output"
+      - "Updated gap report"
+    constraints:
+      - "PM may edit only GoalBuddy control files unless a future active Worker task allows product edits."
+      - "Do not mark the goal done."
+      - "If safe local work remains, update or create the next Worker task."
+      - "Use Judge for phase boundaries, high-risk changes, rejected verification, ambiguity, or final audit."
+    expected_output:
+      - "Receipt for board update."
+      - "Next active task selected."
+      - "If continuing with Worker, refreshed objective, allowed_files, verify, and stop_if."
+      - "If escalating to Judge, exact audit or decision question."
+    receipt:
+      result: done
+      summary: "Recorded T003 verification and selected Stage G real-source switch readiness as the next safe local Worker slice. The slice avoids live source access and creates explicit acceptance/readiness gates for fixture-to-real transition."
+      next_active_task: T005
+      rationale: "Stage G is absent from eval/stages and is a design-critical gap. Actual source access requires credentials/approval, but acceptance YAML plus a skip-safe rehearsal gate can be implemented locally."
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add Stage G real-source switch acceptance YAML and a skip-safe rehearsal gate without touching live JIRA, Confluence, or Email."
+    inputs:
+      - "SoC_Knowledge_PoC_Design_v4.0.md Stage G"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - ".claude/skills/rune-source-jira"
+      - ".claude/skills/rune-source-confluence"
+      - ".claude/skills/rune-source-email"
+      - "existing ops/rehearsal patterns"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Do not perform live source calls."
+      - "Do not leak MCP tool names into product-layer code."
+      - "Keep real source access behind source skills/adapters."
+      - "Default rehearsal must be skip-safe and explicit about required external state."
+      - "Update the gap report if Stage G status changes."
+    allowed_files:
+      - "eval/stages/G.yaml"
+      - "ops/rehearsal/run_soc_real_source_switch_rehearsal.py"
+      - "tests/unit/ops/test_soc_stage_g_foundation.py"
+      - "tests/unit/ops/test_soc_real_source_switch_rehearsal.py"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/ops/test_soc_stage_g_foundation.py tests/unit/ops/test_soc_real_source_switch_rehearsal.py -q"
+      - "uv run python ops/rehearsal/run_soc_real_source_switch_rehearsal.py --dry-run --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need live JIRA, Confluence, or Email credentials."
+      - "Need files outside allowed_files."
+      - "The rehearsal would call source systems by default."
+      - "The implementation couples product code to MCP tool names."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added Stage G real-source switch acceptance YAML and a skip-safe readiness rehearsal. The gate verifies source skill presence, adapter boundaries, required live source/database config, and masks token/DSN details without fetching live JIRA, Confluence, or Email by default."
+      changed_files:
+        - "eval/stages/G.yaml"
+        - "ops/rehearsal/run_soc_real_source_switch_rehearsal.py"
+        - "tests/unit/ops/test_soc_stage_g_foundation.py"
+        - "tests/unit/ops/test_soc_real_source_switch_rehearsal.py"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/ops/test_soc_stage_g_foundation.py tests/unit/ops/test_soc_real_source_switch_rehearsal.py -q"
+          status: "pass"
+          evidence: "initial RED failed because eval/stages/G.yaml and run_soc_real_source_switch_rehearsal.py were missing; after implementation 4 passed"
+        - cmd: "uv run python ops/rehearsal/run_soc_real_source_switch_rehearsal.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, source_skills.status=passed, adapter_boundaries.status=passed, requires_live=true"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 133 source files"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "421 passed, 3 skipped"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 0.98ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a fuller SoC Streamlit UI usage and target-run guide and wire it into Stage E acceptance."
+    inputs:
+      - "SoC_Knowledge_PoC_Design_v4.0.md Stage E"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "eval/stages/E.yaml"
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+      - "ops/ui/smoke_soc_streamlit_ui.py"
+    constraints:
+      - "Use tests before implementation for guide/stage coverage."
+      - "Do not change UI runtime behavior unless the tests require it."
+      - "Document exact local and target commands, required env vars, live smoke, feedback check, and known external blockers."
+      - "Update the gap report if Stage E usage-guide status changes."
+    allowed_files:
+      - "docs/runbooks/SOC_KNOWLEDGE_UI_GUIDE.md"
+      - "eval/stages/E.yaml"
+      - "tests/unit/ops/test_soc_stage_e_foundation.py"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/ops/test_soc_stage_e_foundation.py -q"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need to run target Streamlit environment or live browser manually."
+      - "The guide would include secrets, internal endpoints, or unapproved company data."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added a SoC Streamlit UI guide and wired it into Stage E acceptance. The guide documents local and target run commands, FastAPI endpoint boundaries, live smoke checks, feedback verification, session isolation, and secret-handling rules."
+      changed_files:
+        - "docs/runbooks/SOC_KNOWLEDGE_UI_GUIDE.md"
+        - "eval/stages/E.yaml"
+        - "tests/unit/ops/test_soc_stage_e_foundation.py"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/ops/test_soc_stage_e_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because guide file and Stage E link were missing; after implementation 6 passed"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 133 source files"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "422 passed, 3 skipped"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+
+  - id: T010
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: medium
+    objective: "Map external-evidence blockers that cannot be completed locally in the current environment."
+    inputs:
+      - "Current gap report"
+      - "Live-gate scripts under ops/"
+      - "CI workflow files"
+      - "Runbooks or docs naming required env vars, DSNs, model access, or target services"
+    constraints:
+      - "Read-only."
+      - "Do not attempt live external service calls unless a prior Worker task explicitly assigned them."
+      - "Separate missing implementation from missing environment evidence."
+    expected_output:
+      - "List of external gates, required variables/services, and exact commands."
+      - "Which blockers can be converted into skip-safe local verification."
+      - "Which blockers require owner-provided credentials or target environment access."
+      - "Candidate Worker slices that improve local readiness without live access."
+    receipt:
+      result: done
+      note: "notes/T010-external-blockers.md"
+      summary: "Mapped the remaining external evidence gates and selected a local skip-safe storage-backed query eval gate as the next implementation slice."
+      external_gates:
+        - "POSTGRES_TEST_DSN target DB live profile and storage rehearsal"
+        - "Live local embedding and reranker model quality"
+        - "Live Claude Code quality through the model gateway"
+        - "Live JIRA, Confluence, and decision-email source switch"
+        - "Target UI browser smoke evidence"
+      spawned_tasks:
+        - T011
+
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a skip-safe storage-backed SoC query eval gate that can run against seed or scale fixtures when a target Postgres DSN is provided."
+    inputs:
+      - "T010 receipt"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "eval/stages/D.yaml"
+      - "eval/stages/F.yaml"
+      - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+      - "src/req_tracker/query/retrieval.py"
+      - "src/req_tracker/evals/soc_query.py"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Default command must be skip-safe without POSTGRES_TEST_DSN."
+      - "Do not print DSNs, tokens, or source credentials."
+      - "Do not perform live external source calls."
+      - "Reuse PostgresHybridSocRetrievalBackend and existing query eval comparison contracts."
+      - "Update Stage D/F acceptance and the gap report if this changes gap status."
+    allowed_files:
+      - "ops/evals/run_soc_storage_backed_query_eval.py"
+      - "tests/unit/ops/test_soc_storage_backed_query_eval.py"
+      - "eval/stages/D.yaml"
+      - "eval/stages/F.yaml"
+      - "tests/unit/ops/test_soc_stage_d_foundation.py"
+      - "tests/unit/ops/test_soc_stage_f_foundation.py"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/ops/test_soc_storage_backed_query_eval.py -q"
+      - "uv run pytest tests/unit/ops/test_soc_storage_backed_query_eval.py tests/unit/ops/test_soc_stage_d_foundation.py tests/unit/ops/test_soc_stage_f_foundation.py -q"
+      - "uv run python ops/evals/run_soc_storage_backed_query_eval.py --dry-run --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need a live DSN, JIRA, Confluence, Email, local model, or Claude credential to finish local verification."
+      - "The gate would mutate target storage by default."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added a skip-safe storage-backed SoC query eval gate for seed/scale ground-truth query quality on a target Postgres hybrid retrieval profile. Stage D/F acceptance and the gap report now track the gate; actual target DSN evidence remains external."
+      changed_files:
+        - "ops/evals/run_soc_storage_backed_query_eval.py"
+        - "tests/unit/ops/test_soc_storage_backed_query_eval.py"
+        - "eval/stages/D.yaml"
+        - "eval/stages/F.yaml"
+        - "tests/unit/ops/test_soc_stage_d_foundation.py"
+        - "tests/unit/ops/test_soc_stage_f_foundation.py"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/ops/test_soc_storage_backed_query_eval.py tests/unit/ops/test_soc_stage_d_foundation.py tests/unit/ops/test_soc_stage_f_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because run_soc_storage_backed_query_eval.py and Stage D/F acceptance entries were missing; after implementation 9 passed"
+        - cmd: "uv run python ops/evals/run_soc_storage_backed_query_eval.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, requires_live=true, dsn_provided=false, storage_rehearsal/query_quality skipped without printing secrets"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 133 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 0.95ms"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "425 passed, 3 skipped"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+
+  - id: T012
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: low
+    objective: "Pause the SoC Knowledge PoC gap-closure goal after the current implementation and verification iteration until the user explicitly resumes work."
+    inputs:
+      - "T011 receipt"
+      - "User instruction to stop after this implementation/verification"
+    constraints:
+      - "Do not implement another Worker slice."
+      - "Do not run the final Judge audit until the user resumes."
+      - "On resume, choose between target DSN live evidence, live model/Claude evidence, target UI evidence, Stage G real-source evidence, or final audit."
+    expected_output:
+      - "Board remains valid and paused with T011 complete."
+      - "Next action is deferred to a future user request."
+    receipt:
+      result: done
+      summary: "User resumed the persistent goal, so the pause task is closed and the board advances to the next safe local Worker slice."
+      next_active_task: T013
+
+  - id: T013
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add SoC eval-run persistence so Stage F query comparison reports can be stored and reloaded as soc_eval_runs."
+    inputs:
+      - "SoC_Knowledge_PoC_Design_v4.0.md section 12.2 eval_run table"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md Stage F eval_run gap"
+      - "src/req_tracker/evals/soc_query.py"
+      - "src/req_tracker/storage/postgres_store.py"
+      - "src/req_tracker/storage/sqlite_store.py"
+      - "eval/stages/F.yaml"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Do not require a live Postgres DSN for local verification."
+      - "Do not print DSNs or credentials."
+      - "Persist eval reports as data only; do not auto-promote prompt, model, rule, or retrieval changes."
+      - "Keep production active behavior unchanged."
+    allowed_files:
+      - "src/req_tracker/evals/soc_query.py"
+      - "ops/evals/run_soc_eval_persistence_rehearsal.py"
+      - "src/req_tracker/storage/postgres_store.py"
+      - "src/req_tracker/storage/migrations/postgres/011_soc_knowledge_tables.sql"
+      - "tests/unit/evals/test_soc_query_eval.py"
+      - "tests/unit/ops/test_soc_eval_persistence_rehearsal.py"
+      - "tests/unit/ops/test_soc_stage_f_foundation.py"
+      - "tests/unit/storage/test_postgres_store.py"
+      - "eval/stages/F.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/evals/test_soc_query_eval.py tests/unit/ops/test_soc_eval_persistence_rehearsal.py tests/unit/storage/test_postgres_store.py::test_postgres_store_typed_soc_eval_run_table tests/unit/ops/test_soc_stage_f_foundation.py -q"
+      - "uv run python ops/evals/run_soc_eval_persistence_rehearsal.py --coverage-mode scale --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need live target Postgres to prove local behavior."
+      - "Need files outside allowed_files."
+      - "The implementation would directly mutate production behavior or active improvement state."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added SoC eval-run persistence for Stage F query comparison reports. Reports now build compact SocEvalRunRecord payloads, persist through the shared state-store contract into soc_eval_runs, reload through a local SQLite rehearsal, and map to the typed PostgreSQL soc_eval_runs mirror without auto-promoting any improvement."
+      changed_files:
+        - "src/req_tracker/evals/soc_query.py"
+        - "ops/evals/run_soc_eval_persistence_rehearsal.py"
+        - "src/req_tracker/storage/postgres_store.py"
+        - "src/req_tracker/storage/migrations/postgres/011_soc_knowledge_tables.sql"
+        - "tests/unit/evals/test_soc_query_eval.py"
+        - "tests/unit/ops/test_soc_eval_persistence_rehearsal.py"
+        - "tests/unit/ops/test_soc_stage_f_foundation.py"
+        - "tests/unit/storage/test_postgres_store.py"
+        - "eval/stages/F.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/evals/test_soc_query_eval.py tests/unit/ops/test_soc_eval_persistence_rehearsal.py tests/unit/storage/test_postgres_store.py::test_postgres_store_typed_soc_eval_run_table tests/unit/ops/test_soc_stage_f_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because build_soc_eval_run_record was missing; after implementation 13 passed"
+        - cmd: "uv run python ops/evals/run_soc_eval_persistence_rehearsal.py --coverage-mode scale --format json"
+          status: "pass"
+          evidence: "status=passed, persisted.collection=soc_eval_runs, coverage_mode=scale, 30 queries / 400 artifacts / regression_count 0, reloaded record matched"
+        - cmd: "uv run pytest tests/unit/storage/test_postgres_store.py -q"
+          status: "pass"
+          evidence: "15 passed"
+        - cmd: "uv run python ops/rehearsal/validate_soc_postgres_profile.py"
+          status: "pass"
+          evidence: "passed=true, soc_eval_runs table and idx_soc_eval_runs_mode_started checked"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 133 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages"
+
+  - id: T014
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a local Stage F eval-run diff report so two SoC eval runs can be compared for metric regression without auto-promoting prompt, model, rule, or retrieval changes."
+    inputs:
+      - "SoC_Knowledge_PoC_Design_v4.0.md Stage F F4/F5 diff and regression requirements"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md Stage F replay/diff and promotion-loop gaps"
+      - "src/req_tracker/evals/soc_query.py"
+      - "eval/stages/F.yaml"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Do not require live Postgres, live model, or live Claude Code access."
+      - "Do not mutate active prompt, model, rule, retrieval policy, or production graph behavior."
+      - "Keep the diff report deterministic, JSON-serializable, and suitable for later debug artifact storage."
+    allowed_files:
+      - "src/req_tracker/evals/soc_query.py"
+      - "ops/evals/diff_soc_eval_runs.py"
+      - "tests/unit/evals/test_soc_query_eval.py"
+      - "tests/unit/ops/test_soc_eval_diff.py"
+      - "tests/unit/ops/test_soc_stage_f_foundation.py"
+      - "eval/stages/F.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/evals/test_soc_query_eval.py tests/unit/ops/test_soc_eval_diff.py tests/unit/ops/test_soc_stage_f_foundation.py -q"
+      - "uv run python ops/evals/diff_soc_eval_runs.py --coverage-mode scale --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need live target storage or external credentials to finish local verification."
+      - "The diff would directly change active production behavior instead of only reporting evidence."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added a report-only SoC eval-run diff path for Stage F. Baseline and candidate eval-run records can now be compared for recall, source accuracy, schema, unknown-handling, and regression-count drift without mutating active prompt, model, rule, retrieval, or graph behavior."
+      changed_files:
+        - "src/req_tracker/evals/soc_query.py"
+        - "ops/evals/diff_soc_eval_runs.py"
+        - "tests/unit/evals/test_soc_query_eval.py"
+        - "tests/unit/ops/test_soc_eval_diff.py"
+        - "tests/unit/ops/test_soc_stage_f_foundation.py"
+        - "eval/stages/F.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/evals/test_soc_query_eval.py tests/unit/ops/test_soc_eval_diff.py tests/unit/ops/test_soc_stage_f_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because diff_soc_eval_run_records was missing; after implementation 13 passed"
+        - cmd: "uv run python ops/evals/diff_soc_eval_runs.py --coverage-mode scale --format json"
+          status: "pass"
+          evidence: "status=passed, coverage_mode=scale, regression_delta=0, regressed_metrics=[], report_only=true"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 133 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "433 passed, 3 skipped"
+
+  - id: T015
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a SoC lifecycle event write path so fixture-to-Postgres loading populates soc_event_log alongside artifacts, classifications, and embeddings."
+    inputs:
+      - "SoC_Knowledge_PoC_Design_v4.0.md section 12.2 event_log table"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md lifecycle write-path gap"
+      - "src/req_tracker/storage/soc_postgres_loader.py"
+      - "src/req_tracker/ontology/soc_models.py SocLifecycleEvent"
+      - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Do not require a live target Postgres DSN for local verification."
+      - "Do not add source-system calls or external credentials."
+      - "Keep events append-only/idempotent and tied to artifact source_url/run_id/step_id evidence."
+      - "Do not mutate approved graph state or pending AI proposal state."
+    allowed_files:
+      - "src/req_tracker/storage/soc_postgres_loader.py"
+      - "tests/unit/storage/test_soc_postgres_loader.py"
+      - "tests/unit/ops/test_soc_stage_a_foundation.py"
+      - "tests/unit/ops/test_soc_stage_d_foundation.py"
+      - "eval/stages/A.yaml"
+      - "eval/stages/D.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/storage/test_soc_postgres_loader.py tests/unit/ops/test_soc_stage_a_foundation.py tests/unit/ops/test_soc_stage_d_foundation.py -q"
+      - "uv run python ops/rehearsal/validate_soc_postgres_profile.py"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need live target storage or source credentials to finish local verification."
+      - "The event write path would update approved graph truth or pending proposal state."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added a SoC lifecycle event write path for fixture-to-Postgres loading. The loader now builds source-linked artifact_synced SocLifecycleEvent records, upserts them into soc_event_log idempotently, and Stage D acceptance tracks artifact/classification/event/embedding fixture loading."
+      changed_files:
+        - "src/req_tracker/storage/soc_postgres_loader.py"
+        - "tests/unit/storage/test_soc_postgres_loader.py"
+        - "tests/unit/ops/test_soc_stage_d_foundation.py"
+        - "eval/stages/D.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/storage/test_soc_postgres_loader.py tests/unit/ops/test_soc_stage_a_foundation.py tests/unit/ops/test_soc_stage_d_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because lifecycle_events_for_artifacts was missing; after implementation 9 passed"
+        - cmd: "uv run pytest tests/unit/storage/test_soc_postgres_loader.py tests/unit/ops/test_soc_stage_a_foundation.py tests/unit/ops/test_soc_stage_d_foundation.py tests/unit/ops/test_soc_live_storage_rehearsal.py -q"
+          status: "pass"
+          evidence: "12 passed"
+        - cmd: "uv run python ops/rehearsal/validate_soc_postgres_profile.py"
+          status: "pass"
+          evidence: "passed=true, soc_event_log table and idx_soc_event_log_entity_ts checked"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 133 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "435 passed, 3 skipped"
+
+  - id: T016
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the remaining SoC Knowledge PoC gaps after T013-T015 and select the next largest safe slice or name the external blockers that now dominate."
+    inputs:
+      - "T013 receipt"
+      - "T014 receipt"
+      - "T015 receipt"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "SoC_Knowledge_PoC_Design_v4.0.md"
+      - "Current verification outputs"
+    constraints:
+      - "Read-only except GoalBuddy control files and notes."
+      - "Do not implement."
+      - "Separate local implementation gaps from external target DB, source, live model, and manual curation evidence."
+      - "Reject further tiny scaffolding unless it closes a material design requirement."
+      - "If safe local work remains, specify exact Worker objective, allowed_files, verify commands, and stop_if."
+    expected_output:
+      - "not_complete | blocked_by_external_evidence | ready_for_next_worker"
+      - "Ranked remaining gaps."
+      - "Recommended next active task."
+      - "Exact external evidence commands if external blockers dominate."
+    receipt:
+      result: done
+      note: "notes/T016-post-worker-audit.md"
+      decision: "ready_for_next_worker"
+      full_outcome_complete: false
+      summary: "T013-T015 closed local eval-run persistence, eval-run diff, and lifecycle event writer gaps. The largest safe remaining local gap is a production-shaped SoC fixture ingestion workflow that ties classifier, lifecycle events, and storage projection into one traceable flow. External target DB, live model, live Claude, source access, target UI, and manual curation evidence remain separate blockers."
+      next_active_task: T017
+
+  - id: T017
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a skip-safe SoC fixture ingestion workflow rehearsal that ties packaged artifacts through source snapshot, rule classification, lifecycle event generation, and storage projection counts without requiring live target storage."
+    inputs:
+      - "T016 receipt"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md workflow gap"
+      - "SoC_Knowledge_PoC_Design_v4.0.md Stage C ingestion flow"
+      - "src/req_tracker/ingestion/soc_classification.py"
+      - "src/req_tracker/storage/soc_postgres_loader.py"
+      - "src/req_tracker/debug/models.py"
+      - "eval/stages/C.yaml"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Do not require live Postgres, AGE, pgvector, source credentials, live model, or Claude access."
+      - "Do not mutate approved graph truth or pending AI proposal state."
+      - "Record deterministic stage outputs and counts so later debug/replay storage can consume them."
+      - "Reuse existing classifier and lifecycle event builder rather than duplicating ontology logic."
+    allowed_files:
+      - "src/req_tracker/workflows/soc_knowledge.py"
+      - "src/req_tracker/workflows/__init__.py"
+      - "ops/rehearsal/run_soc_fixture_ingestion_workflow.py"
+      - "tests/unit/workflows/test_soc_knowledge_workflow.py"
+      - "tests/unit/ops/test_soc_fixture_ingestion_workflow.py"
+      - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+      - "eval/stages/C.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/workflows/test_soc_knowledge_workflow.py tests/unit/ops/test_soc_fixture_ingestion_workflow.py tests/unit/ops/test_soc_stage_b_c_foundation.py -q"
+      - "uv run python ops/rehearsal/run_soc_fixture_ingestion_workflow.py --coverage-mode scale --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need live target storage or external source credentials."
+      - "The workflow would bypass source adapter boundaries, masking/evidence expectations, or graph approval separation."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added a skip-safe SoC fixture ingestion workflow rehearsal. Packaged seed/scale artifacts now flow through source snapshot, rule classification, lifecycle event generation, and storage projection counts with AgentRun/AgentStepTrace lineage and no live storage requirement."
+      changed_files:
+        - "src/req_tracker/workflows/soc_knowledge.py"
+        - "ops/rehearsal/run_soc_fixture_ingestion_workflow.py"
+        - "tests/unit/workflows/test_soc_knowledge_workflow.py"
+        - "tests/unit/ops/test_soc_fixture_ingestion_workflow.py"
+        - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+        - "eval/stages/C.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/workflows/test_soc_knowledge_workflow.py tests/unit/ops/test_soc_fixture_ingestion_workflow.py tests/unit/ops/test_soc_stage_b_c_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because req_tracker.workflows.soc_knowledge was missing; after implementation 7 passed"
+        - cmd: "uv run python ops/rehearsal/run_soc_fixture_ingestion_workflow.py --coverage-mode scale --format json"
+          status: "pass"
+          evidence: "status=passed, 400 artifacts, 1600 classifications, 400 events, 4 workflow steps, live_storage_required=0"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 134 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "439 passed, 3 skipped"
+
+  - id: T018
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit whether remaining work is now dominated by external/live evidence gates or whether another local implementation slice is still material."
+    inputs:
+      - "T013-T017 receipts"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "SoC_Knowledge_PoC_Design_v4.0.md"
+      - "Fresh full pytest output"
+    constraints:
+      - "Read-only except GoalBuddy control files and notes."
+      - "Do not implement."
+      - "Separate true local code gaps from external target DB, source access, live model, live Claude, target UI, and manual review evidence."
+      - "If external evidence dominates, prepare exact owner-provided inputs and commands instead of inventing more seed scaffolding."
+    expected_output:
+      - "not_complete | external_evidence_dominates | ready_for_next_worker"
+      - "Remaining requirement-to-evidence map."
+      - "Next task with allowed files and verification, or exact external handoff commands."
+    receipt:
+      result: done
+      note: "notes/T018-remaining-gap-audit.md"
+      decision: "ready_for_next_worker"
+      full_outcome_complete: false
+      summary: "External/live evidence is not the only remaining gap. Stage C still lacks a local rule entity extractor and cross-reference relation projection, while the design explicitly requires JIRA key mention to MENTIONS edge generation."
+      next_active_task: T019
+
+  - id: T019
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a rule-only SoC entity extractor and semantic relation projection for artifact mentions and authors, then wire its counts into the fixture ingestion workflow."
+    inputs:
+      - "T018 receipt"
+      - "SoC_Knowledge_PoC_Design_v4.0.md Stage C entity extractor and JIRA key mention acceptance"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md entity extraction gap"
+      - "src/req_tracker/workflows/soc_knowledge.py"
+      - "fixtures/soc_knowledge/"
+      - "eval/stages/C.yaml"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Do not require live source credentials, live Postgres, AGE, pgvector, model, or Claude access."
+      - "Do not mutate approved graph truth or pending AI proposal state."
+      - "Emit side-car extraction/relation contracts only; graph writes remain a later explicit gate."
+      - "Use deterministic rules for explicit links, JIRA-key-like mentions, and author_id."
+    allowed_files:
+      - "src/req_tracker/ontology/soc_models.py"
+      - "src/req_tracker/ingestion/soc_entity_extraction.py"
+      - "src/req_tracker/workflows/soc_knowledge.py"
+      - "ops/rehearsal/run_soc_fixture_ingestion_workflow.py"
+      - "tests/unit/ingestion/test_soc_entity_extraction.py"
+      - "tests/unit/workflows/test_soc_knowledge_workflow.py"
+      - "tests/unit/ops/test_soc_fixture_ingestion_workflow.py"
+      - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+      - "eval/stages/C.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      - "docs/goals/soc-knowledge-poc-gap-closure/notes/T018-remaining-gap-audit.md"
+    verify:
+      - "uv run pytest tests/unit/ingestion/test_soc_entity_extraction.py tests/unit/workflows/test_soc_knowledge_workflow.py tests/unit/ops/test_soc_fixture_ingestion_workflow.py tests/unit/ops/test_soc_stage_b_c_foundation.py -q"
+      - "uv run python ops/rehearsal/run_soc_fixture_ingestion_workflow.py --coverage-mode scale --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need live target storage or source/model credentials."
+      - "The extractor would write approved graph truth or pending AI proposals."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added rule-only SoC entity extraction and side-car semantic relation projection. Explicit artifact links and JIRA-key-like body mentions now produce baseline mentions relations, author_id produces Person/authoredBy relations, and the fixture ingestion workflow reports entity/relation counts with traceable stage output."
+      changed_files:
+        - "src/req_tracker/ontology/soc_models.py"
+        - "src/req_tracker/ingestion/soc_entity_extraction.py"
+        - "src/req_tracker/workflows/soc_knowledge.py"
+        - "tests/unit/ingestion/test_soc_entity_extraction.py"
+        - "tests/unit/workflows/test_soc_knowledge_workflow.py"
+        - "tests/unit/ops/test_soc_fixture_ingestion_workflow.py"
+        - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+        - "eval/stages/C.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+        - "docs/goals/soc-knowledge-poc-gap-closure/notes/T018-remaining-gap-audit.md"
+      commands:
+        - cmd: "uv run pytest tests/unit/ingestion/test_soc_entity_extraction.py tests/unit/workflows/test_soc_knowledge_workflow.py tests/unit/ops/test_soc_fixture_ingestion_workflow.py tests/unit/ops/test_soc_stage_b_c_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because req_tracker.ingestion.soc_entity_extraction was missing; after implementation 10 passed"
+        - cmd: "uv run python ops/rehearsal/run_soc_fixture_ingestion_workflow.py --coverage-mode scale --format json"
+          status: "pass"
+          evidence: "status=passed, 400 artifacts, 1600 classifications, 427 entities, 800 semantic relations, 400 events, 5 steps"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 135 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "442 passed, 3 skipped"
+
+  - id: T020
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Extend the SoC AGE graph loader to project side-car semantic relations into MENTIONS and AUTHORED_BY graph edges without requiring live AGE execution locally."
+    inputs:
+      - "T019 receipt"
+      - "SoC_Knowledge_PoC_Design_v4.0.md Stage C cross-reference edge acceptance"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md semantic relation graph load gap"
+      - "src/req_tracker/graph/soc_age_loader.py"
+      - "src/req_tracker/ingestion/soc_entity_extraction.py"
+      - "tests/unit/graph/test_soc_age_loader.py"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Do not require live AGE/Postgres for local verification."
+      - "Do not interpolate artifact ids, relation ids, or person ids into Cypher strings."
+      - "Do not mutate approved graph truth outside the explicit graph loader path."
+      - "Keep semantic relation loading optional so existing callers remain compatible."
+    allowed_files:
+      - "src/req_tracker/graph/soc_age_loader.py"
+      - "tests/unit/graph/test_soc_age_loader.py"
+      - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+      - "tests/unit/ops/test_soc_stage_d_foundation.py"
+      - "eval/stages/C.yaml"
+      - "eval/stages/D.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/graph/test_soc_age_loader.py tests/unit/ops/test_soc_stage_b_c_foundation.py tests/unit/ops/test_soc_stage_d_foundation.py -q"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need live target AGE/Postgres to finish local verification."
+      - "The loader would interpolate source values into Cypher."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Extended the SoC AGE graph loader so side-car semantic relations can be projected into MENTIONS and AUTHORED_BY edges through the existing parameterized AGE payload path. Existing callers remain compatible because semantic_relations is optional."
+      changed_files:
+        - "src/req_tracker/graph/soc_age_loader.py"
+        - "tests/unit/graph/test_soc_age_loader.py"
+        - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+        - "eval/stages/C.yaml"
+        - "eval/stages/D.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/graph/test_soc_age_loader.py tests/unit/ops/test_soc_stage_b_c_foundation.py tests/unit/ops/test_soc_stage_d_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because semantic_relations argument and Stage C AUTHORED_BY coverage were missing; after implementation 7 passed"
+        - cmd: "uv run pytest tests/unit/graph/test_soc_age_loader.py tests/unit/query/test_soc_storage_retrieval.py::test_postgres_age_backend_builds_parameterized_cypher_wrapper -q"
+          status: "pass"
+          evidence: "3 passed"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 135 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "443 passed, 3 skipped"
+
+  - id: T021
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add a skip-safe SoC fixture ingestion idempotency check proving repeated seed/scale ingestion produces stable IDs, counts, and storage projection without duplicate candidates."
+    inputs:
+      - "SoC_Knowledge_PoC_Design_v4.0.md Stage C idempotent re-ingestion acceptance"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md idempotent re-ingestion gap"
+      - "src/req_tracker/workflows/soc_knowledge.py"
+      - "ops/rehearsal/run_soc_fixture_ingestion_workflow.py"
+      - "eval/stages/C.yaml"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Do not require live target storage or source credentials."
+      - "Do not mutate approved graph truth or pending AI proposals."
+      - "Compare deterministic run outputs without using wall-clock fields as proof."
+      - "Keep the rehearsal skip-safe and JSON serializable."
+    allowed_files:
+      - "src/req_tracker/workflows/soc_knowledge.py"
+      - "src/req_tracker/ingestion/soc_classification.py"
+      - "src/req_tracker/ingestion/soc_entity_extraction.py"
+      - "src/req_tracker/storage/soc_postgres_loader.py"
+      - "ops/rehearsal/run_soc_fixture_ingestion_workflow.py"
+      - "ops/rehearsal/run_soc_ingestion_idempotency_check.py"
+      - "tests/unit/workflows/test_soc_knowledge_workflow.py"
+      - "tests/unit/ops/test_soc_fixture_ingestion_workflow.py"
+      - "tests/unit/ops/test_soc_ingestion_idempotency_check.py"
+      - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+      - "eval/stages/C.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/workflows/test_soc_knowledge_workflow.py tests/unit/ops/test_soc_fixture_ingestion_workflow.py tests/unit/ops/test_soc_ingestion_idempotency_check.py tests/unit/ops/test_soc_stage_b_c_foundation.py -q"
+      - "uv run python ops/rehearsal/run_soc_ingestion_idempotency_check.py --coverage-mode scale --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need live target storage or source credentials."
+      - "The check would use timestamp equality instead of stable IDs/counts/projection keys."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added a skip-safe SoC fixture ingestion idempotency check. The workflow now emits a run-id-independent idempotency fingerprint, rule classification/semantic relation/lifecycle event IDs are stable across repeated runs, and the scale check reports duplicate_candidate_count=0."
+      changed_files:
+        - "src/req_tracker/workflows/soc_knowledge.py"
+        - "src/req_tracker/ingestion/soc_classification.py"
+        - "src/req_tracker/ingestion/soc_entity_extraction.py"
+        - "src/req_tracker/storage/soc_postgres_loader.py"
+        - "ops/rehearsal/run_soc_ingestion_idempotency_check.py"
+        - "tests/unit/workflows/test_soc_knowledge_workflow.py"
+        - "tests/unit/ops/test_soc_ingestion_idempotency_check.py"
+        - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+        - "eval/stages/C.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/workflows/test_soc_knowledge_workflow.py tests/unit/ops/test_soc_fixture_ingestion_workflow.py tests/unit/ops/test_soc_ingestion_idempotency_check.py tests/unit/ops/test_soc_stage_b_c_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because idempotency_fingerprint, run_soc_ingestion_idempotency_check.py, and ACC-C-SEED-06 were missing; after implementation 10 passed"
+        - cmd: "uv run python ops/rehearsal/run_soc_ingestion_idempotency_check.py --coverage-mode scale --format json"
+          status: "pass"
+          evidence: "status=passed, fingerprint_match=true, duplicate_candidate_count=0, 400 artifacts / 1600 classifications / 427 entities / 800 relations / 400 events"
+        - cmd: "uv run pytest tests/unit/ingestion/test_soc_classification.py tests/unit/ingestion/test_soc_entity_extraction.py tests/unit/storage/test_soc_postgres_loader.py tests/unit/workflows/test_soc_knowledge_workflow.py tests/unit/ops/test_soc_ingestion_idempotency_check.py -q"
+          status: "pass"
+          evidence: "15 passed"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 135 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "446 passed, 3 skipped"
+
+  - id: T022
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit the remaining gap map after Stage C entity, semantic relation, graph projection, and idempotency slices, then decide whether another local Worker slice is material or external/live evidence now dominates."
+    inputs:
+      - "T019-T021 receipts"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "SoC_Knowledge_PoC_Design_v4.0.md"
+      - "eval/stages/A.yaml through G.yaml"
+      - "Fresh full pytest output"
+    constraints:
+      - "Read-only except GoalBuddy control files and notes."
+      - "Do not implement."
+      - "Separate remaining local implementation gaps from target DB, live local model, live Claude Code, real-source, target UI, and manual review evidence."
+      - "If local implementation remains, choose the largest safe useful Worker slice with allowed_files and verify commands."
+      - "If external evidence dominates, name exact owner inputs and commands."
+    expected_output:
+      - "external_evidence_dominates | ready_for_next_worker | not_complete"
+      - "Remaining gap ranking."
+      - "Next active task or exact external handoff."
+    receipt:
+      result: done
+      note: "notes/T022-remaining-gap-audit.md"
+      decision: "ready_for_next_worker"
+      full_outcome_complete: false
+      summary: "External/live evidence now dominates most remaining gaps, but live storage rehearsal still does not pass extracted semantic relations into the AGE graph loader. Selected one final local Worker slice for this iteration to make the target DB gate cover MENTIONS/AUTHORED_BY edge loading."
+      next_active_task: T023
+
+  - id: T023
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Wire rule-only semantic relation extraction into the skip-safe live SoC storage rehearsal so the target AGE graph load gate includes MENTIONS and AUTHORED_BY relation counts when a DSN is provided."
+    inputs:
+      - "T022 receipt"
+      - "SoC_Knowledge_PoC_Design_v4.0.md Stage C/D graph builder and storage-backed query target"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md live storage rehearsal gap"
+      - "src/req_tracker/ingestion/soc_entity_extraction.py"
+      - "src/req_tracker/graph/soc_age_loader.py"
+      - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+    constraints:
+      - "Use TDD: add or update a failing test before implementation."
+      - "Do not require a live target DSN for local verification."
+      - "Do not perform live source/model/Claude calls."
+      - "Keep semantic relation loading explicit through the graph loader and parameterized payload path."
+      - "Default no-DSN CLI path must remain skip-safe."
+      - "Stop after this Worker implementation and verification; do not continue to the next gap without a new user request."
+    allowed_files:
+      - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+      - "tests/unit/ops/test_soc_live_storage_rehearsal.py"
+      - "tests/unit/ops/test_soc_stage_d_foundation.py"
+      - "eval/stages/D.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      - "docs/goals/soc-knowledge-poc-gap-closure/notes/T022-remaining-gap-audit.md"
+    verify:
+      - "uv run pytest tests/unit/ops/test_soc_live_storage_rehearsal.py tests/unit/ops/test_soc_stage_d_foundation.py -q"
+      - "uv run python ops/rehearsal/run_soc_live_storage_rehearsal.py --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need live target storage or source/model credentials."
+      - "The rehearsal would mutate graph data outside the explicit graph loader path."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Wired rule-only semantic relation extraction into the skip-safe live SoC storage rehearsal. When a DSN is provided, the rehearsal now passes extracted MENTIONS/AUTHORED_BY relation candidates into SocAgeGraphLoader, and Stage D live acceptance requires age_graph_load.counts.semantic_relations > 0. The no-DSN path remains skipped and non-failing unless --require-live is used."
+      changed_files:
+        - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+        - "tests/unit/ops/test_soc_live_storage_rehearsal.py"
+        - "tests/unit/ops/test_soc_stage_d_foundation.py"
+        - "eval/stages/D.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/ops/test_soc_live_storage_rehearsal.py tests/unit/ops/test_soc_stage_d_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because live storage rehearsal did not pass semantic_relations into the fake graph loader; after implementation 5 passed"
+        - cmd: "uv run python ops/rehearsal/run_soc_live_storage_rehearsal.py --format json"
+          status: "pass"
+          evidence: "status=skipped without DSN, dsn_provided=false, no secrets printed"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 135 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "446 passed, 3 skipped"
+      next_active_task: T999
+      pause_after_worker: true
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit whether the SoC Knowledge PoC design target is satisfied."
+    inputs:
+      - "All done task receipts"
+      - "Current docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "Current SoC_Knowledge_PoC_Design_v4.0.md"
+      - "Current dirty diff"
+      - "Fresh verification outputs"
+    constraints:
+      - "Read-only."
+      - "Reject completion if any design-critical gap is missing, partial, or weakly evidenced."
+      - "Reject completion if a required Worker task is still queued or active."
+      - "Reject completion if live-only blockers have not been named with exact commands and required external state."
+      - "Do not redefine success around the already completed work."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Requirement-by-requirement evidence map."
+      - "Missing evidence or implementation gaps."
+      - "Next task if not complete."
+    receipt:
+      result: done
+      note: "notes/T999-final-audit.md"
+      decision: "not_complete"
+      full_outcome_complete: false
+      summary: "Final audit rejected completion. The seed baseline is strong, but target DB, live local model, live Claude, real-source, and manual curation evidence are missing. Stage C also has a local implementation gap: Claude Code classifier enrichment remains pending."
+      next_active_task: T024
+
+  - id: T024
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Add skip-safe Stage C Claude Code classifier enrichment behind the model gateway, producing pending side-car classification proposals without mutating approved graph truth."
+    inputs:
+      - "T999 receipt"
+      - "SoC_Knowledge_PoC_Design_v4.0.md sections 8.1, 10.2, 11.4, and Stage C"
+      - "eval/stages/C.yaml C6 pending item"
+      - "src/req_tracker/ingestion/soc_classification.py"
+      - "src/req_tracker/model_gateway/client.py"
+      - "config/prompt_versions.json"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Do not call Claude Code or any live model by default."
+      - "All Claude classifier calls must go through ModelGatewayClient."
+      - "AI classifier output must be source=claude and status=pending, not baseline or approved."
+      - "Do not write approved graph truth or pending AI proposal state outside side-car classification contracts."
+      - "No secrets, tokens, internal endpoints, or unmasked confidential data."
+    allowed_files:
+      - "src/req_tracker/ontology/soc_models.py"
+      - "src/req_tracker/ingestion/soc_classification.py"
+      - "ops/evals/run_soc_classifier_enrichment_gate.py"
+      - "tests/unit/ingestion/test_soc_classification.py"
+      - "tests/unit/ops/test_soc_classifier_enrichment_gate.py"
+      - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+      - "tests/unit/model_gateway/test_http_provider_and_registry.py"
+      - "config/prompt_versions.json"
+      - "src/req_tracker/model_gateway/models.py"
+      - "eval/stages/C.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      - "docs/goals/soc-knowledge-poc-gap-closure/notes/T999-final-audit.md"
+    verify:
+      - "uv run pytest tests/unit/ingestion/test_soc_classification.py tests/unit/ops/test_soc_classifier_enrichment_gate.py tests/unit/ops/test_soc_stage_b_c_foundation.py tests/unit/model_gateway/test_http_provider_and_registry.py -q"
+      - "uv run python ops/evals/run_soc_classifier_enrichment_gate.py --dry-run --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need live Claude/model/source/target DB credentials to finish local verification."
+      - "The classifier would bypass model_gateway."
+      - "The classifier would mark AI output as approved/baseline or commit graph truth."
+      - "Verification fails twice for different root causes."
+    receipt:
+      result: done
+      summary: "Added skip-safe Stage C Claude Code classifier enrichment behind the model gateway. GatewaySocAxisClassifier validates SocAxisClassificationBatch output and converts Claude suggestions to source=claude/status=pending side-car proposals; the new classifier enrichment gate is dry-run by default and live opt-in."
+      changed_files:
+        - "src/req_tracker/ontology/soc_models.py"
+        - "src/req_tracker/model_gateway/models.py"
+        - "src/req_tracker/ingestion/soc_classification.py"
+        - "ops/evals/run_soc_classifier_enrichment_gate.py"
+        - "tests/unit/ingestion/test_soc_classification.py"
+        - "tests/unit/ops/test_soc_classifier_enrichment_gate.py"
+        - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+        - "tests/unit/model_gateway/test_http_provider_and_registry.py"
+        - "config/prompt_versions.json"
+        - "eval/stages/C.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+        - "docs/goals/soc-knowledge-poc-gap-closure/notes/T999-final-audit.md"
+      commands:
+        - cmd: "uv run pytest tests/unit/ingestion/test_soc_classification.py tests/unit/ops/test_soc_classifier_enrichment_gate.py tests/unit/ops/test_soc_stage_b_c_foundation.py tests/unit/model_gateway/test_http_provider_and_registry.py -q"
+          status: "pass"
+          evidence: "initial RED failed because GatewaySocAxisClassifier and run_soc_classifier_enrichment_gate.py were missing; after implementation 17 passed"
+        - cmd: "uv run python ops/evals/run_soc_classifier_enrichment_gate.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, requires_live=true, prompt_version_id=pv_soc_axis_classification_v1, response_model=SocAxisClassificationBatch"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 135 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 0.98ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "449 passed, 3 skipped"
+      next_active_task: T025
+
+  - id: T025
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: low
+    objective: "Reconcile stale Stage A/C acceptance YAML and gap report labels for already-implemented local embedder, graph/index builder, and project folder structure evidence."
+    inputs:
+      - "T024 receipt"
+      - "eval/stages/A.yaml A11 partial"
+      - "eval/stages/C.yaml C8/C9 pending"
+      - "Current files under src/req_tracker/query, src/req_tracker/fixtures, src/req_tracker/soc_ui, src/req_tracker/vector, src/req_tracker/graph, and storage profile loaders"
+    constraints:
+      - "Use TDD by updating acceptance tests before YAML/doc edits."
+      - "Do not add new runtime behavior."
+      - "Only mark items implemented_seed when current files and existing tests directly prove the seed behavior."
+      - "Keep live target DB/model/source evidence explicitly pending."
+    allowed_files:
+      - "eval/stages/A.yaml"
+      - "eval/stages/C.yaml"
+      - "tests/unit/ops/test_soc_stage_a_foundation.py"
+      - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+    verify:
+      - "uv run pytest tests/unit/ops/test_soc_stage_a_foundation.py tests/unit/ops/test_soc_stage_b_c_foundation.py -q"
+      - "uv run python ops/evals/smoke_soc_embedding_model.py --dry-run --format json"
+      - "uv run python ops/rehearsal/run_soc_live_storage_rehearsal.py --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Current files do not directly prove a seed behavior."
+      - "The update would imply live target DB/model/source evidence exists."
+    receipt:
+      result: done
+      summary: "Reconciled stale Stage A/C acceptance labels with current seed evidence. A11 is now implemented_seed for the existing folder structure, C8 points to the local embedder seed gates, and C9 points to the graph/index builder seed gates while live target evidence remains explicitly pending."
+      changed_files:
+        - "eval/stages/A.yaml"
+        - "eval/stages/C.yaml"
+        - "tests/unit/ops/test_soc_stage_a_foundation.py"
+        - "tests/unit/ops/test_soc_stage_b_c_foundation.py"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/ops/test_soc_stage_a_foundation.py tests/unit/ops/test_soc_stage_b_c_foundation.py -q"
+          status: "pass"
+          evidence: "initial RED failed because A11/C8/C9 labels were partial/pending; after YAML/report reconciliation 6 passed"
+        - cmd: "uv run python ops/evals/smoke_soc_embedding_model.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, mode=dry_run, model=BAAI/bge-m3, expected_dimensions=1024"
+        - cmd: "uv run python ops/rehearsal/run_soc_live_storage_rehearsal.py --format json"
+          status: "pass"
+          evidence: "status=skipped without DSN, target DB evidence remains explicit"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 135 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 0.98ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "449 passed, 3 skipped"
+      next_active_task: T026
+
+  - id: T026
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: "Audit whether any safe local implementation work remains after A-F seed reconciliation, or whether the remaining gap is now external/live/manual evidence only."
+    inputs:
+      - "T024-T025 receipts"
+      - "Current eval/stages/A.yaml through G.yaml status scan"
+      - "Current docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "Fresh verification outputs from T025"
+    constraints:
+      - "Read-only except GoalBuddy control files and notes."
+      - "Do not implement."
+      - "Separate external/live/manual evidence from any actual local code gap."
+      - "If only external evidence remains, name the exact commands and owner-provided inputs."
+      - "Do not mark the thread goal complete without live/manual evidence."
+    expected_output:
+      - "external_evidence_dominates | ready_for_next_worker | not_complete"
+      - "Remaining gap map."
+      - "Exact external evidence handoff or next Worker."
+    receipt:
+      result: done
+      note: "notes/T026-external-evidence-audit.md"
+      decision: "external_evidence_dominates"
+      full_outcome_complete: false
+      summary: "After T024/T025, local Stage A-F seed implementation and acceptance labels are aligned. Remaining gaps are target DB live evidence, live local model quality, live Claude quality, real-source switch evidence, and manual curation/review."
+      next_active_task: T027
+
+  - id: T027
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: "Collect or run the external/live/manual evidence commands once the owner provides approved target DB, source credentials, model availability, Claude access, or manual review records."
+    inputs:
+      - "T026 receipt"
+      - "Owner-provided target DB/source/model/Claude/manual-review evidence"
+    constraints:
+      - "Do not invent live evidence."
+      - "Do not print secrets or DSNs."
+      - "Run only commands for which the required approved inputs are actually present."
+      - "If no approved external input is available, keep the goal active and report exact missing inputs."
+    expected_output:
+      - "Recorded live/manual evidence, or exact missing input list."
+      - "Updated gap report and board receipt."
+      - "Final audit only after all live/manual requirements are evidenced."
+    receipt:
+      result: done
+      note: "notes/T027-live-evidence-attempt.md"
+      summary: "Checked external inputs without printing secrets. Target DB/source env vars are missing; sentence_transformers/torch are unavailable; Claude CLI is present. Live Claude gates were attempted and failed because Claude returned natural-language text instead of schema-valid JSON, exposing a local structured-output hardening gap."
+      commands:
+        - cmd: "uv run python ops/evals/run_soc_classifier_enrichment_gate.py --live --format json"
+          status: "fail"
+          evidence: "classifier_enrichment.status=failed, proposal_count=0, pending_count=0"
+        - cmd: "uv run python ops/evals/run_soc_claude_quality_gate.py --live --format json"
+          status: "fail"
+          evidence: "slice_planning.status=failed; Claude CLI result text was not SocSlice JSON"
+      next_active_task: T028
+
+  - id: T028
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Harden Claude Code subprocess structured-output prompting and normalization so live SoC Claude quality gates can receive schema-valid JSON instead of natural-language result text."
+    inputs:
+      - "T027 receipt"
+      - "src/req_tracker/model_gateway/claude_code_provider.py"
+      - "tests/unit/model_gateway/test_claude_code_provider.py"
+      - "ops/evals/run_soc_classifier_enrichment_gate.py"
+      - "ops/evals/run_soc_claude_quality_gate.py"
+      - "config/prompt_versions.json"
+    constraints:
+      - "Use TDD: add failing tests before implementation."
+      - "Keep all Claude calls behind ModelGatewayClient/provider boundary."
+      - "Do not hardcode task-specific answers."
+      - "Do not leak secrets, DSNs, or confidential data."
+      - "Keep provider behavior compatible with existing JSON output wrappers."
+      - "If live Claude still refuses schema-valid JSON after local hardening, record exact failure and keep goal active."
+    allowed_files:
+      - "src/req_tracker/model_gateway/claude_code_provider.py"
+      - "src/req_tracker/ingestion/soc_classification.py"
+      - "tests/unit/model_gateway/test_claude_code_provider.py"
+      - "tests/unit/ops/test_soc_classifier_enrichment_gate.py"
+      - "tests/unit/ops/test_soc_claude_quality_gate.py"
+      - "ops/evals/run_soc_classifier_enrichment_gate.py"
+      - "ops/evals/run_soc_claude_quality_gate.py"
+      - "config/prompt_versions.json"
+      - "eval/stages/C.yaml"
+      - "eval/stages/D.yaml"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      - "docs/goals/soc-knowledge-poc-gap-closure/notes/T027-live-evidence-attempt.md"
+    verify:
+      - "uv run pytest tests/unit/model_gateway/test_claude_code_provider.py tests/unit/ops/test_soc_classifier_enrichment_gate.py tests/unit/ops/test_soc_claude_quality_gate.py -q"
+      - "uv run python ops/evals/run_soc_classifier_enrichment_gate.py --dry-run --format json"
+      - "uv run python ops/evals/run_soc_claude_quality_gate.py --dry-run --format json"
+      - "uv run ruff check ."
+      - "uv run mypy src"
+      - "uv run python ops/evals/run_soc_classifier_enrichment_gate.py --live --format json"
+      - "uv run python ops/evals/run_soc_claude_quality_gate.py --live --format json"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Need target DB/source/model credentials."
+      - "Claude CLI is unavailable or requires interactive login."
+      - "Live Claude fails twice after local prompt/provider hardening for different root causes."
+    receipt:
+      result: done
+      summary: "Hardened Claude Code structured-output handling and closed the live Claude quality gap for classifier enrichment, slice planning, typed tool planning, and answer assembly. Provider payloads now include JSON-only instructions and expected envelope, CLI result text can recover fenced/prose JSON objects, and gates include example outputs."
+      changed_files:
+        - "src/req_tracker/model_gateway/claude_code_provider.py"
+        - "src/req_tracker/ingestion/soc_classification.py"
+        - "tests/unit/model_gateway/test_claude_code_provider.py"
+        - "tests/unit/ops/test_soc_classifier_enrichment_gate.py"
+        - "tests/unit/ops/test_soc_claude_quality_gate.py"
+        - "ops/evals/run_soc_classifier_enrichment_gate.py"
+        - "ops/evals/run_soc_claude_quality_gate.py"
+        - "config/prompt_versions.json"
+        - "eval/stages/C.yaml"
+        - "eval/stages/D.yaml"
+        - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+        - "docs/goals/soc-knowledge-poc-gap-closure/state.yaml"
+      commands:
+        - cmd: "uv run pytest tests/unit/model_gateway/test_claude_code_provider.py -q"
+          status: "pass"
+          evidence: "initial RED failed because structured_output_instruction and fenced JSON extraction were missing; after implementation 8 passed"
+        - cmd: "uv run pytest tests/unit/ops/test_soc_classifier_enrichment_gate.py -q"
+          status: "pass"
+          evidence: "initial RED failed because classifier live gate used a fully classified seed artifact; after synthetic weak-baseline artifact update 2 passed"
+        - cmd: "uv run pytest tests/unit/model_gateway/test_claude_code_provider.py tests/unit/ops/test_soc_classifier_enrichment_gate.py tests/unit/ops/test_soc_claude_quality_gate.py tests/unit/ops/test_soc_stage_b_c_foundation.py tests/unit/ops/test_soc_stage_d_foundation.py -q"
+          status: "pass"
+          evidence: "17 passed"
+        - cmd: "uv run python ops/evals/run_soc_classifier_enrichment_gate.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, requires_live=true"
+        - cmd: "uv run python ops/evals/run_soc_claude_quality_gate.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, requires_live=true"
+        - cmd: "uv run python ops/evals/run_soc_classifier_enrichment_gate.py --live --format json"
+          status: "pass"
+          evidence: "status=passed, classifier_enrichment.status=passed, proposal_count=3, pending_count=3, trace_count=1"
+        - cmd: "uv run python ops/evals/run_soc_claude_quality_gate.py --live --format json"
+          status: "pass"
+          evidence: "status=passed, slice_planning/query_tool_planning/answer_assembly all passed, source_url_count=1, trace_count=3"
+        - cmd: "uv run ruff check ."
+          status: "pass"
+          evidence: "All checks passed"
+        - cmd: "uv run mypy src"
+          status: "pass"
+          evidence: "Success: no issues found in 135 source files"
+        - cmd: "uv lock --check"
+          status: "pass"
+          evidence: "Resolved 139 packages in 1ms"
+        - cmd: "git diff --check -- <changed files>"
+          status: "pass"
+          evidence: "no whitespace errors"
+        - cmd: "uv run pytest"
+          status: "pass"
+          evidence: "451 passed, 3 skipped"
+      next_active_task: T029
+
+  - id: T029
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: "Collect the remaining target DB, live local model, real-source, target UI repetition, and manual curation evidence when approved inputs are available."
+    inputs:
+      - "T028 receipt"
+      - "docs/goals/soc-knowledge-poc-gap-closure/notes/T026-external-evidence-audit.md"
+    constraints:
+      - "Do not invent live/manual evidence."
+      - "Do not print secrets, tokens, or DSNs."
+      - "Run only commands whose required approved inputs are present."
+      - "Keep the thread goal active until the remaining evidence is collected and final audit passes."
+    expected_output:
+      - "Recorded remaining live/manual evidence or exact missing input list."
+      - "Updated gap report."
+      - "Final audit when all remaining evidence exists."
+    receipt:
+      result: done
+      note: "notes/T029-remaining-evidence-status.md"
+      summary: "Rechecked remaining target DB, live local model, real-source, target UI, and manual curation evidence. No approved target DB/source/model/manual inputs are present in this environment. Skip-safe gates still behave correctly: UI dry-run passed, source skill/adapter readiness passed, and DB/storage/local-model live gates skipped with explicit missing-input reasons."
+      missing_inputs:
+        - "POSTGRES_TEST_DSN or POSTGRES_DSN for target SoC PostgreSQL profile evidence."
+        - "Approved local model install/download or pre-provisioned bge-m3/e5 and cross-encoder model cache."
+        - "JIRA_BASE_URL, JIRA_TOKEN, JIRA_PROJECT_KEY for approved JIRA sample evidence."
+        - "CONFLUENCE_BASE_URL, CONFLUENCE_TOKEN, CONFLUENCE_SPACE_KEY for approved Confluence sample evidence."
+        - "DECISION_EMAIL_EXPORT_PATH for approved decision-email sample evidence."
+        - "Target Streamlit URL and running target services for repeated UI acceptance."
+        - "Manual curation/review records for scale query and real-source classification evidence."
+      commands:
+        - cmd: "uv run python ops/rehearsal/validate_soc_live_postgres.py"
+          status: "pass"
+          evidence: "status=skipped, dsn_provided=false, POSTGRES_DSN or POSTGRES_TEST_DSN required"
+        - cmd: "uv run python ops/rehearsal/run_soc_live_storage_rehearsal.py --format json"
+          status: "pass"
+          evidence: "status=skipped, profile/fixture_load/age_graph_load/hybrid_retrieval skipped, dsn_provided=false"
+        - cmd: "uv run python ops/evals/run_soc_storage_backed_query_eval.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, requires_live=true, missing DSN"
+        - cmd: "uv run python ops/evals/run_soc_local_model_quality_gate.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, requires_live=true, embedding and reranker checks reported without live model loading"
+        - cmd: "uv run python ops/rehearsal/run_soc_real_source_switch_rehearsal.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=skipped, source_skills.status=passed, adapter_boundaries.status=passed, live source env vars and target DB missing"
+        - cmd: "uv run python ops/ui/smoke_soc_streamlit_ui.py --dry-run --format json"
+          status: "pass"
+          evidence: "status=passed, API-only Streamlit modules and /api/v1/soc/query + /api/v1/feedback boundary reported"
+        - cmd: "env/package presence check without printing values"
+          status: "pass"
+          evidence: "target DB/source/model cache env vars absent; sentence_transformers=false; torch=false; Claude CLI present"
+      next_active_task: T030
+
+  - id: T030
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: low
+    objective: "Resume external evidence collection when the owner provides approved target DB, local model, source, target UI, or manual review inputs."
+    inputs:
+      - "T029 receipt"
+      - "docs/goals/soc-knowledge-poc-gap-closure/notes/T029-remaining-evidence-status.md"
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+    constraints:
+      - "Do not invent live/manual evidence."
+      - "Do not print secrets, tokens, DSNs, or unmasked confidential data."
+      - "Do not install or download live local model dependencies without owner approval."
+      - "Run only the live/manual commands whose approved inputs are present."
+      - "Do not mark the goal complete until a final audit maps all design-critical live/manual gaps to passing evidence or named accepted blockers."
+    expected_output:
+      - "Run target DB, live local model, real-source, target UI, or manual curation gates when the corresponding inputs exist."
+      - "Update gap report and board receipts with exact evidence."
+      - "Escalate to final audit only after the remaining evidence is collected."
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: passed
+    task: T029
+    commands:
+      - "uv run python ops/rehearsal/validate_soc_live_postgres.py"
+      - "uv run python ops/rehearsal/run_soc_live_storage_rehearsal.py --format json"
+      - "uv run python ops/evals/run_soc_storage_backed_query_eval.py --dry-run --format json"
+      - "uv run python ops/evals/run_soc_local_model_quality_gate.py --dry-run --format json"
+      - "uv run python ops/rehearsal/run_soc_real_source_switch_rehearsal.py --dry-run --format json"
+      - "uv run python ops/ui/smoke_soc_streamlit_ui.py --dry-run --format json"

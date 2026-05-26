@@ -1,0 +1,129 @@
+relations:
+  - name: belongsToProject
+    from: Artifact
+    to: Project
+    cardinality: many-to-one
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: atLevel
+    from: Artifact
+    to: Artifact
+    cardinality: many-to-many
+    properties:
+      - {name: level, type: enum, values: [L0, L1, L2, L3, L4, L5], required: true}
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: addresses
+    from: Artifact
+    to: Concern
+    cardinality: many-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: involves
+    from: Artifact
+    to: Component
+    cardinality: many-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: tracesTo
+    from: Artifact
+    to: Artifact
+    cardinality: many-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: verifies
+    from: Artifact
+    to: Artifact
+    cardinality: many-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: derivedFrom
+    from: Artifact
+    to: Artifact
+    cardinality: many-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: resolvedBy
+    from: Issue
+    to: Artifact
+    cardinality: many-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: discussedIn
+    from: Decision
+    to: Artifact
+    cardinality: many-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: mentions
+    from: Artifact
+    to: Artifact
+    cardinality: many-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: replyTo
+    from: EmailMessage
+    to: EmailMessage
+    cardinality: many-to-one
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: partOf
+    from: EmailMessage
+    to: EmailThread
+    cardinality: many-to-one
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: authoredBy
+    from: Artifact
+    to: Person
+    cardinality: many-to-one
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: assignedTo
+    from: Issue
+    to: Person
+    cardinality: many-to-one
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: hasLifecycleEvent
+    from: Artifact
+    to: Event
+    cardinality: one-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}
+
+  - name: feedbackTo
+    from: Artifact
+    to: Artifact
+    cardinality: many-to-many
+    properties:
+      - {name: confidence, type: float}
+      - {name: source, type: enum, values: [rule, claude, manual, fixture]}

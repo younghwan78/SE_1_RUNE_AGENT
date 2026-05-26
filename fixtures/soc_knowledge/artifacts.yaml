@@ -1,0 +1,461 @@
+artifacts:
+  - external_id: SOC1-JIRA-001
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-001
+    project_key: SOC-N-1
+    title: Camera DVFS power architecture
+    body_text: Camera architecture evaluates DVFS to reduce power consumption.
+    created_at: "2026-01-01T00:00:00+00:00"
+    updated_at: "2026-01-02T00:00:00+00:00"
+    labels: [jira, level/L2, concern/power, component/camera]
+    links: [SOC1-CONF-001]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L2, concerns: [Power], components: [Camera]}}
+
+  - external_id: SOC1-JIRA-002
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-002
+    project_key: SOC-N-1
+    title: Camera shot performance issue
+    body_text: Shot-to-shot performance drops below target fps in camera preview.
+    created_at: "2026-01-03T00:00:00+00:00"
+    updated_at: "2026-01-04T00:00:00+00:00"
+    labels: [jira, level/L3, concern/performance, component/camera]
+    links: [SOC1-CONF-003]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L3, concerns: [Performance], components: [Camera]}}
+
+  - external_id: SOC1-JIRA-003
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-003
+    project_key: SOC-N-1
+    title: Memory footprint request
+    body_text: System requirement asks to reduce memory usage by 80 MB.
+    created_at: "2026-01-05T00:00:00+00:00"
+    updated_at: "2026-01-06T00:00:00+00:00"
+    labels: [jira, level/L1, concern/memory, component/memory_subsystem]
+    links: [SOC1-CONF-002]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L1, concerns: [Memory], components: [MemorySubsystem]}}
+
+  - external_id: SOC1-JIRA-004
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-004
+    project_key: SOC-N-1
+    title: NPU area reduction tradeoff
+    body_text: IP design compares NPU SRAM options for area reduction.
+    created_at: "2026-01-07T00:00:00+00:00"
+    updated_at: "2026-01-08T00:00:00+00:00"
+    labels: [jira, level/L4, concern/area, component/npu]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L4, concerns: [Area], components: [NPU]}}
+
+  - external_id: SOC1-JIRA-005
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-005
+    project_key: SOC-N-1
+    title: GPU driver latency cleanup
+    body_text: Software implementation reduces GPU command latency during unit tests.
+    created_at: "2026-01-09T00:00:00+00:00"
+    updated_at: "2026-01-10T00:00:00+00:00"
+    labels: [jira, level/L5, concern/latency, component/gpu]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L5, concerns: [Latency], components: [GPU]}}
+
+  - external_id: SOC1-JIRA-006
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-006
+    project_key: SOC-N-1
+    title: Display thermal throttling review
+    body_text: SoC architecture reviews display thermal limit during peak brightness.
+    created_at: "2026-01-11T00:00:00+00:00"
+    updated_at: "2026-01-12T00:00:00+00:00"
+    labels: [jira, level/L2, concern/thermal, component/display]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L2, concerns: [Thermal], components: [Display]}}
+
+  - external_id: SOC1-JIRA-007
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-007
+    project_key: SOC-N-1
+    title: DRAM bandwidth integration issue
+    body_text: Subsystem integration finds memory bandwidth pressure in camera and GPU load.
+    created_at: "2026-01-13T00:00:00+00:00"
+    updated_at: "2026-01-14T00:00:00+00:00"
+    labels: [jira, level/L3, concern/bandwidth, component/memory_subsystem]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L3, concerns: [Bandwidth], components: [MemorySubsystem]}}
+
+  - external_id: SOC1-JIRA-008
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-008
+    project_key: SOC-N-1
+    title: PMU reliability requirement
+    body_text: System requirement defines reliability target for PMU reset handling.
+    created_at: "2026-01-15T00:00:00+00:00"
+    updated_at: "2026-01-16T00:00:00+00:00"
+    labels: [jira, level/L1, concern/reliability, component/pmu]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L1, concerns: [Reliability], components: [PMU]}}
+
+  - external_id: SOC1-JIRA-009
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-009
+    project_key: SOC-N-1
+    title: ISP power gate block design
+    body_text: IP design adds ISP power gate sequencing for idle capture.
+    created_at: "2026-01-17T00:00:00+00:00"
+    updated_at: "2026-01-18T00:00:00+00:00"
+    labels: [jira, level/L4, concern/power, component/isp]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L4, concerns: [Power], components: [ISP]}}
+
+  - external_id: SOC1-JIRA-010
+    source_type: jira
+    source_url: https://jira.example/browse/SOC1-JIRA-010
+    project_key: SOC-N-1
+    title: Customer camera performance request
+    body_text: Customer email asks for faster camera launch performance.
+    created_at: "2026-01-19T00:00:00+00:00"
+    updated_at: "2026-01-20T00:00:00+00:00"
+    labels: [jira, level/L0, concern/performance, component/camera]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Performance], components: [Camera]}}
+
+  - external_id: SOC2-JIRA-001
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-001
+    project_key: SOC-N-2
+    title: Camera power budget carryover
+    body_text: SoC architecture reuses prior camera power budget from SOC-N-1.
+    created_at: "2026-02-01T00:00:00+00:00"
+    updated_at: "2026-02-02T00:00:00+00:00"
+    labels: [jira, level/L2, concern/power, component/camera]
+    links: [SOC1-JIRA-001]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L2, concerns: [Power], components: [Camera]}}
+
+  - external_id: SOC2-JIRA-002
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-002
+    project_key: SOC-N-2
+    title: Camera shot performance regression
+    body_text: Camera shot performance regression is traced to preview buffer depth.
+    created_at: "2026-02-03T00:00:00+00:00"
+    updated_at: "2026-02-04T00:00:00+00:00"
+    labels: [jira, level/L3, concern/performance, component/camera]
+    links: [SOC1-JIRA-002]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L3, concerns: [Performance], components: [Camera]}}
+
+  - external_id: SOC2-JIRA-003
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-003
+    project_key: SOC-N-2
+    title: Memory reduction requirement update
+    body_text: Spec definition updates memory reduction target for SOC-N-2.
+    created_at: "2026-02-05T00:00:00+00:00"
+    updated_at: "2026-02-06T00:00:00+00:00"
+    labels: [jira, level/L1, concern/memory, component/memory_subsystem]
+    links: [SOC1-JIRA-003]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L1, concerns: [Memory], components: [MemorySubsystem]}}
+
+  - external_id: SOC2-JIRA-004
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-004
+    project_key: SOC-N-2
+    title: NPU area floorplan decision
+    body_text: IP design adjusts NPU floorplan to control area.
+    created_at: "2026-02-07T00:00:00+00:00"
+    updated_at: "2026-02-08T00:00:00+00:00"
+    labels: [jira, level/L4, concern/area, component/npu]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L4, concerns: [Area], components: [NPU]}}
+
+  - external_id: SOC2-JIRA-005
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-005
+    project_key: SOC-N-2
+    title: Display latency driver fix
+    body_text: Software driver fix reduces display wake latency.
+    created_at: "2026-02-09T00:00:00+00:00"
+    updated_at: "2026-02-10T00:00:00+00:00"
+    labels: [jira, level/L5, concern/latency, component/display]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L5, concerns: [Latency], components: [Display]}}
+
+  - external_id: SOC2-JIRA-006
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-006
+    project_key: SOC-N-2
+    title: Memory subsystem footprint request
+    body_text: Customer asks to reduce memory usage in the memory subsystem.
+    created_at: "2026-02-11T00:00:00+00:00"
+    updated_at: "2026-02-12T00:00:00+00:00"
+    labels: [jira, level/L1, concern/memory, component/memory_subsystem]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L1, concerns: [Memory], components: [MemorySubsystem]}}
+
+  - external_id: SOC2-JIRA-007
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-007
+    project_key: SOC-N-2
+    title: GPU thermal design review
+    body_text: SoC architecture checks GPU thermal behavior during sustained gaming.
+    created_at: "2026-02-13T00:00:00+00:00"
+    updated_at: "2026-02-14T00:00:00+00:00"
+    labels: [jira, level/L2, concern/thermal, component/gpu]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L2, concerns: [Thermal], components: [GPU]}}
+
+  - external_id: SOC2-JIRA-008
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-008
+    project_key: SOC-N-2
+    title: NoC bandwidth integration test
+    body_text: Subsystem integration measures NoC bandwidth under camera plus NPU load.
+    created_at: "2026-02-15T00:00:00+00:00"
+    updated_at: "2026-02-16T00:00:00+00:00"
+    labels: [jira, level/L3, concern/bandwidth, component/noc]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L3, concerns: [Bandwidth], components: [NoC]}}
+
+  - external_id: SOC2-JIRA-009
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-009
+    project_key: SOC-N-2
+    title: PMU power sequencing design
+    body_text: IP design updates PMU power sequencing for sleep entry.
+    created_at: "2026-02-17T00:00:00+00:00"
+    updated_at: "2026-02-18T00:00:00+00:00"
+    labels: [jira, level/L4, concern/power, component/pmu]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L4, concerns: [Power], components: [PMU]}}
+
+  - external_id: SOC2-JIRA-010
+    source_type: jira
+    source_url: https://jira.example/browse/SOC2-JIRA-010
+    project_key: SOC-N-2
+    title: Customer sensor reliability issue
+    body_text: Customer field validation reports intermittent sensor hub reliability issue.
+    created_at: "2026-02-19T00:00:00+00:00"
+    updated_at: "2026-02-20T00:00:00+00:00"
+    labels: [jira, level/L0, concern/reliability, component/sensor_hub]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Reliability], components: [SensorHub]}}
+
+  - external_id: SOC1-CONF-001
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC1/CAMERA-POWER
+    project_key: SOC-N-1
+    title: SOC-N-1 camera power architecture page
+    body_text: Architecture page explains camera DVFS power tradeoffs.
+    created_at: "2026-01-01T00:00:00+00:00"
+    updated_at: "2026-01-03T00:00:00+00:00"
+    labels: [confluence, level/L2, concern/power, component/camera]
+    links: [SOC1-JIRA-001]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L2, concerns: [Power], components: [Camera]}}
+
+  - external_id: SOC1-CONF-002
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC1/MEMORY-SPEC
+    project_key: SOC-N-1
+    title: SOC-N-1 memory requirement page
+    body_text: Requirement page describes memory footprint reduction history.
+    created_at: "2026-01-05T00:00:00+00:00"
+    updated_at: "2026-01-07T00:00:00+00:00"
+    labels: [confluence, level/L1, concern/memory, component/memory_subsystem]
+    links: [SOC1-JIRA-003]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L1, concerns: [Memory], components: [MemorySubsystem]}}
+
+  - external_id: SOC1-CONF-003
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC1/CAMERA-PERF
+    project_key: SOC-N-1
+    title: SOC-N-1 camera shot performance page
+    body_text: Subsystem architecture page summarizes camera shot performance issues.
+    created_at: "2026-01-08T00:00:00+00:00"
+    updated_at: "2026-01-09T00:00:00+00:00"
+    labels: [confluence, level/L3, concern/performance, component/camera]
+    links: [SOC1-JIRA-002]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L3, concerns: [Performance], components: [Camera]}}
+
+  - external_id: SOC1-CONF-004
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC1/NPU-AREA
+    project_key: SOC-N-1
+    title: SOC-N-1 NPU area design note
+    body_text: IP design note captures NPU area tradeoffs.
+    created_at: "2026-01-10T00:00:00+00:00"
+    updated_at: "2026-01-11T00:00:00+00:00"
+    labels: [confluence, level/L4, concern/area, component/npu]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L4, concerns: [Area], components: [NPU]}}
+
+  - external_id: SOC1-CONF-005
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC1/GPU-LATENCY
+    project_key: SOC-N-1
+    title: SOC-N-1 GPU latency implementation note
+    body_text: Implementation note tracks GPU latency cleanup.
+    created_at: "2026-01-12T00:00:00+00:00"
+    updated_at: "2026-01-13T00:00:00+00:00"
+    labels: [confluence, level/L5, concern/latency, component/gpu]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L5, concerns: [Latency], components: [GPU]}}
+
+  - external_id: SOC2-CONF-001
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC2/CAMERA-POWER
+    project_key: SOC-N-2
+    title: SOC-N-2 camera power carryover page
+    body_text: Architecture page links SOC-N-1 camera power lessons to SOC-N-2.
+    created_at: "2026-02-01T00:00:00+00:00"
+    updated_at: "2026-02-03T00:00:00+00:00"
+    labels: [confluence, level/L2, concern/power, component/camera]
+    links: [SOC2-JIRA-001, SOC1-JIRA-001]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L2, concerns: [Power], components: [Camera]}}
+
+  - external_id: SOC2-CONF-002
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC2/MEMORY-SPEC
+    project_key: SOC-N-2
+    title: SOC-N-2 memory requirement page
+    body_text: Requirement page updates memory footprint and cache constraints.
+    created_at: "2026-02-05T00:00:00+00:00"
+    updated_at: "2026-02-07T00:00:00+00:00"
+    labels: [confluence, level/L1, concern/memory, component/memory_subsystem]
+    links: [SOC2-JIRA-003]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L1, concerns: [Memory], components: [MemorySubsystem]}}
+
+  - external_id: SOC2-CONF-003
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC2/CAMERA-PERF
+    project_key: SOC-N-2
+    title: SOC-N-2 camera shot performance page
+    body_text: Subsystem architecture page analyzes camera shot performance regression.
+    created_at: "2026-02-08T00:00:00+00:00"
+    updated_at: "2026-02-09T00:00:00+00:00"
+    labels: [confluence, level/L3, concern/performance, component/camera]
+    links: [SOC2-JIRA-002]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L3, concerns: [Performance], components: [Camera]}}
+
+  - external_id: SOC2-CONF-004
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC2/NPU-AREA
+    project_key: SOC-N-2
+    title: SOC-N-2 NPU area page
+    body_text: IP design page documents NPU area decision.
+    created_at: "2026-02-10T00:00:00+00:00"
+    updated_at: "2026-02-11T00:00:00+00:00"
+    labels: [confluence, level/L4, concern/area, component/npu]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L4, concerns: [Area], components: [NPU]}}
+
+  - external_id: SOC2-CONF-005
+    source_type: confluence
+    source_url: https://confluence.example/display/SOC2/DISPLAY-LATENCY
+    project_key: SOC-N-2
+    title: SOC-N-2 display latency implementation page
+    body_text: Implementation page tracks display latency driver fix.
+    created_at: "2026-02-12T00:00:00+00:00"
+    updated_at: "2026-02-13T00:00:00+00:00"
+    labels: [confluence, level/L5, concern/latency, component/display]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L5, concerns: [Latency], components: [Display]}}
+
+  - external_id: SOC1-MAIL-001
+    source_type: email
+    source_url: https://mail.example/archive/SOC1-MAIL-001
+    project_key: SOC-N-1
+    title: Customer asks about camera power
+    body_text: Customer asks whether camera power was reduced after SOC-N-1 review.
+    created_at: "2026-01-21T00:00:00+00:00"
+    updated_at: "2026-01-21T00:00:00+00:00"
+    labels: [email, customer, level/L0, concern/power, component/camera]
+    links: [SOC1-JIRA-001]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Power], components: [Camera]}}
+
+  - external_id: SOC1-MAIL-002
+    source_type: email
+    source_url: https://mail.example/archive/SOC1-MAIL-002
+    project_key: SOC-N-1
+    title: Customer reports camera performance concern
+    body_text: Customer reports camera launch performance concern and asks for RCA.
+    created_at: "2026-01-22T00:00:00+00:00"
+    updated_at: "2026-01-22T00:00:00+00:00"
+    labels: [email, customer, level/L0, concern/performance, component/camera]
+    links: [SOC1-JIRA-010]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Performance], components: [Camera]}}
+
+  - external_id: SOC1-MAIL-003
+    source_type: email
+    source_url: https://mail.example/archive/SOC1-MAIL-003
+    project_key: SOC-N-1
+    title: Memory reduction customer thread
+    body_text: Customer asks how memory reduction request was handled.
+    created_at: "2026-01-23T00:00:00+00:00"
+    updated_at: "2026-01-23T00:00:00+00:00"
+    labels: [email, customer, level/L0, concern/memory, component/memory_subsystem]
+    links: [SOC1-JIRA-003]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Memory], components: [MemorySubsystem]}}
+
+  - external_id: SOC1-MAIL-004
+    source_type: email
+    source_url: https://mail.example/archive/SOC1-MAIL-004
+    project_key: SOC-N-1
+    title: Display thermal review follow-up
+    body_text: Internal follow-up asks whether display thermal limit is in system validation.
+    created_at: "2026-01-24T00:00:00+00:00"
+    updated_at: "2026-01-24T00:00:00+00:00"
+    labels: [email, level/L1, concern/thermal, component/display]
+    links: [SOC1-JIRA-006]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L1, concerns: [Thermal], components: [Display]}}
+
+  - external_id: SOC1-MAIL-005
+    source_type: email
+    source_url: https://mail.example/archive/SOC1-MAIL-005
+    project_key: SOC-N-1
+    title: Sensor reliability customer note
+    body_text: Customer asks whether sensor hub reliability failures reappear.
+    created_at: "2026-01-25T00:00:00+00:00"
+    updated_at: "2026-01-25T00:00:00+00:00"
+    labels: [email, customer, level/L0, concern/reliability, component/sensor_hub]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Reliability], components: [SensorHub]}}
+
+  - external_id: SOC2-MAIL-001
+    source_type: email
+    source_url: https://mail.example/archive/SOC2-MAIL-001
+    project_key: SOC-N-2
+    title: Customer asks about SOC-N-2 camera power
+    body_text: Customer asks if SOC-N-2 camera power inherits SOC-N-1 mitigation.
+    created_at: "2026-02-21T00:00:00+00:00"
+    updated_at: "2026-02-21T00:00:00+00:00"
+    labels: [email, customer, level/L0, concern/power, component/camera]
+    links: [SOC2-JIRA-001]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Power], components: [Camera]}}
+
+  - external_id: SOC2-MAIL-002
+    source_type: email
+    source_url: https://mail.example/archive/SOC2-MAIL-002
+    project_key: SOC-N-2
+    title: SOC-N-2 camera performance customer thread
+    body_text: Customer escalates camera shot performance regression.
+    created_at: "2026-02-22T00:00:00+00:00"
+    updated_at: "2026-02-22T00:00:00+00:00"
+    labels: [email, customer, level/L0, concern/performance, component/camera]
+    links: [SOC2-JIRA-002]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Performance], components: [Camera]}}
+
+  - external_id: SOC2-MAIL-003
+    source_type: email
+    source_url: https://mail.example/archive/SOC2-MAIL-003
+    project_key: SOC-N-2
+    title: SOC-N-2 memory reduction customer thread
+    body_text: Customer asks status of SOC-N-2 memory reduction request.
+    created_at: "2026-02-23T00:00:00+00:00"
+    updated_at: "2026-02-23T00:00:00+00:00"
+    labels: [email, customer, level/L0, concern/memory, component/memory_subsystem]
+    links: [SOC2-JIRA-006]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Memory], components: [MemorySubsystem]}}
+
+  - external_id: SOC2-MAIL-004
+    source_type: email
+    source_url: https://mail.example/archive/SOC2-MAIL-004
+    project_key: SOC-N-2
+    title: GPU thermal customer review
+    body_text: Customer asks if GPU thermal throttling affects launch scenario.
+    created_at: "2026-02-24T00:00:00+00:00"
+    updated_at: "2026-02-24T00:00:00+00:00"
+    labels: [email, customer, level/L0, concern/thermal, component/gpu]
+    links: [SOC2-JIRA-007]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Thermal], components: [GPU]}}
+
+  - external_id: SOC2-MAIL-005
+    source_type: email
+    source_url: https://mail.example/archive/SOC2-MAIL-005
+    project_key: SOC-N-2
+    title: Sensor reliability field issue
+    body_text: Customer reports sensor hub reliability issue in field validation.
+    created_at: "2026-02-25T00:00:00+00:00"
+    updated_at: "2026-02-25T00:00:00+00:00"
+    labels: [email, customer, level/L0, concern/reliability, component/sensor_hub]
+    links: [SOC2-JIRA-010]
+    metadata: {soc_fixture_seed: true, soc_axes: {v_level: L0, concerns: [Reliability], components: [SensorHub]}}

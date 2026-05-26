@@ -55,6 +55,9 @@ def test_local_gate_commands_include_staging_evidence_plan_smoke() -> None:
         in commands
     )
     assert "uv run python ops/rehearsal/validate_release_scope_artifacts.py" in commands
+    assert "uv run python ops/rehearsal/validate_soc_postgres_profile.py" in commands
+    assert "uv run python ops/rehearsal/validate_soc_live_postgres.py" in commands
+    assert "uv run python ops/rehearsal/run_soc_live_storage_rehearsal.py" in commands
     assert (
         "uv run python ops/rehearsal/check_goal_completion.py --allow-incomplete"
         in commands

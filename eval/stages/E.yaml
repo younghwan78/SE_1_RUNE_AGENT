@@ -1,0 +1,143 @@
+stage: E
+name: "UI"
+goal: "Provide a thin SoC Knowledge PoC UI where architects can ask natural-language questions and review structured answers, source links, timelines, feedback, and reasoning references through the FastAPI boundary."
+
+subgoals:
+  - id: E1
+    name: "Chat UI"
+    artifacts:
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+      - "ops/ui/smoke_soc_streamlit_ui.py"
+    status: "implemented_seed"
+    note: "Streamlit chat input and assistant answer rendering exist. Single-session browser query smoke passed on local ports 18080/18580; explicit --live smoke can now run two independent browser sessions and check isolation."
+
+  - id: E2
+    name: "Claude Code subprocess wrapper"
+    artifacts:
+      - "src/req_tracker/soc_ui/api_client.py"
+      - "src/req_tracker/model_gateway/claude_code_provider.py"
+      - "src/req_tracker/api/routes/soc_query.py"
+    status: "implemented_seed"
+    note: "UI does not call Claude Code directly. It calls /api/v1/soc/query so model gateway trace, fallback, and validation remain in the backend."
+
+  - id: E3
+    name: "Answer card component"
+    artifacts:
+      - "src/req_tracker/soc_ui/render_answer.py"
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+      - "tests/unit/soc_ui/test_soc_ui_client.py"
+    status: "implemented_seed"
+
+  - id: E4
+    name: "Source deep link rendering"
+    artifacts:
+      - "src/req_tracker/soc_ui/render_answer.py"
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+      - "ops/ui/smoke_soc_streamlit_ui.py"
+    status: "implemented_seed"
+    note: "Source links render through Streamlit link buttons; explicit --live smoke checks that at least one HTTP source link is present and Playwright-actionable."
+
+  - id: E5
+    name: "Timeline panel"
+    artifacts:
+      - "src/req_tracker/soc_ui/render_answer.py"
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+    status: "implemented_seed"
+
+  - id: E6
+    name: "Feedback widget"
+    artifacts:
+      - "src/req_tracker/soc_ui/api_client.py"
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+      - "src/req_tracker/api/routes/feedback.py"
+      - "ops/rehearsal/run_full_stack_rehearsal.py"
+    status: "implemented_seed"
+    note: "UI posts answer feedback to /api/v1/feedback with reason codes. Single-session browser feedback smoke returned 200, and full-stack rehearsal records answer feedback then verifies it is restored from the PostgreSQL state store after API restart."
+
+  - id: E7
+    name: "Session isolation"
+    artifacts:
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+      - "ops/ui/smoke_soc_streamlit_ui.py"
+    status: "implemented_seed"
+    note: "Session id and message history are stored in Streamlit session_state. Explicit --live smoke opens two browser contexts and checks that each session does not display the other session's query."
+
+  - id: E8
+    name: "User identification"
+    artifacts:
+      - "src/req_tracker/soc_ui/api_client.py"
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+    status: "implemented_seed"
+    note: "User and role are forwarded through x-rune-user and x-rune-role headers; API key can be sourced from RUNE_API_KEY."
+
+  - id: E9
+    name: "Timeout and backend error handling"
+    artifacts:
+      - "src/req_tracker/soc_ui/api_client.py"
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+      - "tests/unit/soc_ui/test_soc_ui_client.py"
+    status: "implemented_seed"
+
+  - id: E10
+    name: "Usage guide page"
+    artifacts:
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+      - "docs/runbooks/SOC_KNOWLEDGE_UI_GUIDE.md"
+    status: "implemented_seed"
+    note: "Sidebar identity/project controls exist, and the runbook now documents local/target run commands, API boundary, live smoke, feedback checks, and secret-handling rules."
+
+  - id: E11
+    name: "Reasoning log toggle"
+    artifacts:
+      - "src/req_tracker/soc_ui/render_answer.py"
+      - "src/req_tracker/soc_ui/streamlit_app.py"
+    status: "implemented_seed"
+
+acceptance:
+  - id: ACC-E-SEED-01
+    description: "SoC UI support client posts query requests only through the FastAPI SoC query endpoint."
+    check: "uv run pytest tests/unit/soc_ui/test_soc_ui_client.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-E-SEED-02
+    description: "SoC UI feedback targets answers and posts to the existing feedback endpoint."
+    check: "uv run pytest tests/unit/soc_ui/test_soc_ui_client.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-E-SEED-03
+    description: "SoC UI dry-run smoke imports UI modules without requiring a live backend or live Streamlit session."
+    check: "ops/ui/smoke_soc_streamlit_ui.py --dry-run --format json"
+    expected: "status=passed, api_only=true"
+
+  - id: ACC-E-SEED-04
+    description: "Streamlit remains an optional PoC UI extra rather than a hard core runtime dependency."
+    check: "uv run pytest tests/unit/ops/test_soc_stage_e_foundation.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-E-DOC-01
+    description: "SoC UI usage guide documents local and target run commands, FastAPI endpoints, live smoke, feedback checks, and secret handling."
+    check: "uv run pytest tests/unit/ops/test_soc_stage_e_foundation.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-E-LIVE-01
+    description: "Local live UI can query and submit answer feedback through the FastAPI boundary."
+    check: "Run FastAPI on 127.0.0.1:18080, Streamlit on 127.0.0.1:18580 with SOC_UI_API_BASE_URL=http://127.0.0.1:18080, then submit one browser query and one feedback form."
+    expected: "answer card renders, source links render, /api/v1/soc/query returns 200, /api/v1/feedback returns 200"
+
+  - id: ACC-E-LIVE-02
+    description: "Answer feedback persists through the PostgreSQL-backed FastAPI state store and survives API restart."
+    check: "uv run python ops/rehearsal/run_full_stack_rehearsal.py --api-port 18081 --timeout-seconds 180"
+    expected: "feedback_persistence.passed=true and restored_count >= 1"
+
+  - id: ACC-E-LIVE-03
+    description: "Explicit live UI smoke can verify two browser sessions, source-link actionability, session isolation, and feedback form availability."
+    check: "uv run python ops/ui/smoke_soc_streamlit_ui.py --live --ui-url http://127.0.0.1:18580 --format json"
+    expected: "live_acceptance.status=passed and checks include two_browser_sessions, session_isolation, source_link_present, source_link_clickable, feedback_form_available"
+
+self_review:
+  - "Does Streamlit avoid direct DB access?"
+  - "Does Streamlit avoid direct Claude Code subprocess calls?"
+  - "Do query calls go through /api/v1/soc/query so run/step/model traces stay backend-owned?"
+  - "Does feedback use the existing controlled feedback taxonomy?"
+  - "Does session_state store only UI conversation state?"
+  - "Does explicit --live UI smoke cover two browser sessions, source-link actionability, and feedback form availability without making Streamlit a core runtime dependency?"

@@ -59,6 +59,10 @@ class Settings(BaseSettings):
         validation_alias="MODEL_GATEWAY_ENDPOINT_URL",
     )
     model_gateway_api_key: str = Field(default="", validation_alias="MODEL_GATEWAY_API_KEY")
+    model_gateway_claude_command: str = Field(
+        default="",
+        validation_alias="MODEL_GATEWAY_CLAUDE_COMMAND",
+    )
     model_profiles_path: Path = Field(
         default=Path("config/model_profiles.json"),
         validation_alias="MODEL_PROFILES_PATH",
@@ -66,6 +70,55 @@ class Settings(BaseSettings):
     prompt_versions_path: Path = Field(
         default=Path("config/prompt_versions.json"),
         validation_alias="PROMPT_VERSIONS_PATH",
+    )
+    soc_query_planner_mode: str = Field(
+        default="deterministic",
+        validation_alias="SOC_QUERY_PLANNER_MODE",
+    )
+    soc_query_planner_model_profile_id: str = Field(
+        default="dummy-local",
+        validation_alias="SOC_QUERY_PLANNER_MODEL_PROFILE_ID",
+    )
+    soc_query_tool_planner_mode: str = Field(
+        default="deterministic",
+        validation_alias="SOC_QUERY_TOOL_PLANNER_MODE",
+    )
+    soc_query_tool_planner_model_profile_id: str = Field(
+        default="dummy-local",
+        validation_alias="SOC_QUERY_TOOL_PLANNER_MODEL_PROFILE_ID",
+    )
+    soc_answer_assembler_mode: str = Field(
+        default="deterministic",
+        validation_alias="SOC_ANSWER_ASSEMBLER_MODE",
+    )
+    soc_answer_assembler_model_profile_id: str = Field(
+        default="dummy-local",
+        validation_alias="SOC_ANSWER_ASSEMBLER_MODEL_PROFILE_ID",
+    )
+    soc_reranker_mode: str = Field(
+        default="deterministic",
+        validation_alias="SOC_RERANKER_MODE",
+    )
+    soc_reranker_model_profile_id: str = Field(
+        default="dummy-local",
+        validation_alias="SOC_RERANKER_MODEL_PROFILE_ID",
+    )
+    soc_cross_encoder_model_name: str = Field(
+        default="BAAI/bge-reranker-v2-m3",
+        validation_alias="SOC_CROSS_ENCODER_MODEL_NAME",
+    )
+    soc_embedding_model_name: str = Field(
+        default="BAAI/bge-m3",
+        validation_alias="SOC_EMBEDDING_MODEL_NAME",
+    )
+    soc_embedding_dimensions: int = Field(
+        default=1024,
+        ge=1,
+        validation_alias="SOC_EMBEDDING_DIMENSIONS",
+    )
+    soc_retrieval_backend: str = Field(
+        default="fixture",
+        validation_alias="SOC_RETRIEVAL_BACKEND",
     )
     artifact_store: str = Field(default="local", validation_alias="ARTIFACT_STORE")
     artifact_root: Path = Field(default=Path(".local_artifacts"), validation_alias="ARTIFACT_ROOT")
@@ -75,6 +128,10 @@ class Settings(BaseSettings):
         validation_alias="SQLITE_STATE_PATH",
     )
     postgres_dsn: str = Field(default="", validation_alias="POSTGRES_DSN")
+    postgres_migration_profile: str = Field(
+        default="core",
+        validation_alias="POSTGRES_MIGRATION_PROFILE",
+    )
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
     otel_enabled: bool = Field(default=False, validation_alias="OTEL_ENABLED")
     otel_service_name: str = Field(

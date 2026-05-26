@@ -1,0 +1,153 @@
+stage: C
+name: "Ingestion Fixture Mode"
+goal: "Ingest fixture data through deterministic SoC axis classification before adding Claude Code enrichment or real sources."
+
+subgoals:
+  - id: C1
+    name: "Connector abstraction compatibility"
+    artifacts:
+      - "src/req_tracker/adapters/base.py"
+      - "src/req_tracker/fixtures/soc_knowledge.py"
+    status: "implemented_seed"
+
+  - id: C2
+    name: "JIRA fixture connector path"
+    artifacts: ["fixtures/soc_knowledge/artifacts.yaml"]
+    status: "implemented_seed"
+
+  - id: C3
+    name: "Confluence fixture connector path"
+    artifacts: ["fixtures/soc_knowledge/artifacts.yaml"]
+    status: "implemented_seed"
+
+  - id: C4
+    name: "Email fixture connector path"
+    artifacts: ["fixtures/soc_knowledge/artifacts.yaml"]
+    status: "implemented_seed"
+
+  - id: C5
+    name: "Rule-only SoC axis classifier"
+    artifacts:
+      - "src/req_tracker/ingestion/soc_classification.py"
+      - "tests/unit/ingestion/test_soc_classification.py"
+    status: "implemented_seed"
+
+  - id: C6
+    name: "Claude Code classifier enrichment"
+    artifacts:
+      - "src/req_tracker/ingestion/soc_classification.py"
+      - "src/req_tracker/ontology/soc_models.py"
+      - "src/req_tracker/model_gateway/"
+      - "config/prompt_versions.json"
+      - "ops/evals/run_soc_classifier_enrichment_gate.py"
+      - "tests/unit/ingestion/test_soc_classification.py"
+      - "tests/unit/ops/test_soc_classifier_enrichment_gate.py"
+    status: "implemented_seed"
+    note: "GatewaySocAxisClassifier sends masked/fixture artifact context and rule baselines through ModelGatewayClient using prompt pv_soc_axis_classification_v1, validates SocAxisClassificationBatch output, and converts Claude suggestions to source=claude/status=pending side-car proposals. The explicit --live quality gate is opt-in and passed in the current environment on 2026-05-27."
+
+  - id: C7
+    name: "Entity extractor"
+    artifacts:
+      - "src/req_tracker/ingestion/soc_entity_extraction.py"
+      - "src/req_tracker/ontology/soc_models.py"
+      - "tests/unit/ingestion/test_soc_entity_extraction.py"
+    status: "implemented_seed"
+    note: "Rule-only extraction projects explicit artifact links and JIRA-key-like body mentions into side-car mentions relations, and author_id into authoredBy Person relations. The AGE loader can map these candidates to MENTIONS and AUTHORED_BY edges when explicitly invoked."
+
+  - id: C8
+    name: "Local embedder"
+    artifacts:
+      - "src/req_tracker/vector/local_embedding.py"
+      - "ops/evals/smoke_soc_embedding_model.py"
+      - "ops/evals/run_soc_local_model_quality_gate.py"
+      - "tests/unit/vector/test_local_embedding.py"
+      - "tests/unit/ops/test_soc_embedding_smoke.py"
+      - "tests/unit/ops/test_soc_local_model_quality_gate.py"
+    status: "implemented_seed"
+    note: "LocalSentenceTransformerEmbedder provides lazy local model loading with dry-run smoke and explicit --live quality gate. Actual model download/load evidence remains a live gate."
+
+  - id: C9
+    name: "Graph/index builder"
+    artifacts:
+      - "src/req_tracker/storage/soc_postgres_loader.py"
+      - "src/req_tracker/graph/soc_age_loader.py"
+      - "src/req_tracker/vector/pgvector_backend.py"
+      - "src/req_tracker/graph/postgres_age_backend.py"
+      - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+      - "tests/unit/storage/test_soc_postgres_loader.py"
+      - "tests/unit/graph/test_soc_age_loader.py"
+      - "tests/unit/ops/test_soc_live_storage_rehearsal.py"
+    status: "implemented_seed"
+    note: "SocPostgresFixtureLoader, SocAgeGraphLoader, pgvector query adapter, and live storage rehearsal provide the seed graph/index build path. Passing target DB execution remains explicit in Stage D live acceptance."
+
+  - id: C10
+    name: "Lifecycle event logger"
+    artifacts:
+      - "src/req_tracker/storage/soc_postgres_loader.py"
+      - "src/req_tracker/workflows/soc_knowledge.py"
+    status: "implemented_seed"
+    note: "Fixture ingestion now generates source-linked artifact_synced lifecycle events and includes them in the storage projection without requiring live target storage."
+
+  - id: C11
+    name: "Fixture ingestion workflow"
+    artifacts:
+      - "src/req_tracker/workflows/soc_knowledge.py"
+      - "ops/rehearsal/run_soc_fixture_ingestion_workflow.py"
+      - "tests/unit/workflows/test_soc_knowledge_workflow.py"
+    status: "implemented_seed"
+    note: "Skip-safe workflow runs packaged seed or scale fixtures through source snapshot, rule classification, lifecycle event generation, and storage projection counts."
+
+  - id: C12
+    name: "Idempotent re-ingestion check"
+    artifacts:
+      - "ops/rehearsal/run_soc_ingestion_idempotency_check.py"
+      - "src/req_tracker/workflows/soc_knowledge.py"
+    status: "implemented_seed"
+    note: "Seed/scale fixture ingestion can be run twice and compared by stable artifact/classification/entity/relation/event IDs, counts, and storage projection."
+
+acceptance:
+  - id: ACC-C-SEED-01
+    description: "Rule classifier recall is at least 85 percent against seed ground truth."
+    check: "uv run python ops/fixtures/validate_soc_fixtures.py --format json"
+    expected: "classification_recall >= 0.85"
+
+  - id: ACC-C-SEED-02
+    description: "Rule classifier preserves Project, V-Level, Concern, and Component axes."
+    check: "uv run pytest tests/unit/ingestion/test_soc_classification.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-C-SEED-03
+    description: "Fixture ingestion workflow runs source snapshot, rule classification, lifecycle event generation, and storage projection without live storage."
+    check: "uv run python ops/rehearsal/run_soc_fixture_ingestion_workflow.py --coverage-mode scale --format json"
+    expected: "status=passed, counts.artifacts=400, counts.events=400"
+
+  - id: ACC-C-SEED-04
+    description: "Rule entity extractor projects explicit links and JIRA-key body mentions into side-car mentions relations."
+    check: "uv run pytest tests/unit/ingestion/test_soc_entity_extraction.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-C-SEED-05
+    description: "AGE graph loader can map side-car mentions and authoredBy relations to MENTIONS and AUTHORED_BY graph edges without interpolating source values into Cypher."
+    check: "uv run pytest tests/unit/graph/test_soc_age_loader.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-C-SEED-06
+    description: "Repeated fixture ingestion produces the same stable IDs, counts, and storage projection without duplicate candidates."
+    check: "uv run python ops/rehearsal/run_soc_ingestion_idempotency_check.py --coverage-mode scale --format json"
+    expected: "status=passed, fingerprint_match=true, duplicate_candidate_count=0"
+
+  - id: ACC-C-LIVE-07
+    description: "Claude Code classifier enrichment validates SocAxisClassificationBatch output through the model gateway and keeps AI proposals pending."
+    check: "uv run python ops/evals/run_soc_classifier_enrichment_gate.py --live --format json"
+    expected: "status=passed, classifier_enrichment.status=passed, pending_count > 0"
+
+self_review:
+  - "Are classifier outputs side-car classifications, not approved graph writes?"
+  - "Is source=rule and status=baseline explicit?"
+  - "Are entity extractor outputs side-car entities and relations, not approved graph writes?"
+  - "Do explicit links and JIRA-key-like mentions become MENTIONS candidates without live graph mutation?"
+  - "Does AGE semantic relation loading remain an explicit graph-loader action using parameterized Cypher payloads?"
+  - "Does the fixture workflow produce lifecycle events and storage projection counts without requiring live target storage?"
+  - "Does repeated fixture ingestion keep stable IDs and avoid new duplicate candidates?"
+  - "Does Claude Code classifier enrichment remain model-gateway-only, live opt-in, and pending rather than approved?"
+  - "Is real graph persistence still marked pending until target DB evidence exists?"

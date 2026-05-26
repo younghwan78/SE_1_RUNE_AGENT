@@ -1,0 +1,191 @@
+stage: A
+name: Foundation
+goal: "Prepare the SoC Knowledge PoC foundation: schema, vocab, DB profiles, local models, Claude Code provider, acceptance YAML, test harness, and folder structure."
+
+subgoals:
+  - id: A1
+    name: "DB environment profile"
+    artifacts:
+      - "src/req_tracker/storage/migrations/postgres/"
+      - "src/req_tracker/storage/migrations/postgres/011_soc_knowledge_tables.sql"
+      - "src/req_tracker/storage/migrations/postgres/012_soc_pgvector_tables.sql"
+      - "src/req_tracker/storage/migrations/postgres/013_soc_age_schema.sql"
+      - "ops/rehearsal/validate_soc_postgres_profile.py"
+      - "ops/rehearsal/validate_soc_live_postgres.py"
+      - "src/req_tracker/graph/"
+      - "src/req_tracker/vector/"
+    status: "implemented_seed"
+    note: "Existing PostgreSQL state, Neo4j, and Qdrant profiles exist; SoC Postgres pg_trgm, pgvector, and AGE migrations plus static readiness validation are now present. Runtime Postgres migrations are split into core vs explicit SoC profile, and a live DB validator can check extension/table/index/AGE graph readiness. Passing live DB execution remains pending until a target DB with pgvector and AGE exists."
+
+  - id: A2
+    name: "Ontology schema YAML v0.1"
+    artifacts:
+      - "docs/ontology/soc/schema/v0.1/entities.yaml"
+      - "docs/ontology/soc/schema/v0.1/relations.yaml"
+    status: "implemented"
+
+  - id: A3
+    name: "Initial vocabulary YAML"
+    artifacts:
+      - "docs/ontology/soc/schema/v0.1/vocab/v_levels.yaml"
+      - "docs/ontology/soc/schema/v0.1/vocab/concerns.yaml"
+      - "docs/ontology/soc/schema/v0.1/vocab/components.yaml"
+    status: "implemented"
+
+  - id: A4
+    name: "Schema to DB apply script"
+    artifacts:
+      - "ops/ontology/"
+      - "src/req_tracker/storage/migrations/postgres/011_soc_knowledge_tables.sql"
+      - "src/req_tracker/storage/migrations/postgres/012_soc_pgvector_tables.sql"
+      - "src/req_tracker/storage/migrations/postgres/013_soc_age_schema.sql"
+      - "ops/rehearsal/validate_soc_postgres_profile.py"
+      - "ops/rehearsal/validate_soc_live_postgres.py"
+    status: "implemented_seed"
+    note: "Schema validation exists; PostgreSQL migration resources now create SoC typed tables, pgvector embeddings, and the AGE graph profile. Core Postgres state migrations can run without SoC extensions; SoC profile apply remains explicit via migration profile and live validator."
+
+  - id: A5
+    name: "Schema validator"
+    artifacts:
+      - "src/req_tracker/ontology/soc_schema.py"
+      - "ops/ontology/validate_soc_schema.py"
+    status: "implemented"
+
+  - id: A6
+    name: "Embedding model selection and local load"
+    artifacts:
+      - "src/req_tracker/vector/"
+      - "src/req_tracker/vector/local_embedding.py"
+      - "ops/evals/smoke_soc_embedding_model.py"
+      - "ops/evals/run_soc_local_model_quality_gate.py"
+      - "tests/unit/vector/test_local_embedding.py"
+      - "tests/unit/ops/test_soc_embedding_smoke.py"
+      - "tests/unit/ops/test_soc_local_model_quality_gate.py"
+    status: "implemented_seed"
+    note: "LocalSentenceTransformerEmbedder supports lazy bge-m3/e5-style local model loading with explicit 1024-dimension checks, dry-run smoke coverage, and an explicit local model quality gate. Live model quality remains explicit via --live and optional sentence-transformers availability."
+
+  - id: A7
+    name: "Cross-encoder reranker model load"
+    artifacts:
+      - "src/req_tracker/query/reranking.py"
+      - "src/req_tracker/query/soc_runtime.py"
+      - "ops/evals/smoke_soc_cross_encoder_reranker.py"
+      - "ops/evals/run_soc_local_model_quality_gate.py"
+      - "tests/unit/query/test_soc_reranking.py"
+      - "tests/unit/ops/test_soc_cross_encoder_smoke.py"
+      - "tests/unit/ops/test_soc_local_model_quality_gate.py"
+    status: "implemented_seed"
+    note: "Optional CrossEncoderSocReranker supports lazy local model loading with deterministic fallback, dry-run smoke coverage, and an explicit local model quality gate. Live model quality remains explicit via --live and optional sentence-transformers availability."
+
+  - id: A8
+    name: "Claude Code tool/provider invocation"
+    artifacts:
+      - "src/req_tracker/model_gateway/claude_code_provider.py"
+      - "src/req_tracker/model_gateway/factory.py"
+      - "tests/unit/model_gateway/test_claude_code_provider.py"
+      - "ops/model_gateway/smoke_claude_code_provider.py"
+      - "ops/evals/run_soc_claude_quality_gate.py"
+      - "tests/unit/ops/test_claude_code_provider_smoke.py"
+      - "tests/unit/ops/test_soc_claude_quality_gate.py"
+    status: "implemented_seed"
+    note: "Claude Code subprocess provider is behind the model gateway, normalizes Claude CLI JSON wrappers, has dry-run smoke coverage, and now has a skip-safe SoC quality gate for slice planning, typed tool planning, and answer assembly. Actual live quality evidence remains explicit via --live."
+
+  - id: A9
+    name: "Goal and acceptance YAML format"
+    artifacts:
+      - "eval/stages/A.yaml"
+    status: "implemented"
+
+  - id: A10
+    name: "Automated test harness foundation"
+    artifacts:
+      - "tests/contract/test_soc_models.py"
+      - "tests/unit/ontology/test_soc_schema.py"
+      - "tests/unit/ops/test_soc_stage_a_foundation.py"
+    status: "implemented"
+
+  - id: A11
+    name: "Project folder structure"
+    artifacts:
+      - "docs/ontology/soc/schema/v0.1/"
+      - "eval/stages/"
+      - "ops/ontology/"
+      - "src/req_tracker/ontology/"
+      - "src/req_tracker/query/"
+      - "src/req_tracker/fixtures/"
+      - "src/req_tracker/soc_ui/"
+      - "src/req_tracker/vector/"
+      - "src/req_tracker/graph/"
+    status: "implemented_seed"
+    note: "Foundation, ontology, query, fixture, vector, graph, eval, ops, and SoC UI folders now exist. Target deployment/runtime evidence remains covered by later stage live gates."
+
+acceptance:
+  - id: ACC-A-01
+    description: "Packaged SoC ontology schema YAML exists."
+    check: "Test-Path docs/ontology/soc/schema/v0.1/entities.yaml; Test-Path docs/ontology/soc/schema/v0.1/relations.yaml"
+    expected: "both true"
+
+  - id: ACC-A-02
+    description: "Packaged SoC vocab YAML exists and covers V-Level, Concern, and Component axes."
+    check: "Test-Path docs/ontology/soc/schema/v0.1/vocab/v_levels.yaml; Test-Path docs/ontology/soc/schema/v0.1/vocab/concerns.yaml; Test-Path docs/ontology/soc/schema/v0.1/vocab/components.yaml"
+    expected: "all true"
+
+  - id: ACC-A-03
+    description: "Schema validator passes for packaged assets."
+    check: "uv run python ops/ontology/validate_soc_schema.py --format json"
+    expected: "status=passed"
+
+  - id: ACC-A-04
+    description: "SoC contract and schema tests pass."
+    check: "uv run pytest tests/contract/test_soc_models.py tests/unit/ontology/test_soc_schema.py tests/unit/ops/test_soc_stage_a_foundation.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-A-05
+    description: "Claude Code subprocess provider stays behind the model gateway boundary."
+    check: "uv run pytest tests/unit/model_gateway/test_claude_code_provider.py tests/unit/ops/test_claude_code_provider_smoke.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-A-06
+    description: "Claude Code provider smoke can verify command/profile wiring without live model spend by default."
+    check: "uv run python ops/model_gateway/smoke_claude_code_provider.py --dry-run --format json"
+    expected: "status=skipped, mode=dry_run, command_status reported"
+
+  - id: ACC-A-07
+    description: "SoC Postgres migration resources define pg_trgm, pgvector, and AGE profile requirements with rollback coverage."
+    check: "uv run python ops/rehearsal/validate_soc_postgres_profile.py"
+    expected: "passed=true"
+
+  - id: ACC-A-08
+    description: "Cross-encoder reranker smoke reports configured local model without loading it by default."
+    check: "uv run python ops/evals/smoke_soc_cross_encoder_reranker.py --dry-run --format json"
+    expected: "status=skipped, mode=dry_run, model_name reported"
+
+  - id: ACC-A-09
+    description: "Local embedding model smoke reports configured bge-m3 model without loading it by default."
+    check: "uv run python ops/evals/smoke_soc_embedding_model.py --dry-run --format json"
+    expected: "status=skipped, mode=dry_run, model_name=BAAI/bge-m3, expected_dimensions=1024"
+
+  - id: ACC-A-10
+    description: "Live SoC PostgreSQL validator is safe to run without a DSN and reports explicit live readiness failures when a DSN is provided."
+    check: "uv run python ops/rehearsal/validate_soc_live_postgres.py"
+    expected: "status=skipped without DSN; with --require-live and DSN, pg_trgm/vector/AGE, SoC tables, indexes, and soc_graph are checked"
+
+  - id: ACC-A-11
+    description: "Local embedding and cross-encoder quality gate is safe by default and defines explicit live recall@k criteria."
+    check: "uv run python ops/evals/run_soc_local_model_quality_gate.py --dry-run --format json"
+    expected: "status=skipped, requires_live=true, embedding_quality and reranker_quality checks reported"
+
+  - id: ACC-A-12
+    description: "SoC Claude Code quality gate is safe by default and defines explicit live structured-output checks for slice planning, typed tool planning, and answer assembly."
+    check: "uv run python ops/evals/run_soc_claude_quality_gate.py --dry-run --format json"
+    expected: "status=skipped, requires_live=true, slice_planning/query_tool_planning/answer_assembly checks reported"
+
+self_review:
+  - "Does schema validation fail on unknown entity references?"
+  - "Do all V-Level values L0-L5 exist in order?"
+  - "Do Concern and Component aliases avoid duplicates within each axis?"
+  - "Do SoC Postgres profile migrations fail clearly when pg_trgm, vector, or AGE are unavailable?"
+  - "Does local embedding live loading remain explicit and fail clearly when sentence-transformers/model files are unavailable?"
+  - "Does cross-encoder live loading remain explicit and fail clearly when sentence-transformers/model files are unavailable?"
+  - "Does Claude Code quality execution remain explicit and route through the model gateway rather than direct subprocess calls?"
+  - "Are pending items explicitly marked pending or partial rather than hidden?"

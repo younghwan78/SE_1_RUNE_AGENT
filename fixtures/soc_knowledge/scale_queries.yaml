@@ -1,0 +1,740 @@
+queries:
+- q_id: SQ001
+  question: "SOC-N-1\uC5D0\uC11C Area \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: concern_slice
+    project_keys:
+    - SOC-N-1
+    v_levels: []
+    concerns:
+    - Area
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-104
+  - SOC1-JIRA-112
+  - SOC1-JIRA-120
+  - SOC1-JIRA-128
+  - SOC1-JIRA-136
+  - SOC1-JIRA-144
+  - SOC1-JIRA-152
+  - SOC1-JIRA-160
+  - SOC1-JIRA-168
+  - SOC1-JIRA-176
+  - SOC1-JIRA-184
+  - SOC1-JIRA-192
+  - SOC1-JIRA-200
+  - SOC1-CONF-102
+  - SOC1-CONF-110
+  - SOC1-CONF-118
+  - SOC1-CONF-126
+  - SOC1-CONF-134
+  - SOC1-CONF-142
+  - SOC1-CONF-150
+  - SOC1-MAIL-108
+  - SOC1-MAIL-116
+  - SOC1-MAIL-124
+  - SOC1-MAIL-132
+  - SOC1-MAIL-140
+  - SOC1-MAIL-148
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ002
+  question: "SOC-N-2\uC5D0\uC11C Bandwidth \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: concern_slice
+    project_keys:
+    - SOC-N-2
+    v_levels: []
+    concerns:
+    - Bandwidth
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC2-JIRA-106
+  - SOC2-JIRA-114
+  - SOC2-JIRA-122
+  - SOC2-JIRA-130
+  - SOC2-JIRA-138
+  - SOC2-JIRA-146
+  - SOC2-JIRA-154
+  - SOC2-JIRA-162
+  - SOC2-JIRA-170
+  - SOC2-JIRA-178
+  - SOC2-JIRA-186
+  - SOC2-JIRA-194
+  - SOC2-CONF-104
+  - SOC2-CONF-112
+  - SOC2-CONF-120
+  - SOC2-CONF-128
+  - SOC2-CONF-136
+  - SOC2-CONF-144
+  - SOC2-MAIL-102
+  - SOC2-MAIL-110
+  - SOC2-MAIL-118
+  - SOC2-MAIL-126
+  - SOC2-MAIL-134
+  - SOC2-MAIL-142
+  - SOC2-MAIL-150
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ003
+  question: "SOC-N-1\uC5D0\uC11C Latency \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: concern_slice
+    project_keys:
+    - SOC-N-1
+    v_levels: []
+    concerns:
+    - Latency
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-106
+  - SOC1-JIRA-114
+  - SOC1-JIRA-122
+  - SOC1-JIRA-130
+  - SOC1-JIRA-138
+  - SOC1-JIRA-146
+  - SOC1-JIRA-154
+  - SOC1-JIRA-162
+  - SOC1-JIRA-170
+  - SOC1-JIRA-178
+  - SOC1-JIRA-186
+  - SOC1-JIRA-194
+  - SOC1-CONF-104
+  - SOC1-CONF-112
+  - SOC1-CONF-120
+  - SOC1-CONF-128
+  - SOC1-CONF-136
+  - SOC1-CONF-144
+  - SOC1-MAIL-102
+  - SOC1-MAIL-110
+  - SOC1-MAIL-118
+  - SOC1-MAIL-126
+  - SOC1-MAIL-134
+  - SOC1-MAIL-142
+  - SOC1-MAIL-150
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ004
+  question: "SOC-N-2\uC5D0\uC11C Memory \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: concern_slice
+    project_keys:
+    - SOC-N-2
+    v_levels: []
+    concerns:
+    - Memory
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC2-JIRA-102
+  - SOC2-JIRA-110
+  - SOC2-JIRA-118
+  - SOC2-JIRA-126
+  - SOC2-JIRA-134
+  - SOC2-JIRA-142
+  - SOC2-JIRA-150
+  - SOC2-JIRA-158
+  - SOC2-JIRA-166
+  - SOC2-JIRA-174
+  - SOC2-JIRA-182
+  - SOC2-JIRA-190
+  - SOC2-JIRA-198
+  - SOC2-CONF-108
+  - SOC2-CONF-116
+  - SOC2-CONF-124
+  - SOC2-CONF-132
+  - SOC2-CONF-140
+  - SOC2-CONF-148
+  - SOC2-MAIL-106
+  - SOC2-MAIL-114
+  - SOC2-MAIL-122
+  - SOC2-MAIL-130
+  - SOC2-MAIL-138
+  - SOC2-MAIL-146
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ005
+  question: "SOC-N-1\uC5D0\uC11C Performance \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: concern_slice
+    project_keys:
+    - SOC-N-1
+    v_levels: []
+    concerns:
+    - Performance
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-102
+  - SOC1-JIRA-110
+  - SOC1-JIRA-118
+  - SOC1-JIRA-126
+  - SOC1-JIRA-134
+  - SOC1-JIRA-142
+  - SOC1-JIRA-150
+  - SOC1-JIRA-158
+  - SOC1-JIRA-166
+  - SOC1-JIRA-174
+  - SOC1-JIRA-182
+  - SOC1-JIRA-190
+  - SOC1-JIRA-198
+  - SOC1-CONF-108
+  - SOC1-CONF-116
+  - SOC1-CONF-124
+  - SOC1-CONF-132
+  - SOC1-CONF-140
+  - SOC1-CONF-148
+  - SOC1-MAIL-106
+  - SOC1-MAIL-114
+  - SOC1-MAIL-122
+  - SOC1-MAIL-130
+  - SOC1-MAIL-138
+  - SOC1-MAIL-146
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ006
+  question: "SOC-N-2\uC5D0\uC11C Power \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: concern_slice
+    project_keys:
+    - SOC-N-2
+    v_levels: []
+    concerns:
+    - Power
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC2-JIRA-108
+  - SOC2-JIRA-116
+  - SOC2-JIRA-124
+  - SOC2-JIRA-132
+  - SOC2-JIRA-140
+  - SOC2-JIRA-148
+  - SOC2-JIRA-156
+  - SOC2-JIRA-164
+  - SOC2-JIRA-172
+  - SOC2-JIRA-180
+  - SOC2-JIRA-188
+  - SOC2-JIRA-196
+  - SOC2-CONF-106
+  - SOC2-CONF-114
+  - SOC2-CONF-122
+  - SOC2-CONF-130
+  - SOC2-CONF-138
+  - SOC2-CONF-146
+  - SOC2-MAIL-104
+  - SOC2-MAIL-112
+  - SOC2-MAIL-120
+  - SOC2-MAIL-128
+  - SOC2-MAIL-136
+  - SOC2-MAIL-144
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ007
+  question: "SOC-N-1\uC5D0\uC11C Reliability \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: concern_slice
+    project_keys:
+    - SOC-N-1
+    v_levels: []
+    concerns:
+    - Reliability
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-108
+  - SOC1-JIRA-116
+  - SOC1-JIRA-124
+  - SOC1-JIRA-132
+  - SOC1-JIRA-140
+  - SOC1-JIRA-148
+  - SOC1-JIRA-156
+  - SOC1-JIRA-164
+  - SOC1-JIRA-172
+  - SOC1-JIRA-180
+  - SOC1-JIRA-188
+  - SOC1-JIRA-196
+  - SOC1-CONF-106
+  - SOC1-CONF-114
+  - SOC1-CONF-122
+  - SOC1-CONF-130
+  - SOC1-CONF-138
+  - SOC1-CONF-146
+  - SOC1-MAIL-104
+  - SOC1-MAIL-112
+  - SOC1-MAIL-120
+  - SOC1-MAIL-128
+  - SOC1-MAIL-136
+  - SOC1-MAIL-144
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ008
+  question: "SOC-N-2\uC5D0\uC11C Thermal \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: concern_slice
+    project_keys:
+    - SOC-N-2
+    v_levels: []
+    concerns:
+    - Thermal
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC2-JIRA-104
+  - SOC2-JIRA-112
+  - SOC2-JIRA-120
+  - SOC2-JIRA-128
+  - SOC2-JIRA-136
+  - SOC2-JIRA-144
+  - SOC2-JIRA-152
+  - SOC2-JIRA-160
+  - SOC2-JIRA-168
+  - SOC2-JIRA-176
+  - SOC2-JIRA-184
+  - SOC2-JIRA-192
+  - SOC2-JIRA-200
+  - SOC2-CONF-102
+  - SOC2-CONF-110
+  - SOC2-CONF-118
+  - SOC2-CONF-126
+  - SOC2-CONF-134
+  - SOC2-CONF-142
+  - SOC2-CONF-150
+  - SOC2-MAIL-108
+  - SOC2-MAIL-116
+  - SOC2-MAIL-124
+  - SOC2-MAIL-132
+  - SOC2-MAIL-140
+  - SOC2-MAIL-148
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ009
+  question: "SOC-N-1 L0 AXIBus Bandwidth \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Bandwidth
+    components:
+    - AXIBus
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-CONF-113
+  - SOC1-MAIL-143
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ010
+  question: "SOC-N-1 L0 Cache Bandwidth \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Bandwidth
+    components:
+    - Cache
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-MAIL-119
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ011
+  question: "SOC-N-1 L0 Camera Bandwidth \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Bandwidth
+    components:
+    - Camera
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-155
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ012
+  question: "SOC-N-1 L0 Codec Bandwidth \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Bandwidth
+    components:
+    - Codec
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-179
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ013
+  question: "SOC-N-1 L0 PMU Bandwidth \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Bandwidth
+    components:
+    - PMU
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-107
+  - SOC1-CONF-137
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ014
+  question: "SOC-N-1 L0 Touch Bandwidth \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Bandwidth
+    components:
+    - Touch
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-131
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ015
+  question: "SOC-N-1 L0 DRAMController Memory \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Memory
+    components:
+    - DRAMController
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-143
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ016
+  question: "SOC-N-1 L0 DSP Memory \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Memory
+    components:
+    - DSP
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-119
+  - SOC1-CONF-149
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ017
+  question: "SOC-N-1 L0 GPU Memory \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Memory
+    components:
+    - GPU
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-CONF-125
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ018
+  question: "SOC-N-1 L0 ISP Memory \uAD50\uCC28 \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: topic_intersection
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Memory
+    components:
+    - ISP
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-CONF-101
+  - SOC1-MAIL-131
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ019
+  question: "SOC-N-1 L0 Bandwidth \uC77C\uC815 \uD750\uB984\uC740?"
+  slice:
+    pattern: timeline_slice
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Bandwidth
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-107
+  - SOC1-JIRA-131
+  - SOC1-JIRA-155
+  - SOC1-JIRA-179
+  - SOC1-CONF-113
+  - SOC1-CONF-137
+  - SOC1-MAIL-119
+  - SOC1-MAIL-143
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ020
+  question: "SOC-N-1 L0 Memory \uC77C\uC815 \uD750\uB984\uC740?"
+  slice:
+    pattern: timeline_slice
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Memory
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-119
+  - SOC1-JIRA-143
+  - SOC1-JIRA-167
+  - SOC1-JIRA-191
+  - SOC1-CONF-101
+  - SOC1-CONF-125
+  - SOC1-CONF-149
+  - SOC1-MAIL-107
+  - SOC1-MAIL-131
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ021
+  question: "SOC-N-1 L0 Power \uC77C\uC815 \uD750\uB984\uC740?"
+  slice:
+    pattern: timeline_slice
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Power
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-101
+  - SOC1-JIRA-125
+  - SOC1-JIRA-149
+  - SOC1-JIRA-173
+  - SOC1-JIRA-197
+  - SOC1-CONF-107
+  - SOC1-CONF-131
+  - SOC1-MAIL-113
+  - SOC1-MAIL-137
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ022
+  question: "SOC-N-1 L0 Thermal \uC77C\uC815 \uD750\uB984\uC740?"
+  slice:
+    pattern: timeline_slice
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L0
+    concerns:
+    - Thermal
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-113
+  - SOC1-JIRA-137
+  - SOC1-JIRA-161
+  - SOC1-JIRA-185
+  - SOC1-CONF-119
+  - SOC1-CONF-143
+  - SOC1-MAIL-101
+  - SOC1-MAIL-125
+  - SOC1-MAIL-149
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ023
+  question: "SOC-N-1 L1 Area \uC77C\uC815 \uD750\uB984\uC740?"
+  slice:
+    pattern: timeline_slice
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L1
+    concerns:
+    - Area
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-120
+  - SOC1-JIRA-144
+  - SOC1-JIRA-168
+  - SOC1-JIRA-192
+  - SOC1-CONF-102
+  - SOC1-CONF-126
+  - SOC1-CONF-150
+  - SOC1-MAIL-108
+  - SOC1-MAIL-132
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ024
+  question: "SOC-N-1 L1 Latency \uC77C\uC815 \uD750\uB984\uC740?"
+  slice:
+    pattern: timeline_slice
+    project_keys:
+    - SOC-N-1
+    v_levels:
+    - L1
+    concerns:
+    - Latency
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-114
+  - SOC1-JIRA-138
+  - SOC1-JIRA-162
+  - SOC1-JIRA-186
+  - SOC1-CONF-120
+  - SOC1-CONF-144
+  - SOC1-MAIL-102
+  - SOC1-MAIL-126
+  - SOC1-MAIL-150
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ025
+  question: "SOC1-JIRA-101 lifecycle trace\uB294?"
+  slice:
+    pattern: lifecycle_trace
+    project_keys: []
+    v_levels: []
+    concerns: []
+    components: []
+    lifecycle_states: []
+    artifact_id: SOC1-JIRA-101
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-JIRA-101
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ026
+  question: "SOC1-CONF-101 lifecycle trace\uB294?"
+  slice:
+    pattern: lifecycle_trace
+    project_keys: []
+    v_levels: []
+    concerns: []
+    components: []
+    lifecycle_states: []
+    artifact_id: SOC1-CONF-101
+    keywords: []
+  expected_artifact_ids:
+  - SOC1-CONF-101
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ027
+  question: "SOC2-JIRA-101 lifecycle trace\uB294?"
+  slice:
+    pattern: lifecycle_trace
+    project_keys: []
+    v_levels: []
+    concerns: []
+    components: []
+    lifecycle_states: []
+    artifact_id: SOC2-JIRA-101
+    keywords: []
+  expected_artifact_ids:
+  - SOC2-JIRA-101
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ028
+  question: "SOC2-MAIL-101 lifecycle trace\uB294?"
+  slice:
+    pattern: lifecycle_trace
+    project_keys: []
+    v_levels: []
+    concerns: []
+    components: []
+    lifecycle_states: []
+    artifact_id: SOC2-MAIL-101
+    keywords: []
+  expected_artifact_ids:
+  - SOC2-MAIL-101
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ029
+  question: "Bluetooth \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: unknown
+    project_keys: []
+    v_levels: []
+    concerns: []
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids: []
+  expected_source_urls: []
+  schema_version: soc-v0.1
+- q_id: SQ030
+  question: "PCIe PHY \uAD00\uB828 scale fixture \uD56D\uBAA9\uC740?"
+  slice:
+    pattern: unknown
+    project_keys: []
+    v_levels: []
+    concerns: []
+    components: []
+    lifecycle_states: []
+    keywords: []
+  expected_artifact_ids: []
+  expected_source_urls: []
+  schema_version: soc-v0.1

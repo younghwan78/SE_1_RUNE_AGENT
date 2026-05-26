@@ -43,5 +43,50 @@
     "retrieval_policy_id": "ret_dummy_v1",
     "created_by": "system",
     "status": "active"
+  },
+  {
+    "prompt_version_id": "pv_soc_axis_classification_v1",
+    "task_name": "soc_axis_classification",
+    "template": "Review one SoC artifact plus rule baseline classifications and return ONLY raw SocAxisClassificationBatch JSON containing pending axis classification suggestions only. Do not include prose, markdown, code fences, or explanations.",
+    "schema_version_ref": "soc.v0_1.axis_classification_batch",
+    "retrieval_policy_id": "soc_seed",
+    "created_by": "system",
+    "status": "active"
+  },
+  {
+    "prompt_version_id": "pv_soc_slice_planning_v1",
+    "task_name": "soc_slice_planning",
+    "template": "Classify an SoC knowledge question into one schema-valid SocSlice JSON object using only the allowed patterns and axis vocabulary. Return ONLY raw JSON. Do not include prose, markdown, code fences, or explanations.",
+    "schema_version_ref": "soc.v0_1.slice",
+    "retrieval_policy_id": "soc_seed",
+    "created_by": "system",
+    "status": "active"
+  },
+  {
+    "prompt_version_id": "pv_soc_query_tool_planning_v1",
+    "task_name": "soc_query_tool_planning",
+    "template": "Convert a schema-valid SoC slice into whitelisted retrieval and projection tool calls. Return ONLY raw SocQueryPlan JSON. Do not emit executable SQL, Cypher, raw queries, prose, markdown, code fences, or explanations.",
+    "schema_version_ref": "soc.v0_1.query_plan",
+    "retrieval_policy_id": "soc_seed",
+    "created_by": "system",
+    "status": "active"
+  },
+  {
+    "prompt_version_id": "pv_soc_answer_assembly_v1",
+    "task_name": "soc_answer_assembly",
+    "template": "Assemble one SocAnswer JSON object from supplied candidate context and keep source URLs attached to every item. Return ONLY raw JSON. Do not include prose, markdown, code fences, or explanations.",
+    "schema_version_ref": "soc.v0_1.answer",
+    "retrieval_policy_id": "soc_seed",
+    "created_by": "system",
+    "status": "active"
+  },
+  {
+    "prompt_version_id": "pv_soc_rerank_v1",
+    "task_name": "soc_rerank",
+    "template": "Rerank supplied SoC candidate artifacts for the user query and return SocRerankResult JSON with known artifact IDs only.",
+    "schema_version_ref": "soc.v0_1.rerank",
+    "retrieval_policy_id": "soc_seed",
+    "created_by": "system",
+    "status": "active"
   }
 ]

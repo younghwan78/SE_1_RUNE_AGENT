@@ -32,6 +32,7 @@ def test_helm_chart_maps_production_env_and_secret_refs() -> None:
     for key in [
         "name: rune-agent-secrets",
         "STATE_STORE: postgres",
+        "POSTGRES_MIGRATION_PROFILE: core",
         "GRAPH_BACKEND: neo4j",
         "VECTOR_BACKEND: qdrant",
         "MODEL_GATEWAY_MODE: http_json",

@@ -1,0 +1,96 @@
+stage: B
+name: "Fixture & Data Model"
+goal: "Create fixture data and ground truth that can validate the SoC ontology before real source access."
+
+subgoals:
+  - id: B1
+    name: "Fixture generation spec"
+    artifacts:
+      - "fixtures/soc_knowledge/spec.md"
+      - "ops/fixtures/generate_soc_scale_fixture.py"
+    status: "implemented_seed"
+
+  - id: B2
+    name: "JIRA seed fixture"
+    artifacts:
+      - "fixtures/soc_knowledge/artifacts.yaml"
+      - "fixtures/soc_knowledge/scale_artifacts.yaml"
+      - "fixtures/soc_knowledge/scale_queries.yaml"
+    count: 200
+    status: "implemented_seed"
+    note: "Seed query loop still uses the curated 20 JIRA records; generated scale fixture reaches the Phase 1 200 JIRA target."
+
+  - id: B3
+    name: "Confluence seed fixture"
+    artifacts:
+      - "fixtures/soc_knowledge/artifacts.yaml"
+      - "fixtures/soc_knowledge/scale_artifacts.yaml"
+    count: 100
+    status: "implemented_seed"
+    note: "Seed query loop still uses the curated 10 Confluence records; generated scale fixture reaches the Phase 1 100 Confluence target."
+
+  - id: B4
+    name: "Email seed fixture"
+    artifacts:
+      - "fixtures/soc_knowledge/artifacts.yaml"
+      - "fixtures/soc_knowledge/scale_artifacts.yaml"
+    count: 100
+    status: "implemented_seed"
+    note: "Seed query loop still uses the curated 10 Email records; generated scale fixture reaches the Phase 1 100 Email target."
+
+  - id: B5
+    name: "Cross-reference coverage"
+    artifacts: ["fixtures/soc_knowledge/artifacts.yaml"]
+    status: "implemented_seed"
+
+  - id: B6
+    name: "Ground-truth classification annotations"
+    artifacts: ["fixtures/soc_knowledge/artifacts.yaml"]
+    status: "implemented_seed"
+    note: "Seed ground truth is stored under metadata.soc_axes; final fixture may split annotations into ground_truth/classifications.yaml."
+
+  - id: B7
+    name: "Fixture loader"
+    artifacts: ["src/req_tracker/fixtures/soc_knowledge.py"]
+    status: "implemented_seed"
+
+  - id: B8
+    name: "Fixture validation"
+    artifacts:
+      - "ops/fixtures/validate_soc_fixtures.py"
+      - "ops/fixtures/generate_soc_scale_fixture.py"
+    status: "implemented_seed"
+
+  - id: B9
+    name: "Ground-truth query set"
+    artifacts: ["fixtures/soc_knowledge/queries.yaml"]
+    count: 20
+    status: "implemented"
+    note: "Initial Phase 1 target range is 20-30 queries; full fixture expansion still remains pending."
+
+acceptance:
+  - id: ACC-B-SEED-01
+    description: "Seed fixture has 40 artifacts with 20 JIRA, 10 Confluence, and 10 Email records."
+    check: "uv run python ops/fixtures/validate_soc_fixtures.py --format json"
+    expected: "counts.artifacts=40, counts.jira=20, counts.confluence=10, counts.email=10"
+
+  - id: ACC-B-SEED-02
+    description: "Ground-truth query set covers concern, intersection, timeline, lifecycle, and unknown patterns."
+    check: "uv run python ops/fixtures/validate_soc_fixtures.py --format json"
+    expected: "counts.queries >= 20 and required slice_patterns present"
+
+  - id: ACC-B-SEED-03
+    description: "All fixture query expected ids refer to existing artifacts."
+    check: "uv run python ops/fixtures/validate_soc_fixtures.py --format json"
+    expected: "errors=[]"
+
+  - id: ACC-B-SCALE-01
+    description: "Generated scale fixture reaches the Phase 1 source mix target."
+    check: "uv run python ops/fixtures/validate_soc_fixtures.py --coverage-mode scale --format json"
+    expected: "counts.artifacts=400, counts.jira=200, counts.confluence=100, counts.email=100, counts.queries >= 30"
+
+self_review:
+  - "Do seed fixtures cover both SOC-N-1 and SOC-N-2?"
+  - "Do seed fixtures cover L0-L5?"
+  - "Do seed queries include graceful unknown?"
+  - "Does the generated scale fixture preserve the final 400-artifact target without replacing curated seed queries?"

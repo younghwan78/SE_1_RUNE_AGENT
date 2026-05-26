@@ -1,0 +1,115 @@
+stage: F
+name: "E2E Validation Loop"
+goal: "Compare SoC query answers against ground truth, diagnose failures by layer, and protect passing seed queries from regression."
+
+subgoals:
+  - id: F1
+    name: "Automated Q runner"
+    artifacts:
+      - "ops/evals/run_soc_query_eval.py"
+      - "fixtures/soc_knowledge/scale_artifacts.yaml"
+      - "fixtures/soc_knowledge/scale_queries.yaml"
+    status: "implemented"
+    note: "Q runner executes 20 curated seed queries and 30 generated scale queries over the 400-artifact fixture."
+
+  - id: F2
+    name: "Answer vs ground-truth comparer"
+    artifacts:
+      - "src/req_tracker/evals/soc_query.py"
+      - "ops/evals/compare_soc_answer.py"
+    status: "implemented_seed"
+
+  - id: F3
+    name: "Failure diagnosis by layer"
+    artifacts:
+      - "src/req_tracker/evals/soc_query.py"
+      - "ops/evals/diagnose_soc_failures.py"
+    status: "implemented_seed"
+    note: "Seed diagnostics classify answer_schema, unknown_handling, retrieval, source_link, and precision failures."
+
+  - id: F4
+    name: "Diff report generation"
+    artifacts:
+      - "ops/evals/compare_soc_answer.py"
+      - "ops/evals/diff_soc_eval_runs.py"
+    status: "implemented_seed"
+    note: "CLI emits JSON, can write a single comparison report with --output, and can compare two eval-run records for metric/regression drift."
+
+  - id: F5
+    name: "Regression detection"
+    artifacts: ["src/req_tracker/evals/soc_query.py"]
+    status: "implemented_seed"
+    note: "Current seed baseline treats packaged passing query IDs as the regression set."
+
+  - id: F6
+    name: "Loop iteration fix and re-evaluation"
+    artifacts:
+      - "docs/implementation/12_SOC_KNOWLEDGE_POC_GAP_REPORT.md"
+      - "ops/evals/run_soc_eval_persistence_rehearsal.py"
+      - "src/req_tracker/evals/soc_query.py"
+    status: "implemented_seed"
+    note: "Manual iteration loop is documented, and query eval summaries can now be persisted as soc_eval_runs for restart-safe iteration history. Automated promotion remains outside this seed gate."
+
+  - id: F7
+    name: "Acceptance criteria reached"
+    artifacts:
+      - "eval/stages/F.yaml"
+      - "ops/fixtures/validate_soc_fixtures.py"
+      - "ops/evals/compare_soc_answer.py"
+      - "ops/evals/run_soc_storage_backed_query_eval.py"
+      - "ops/evals/run_soc_eval_persistence_rehearsal.py"
+      - "ops/evals/diff_soc_eval_runs.py"
+    status: "implemented_seed"
+    note: "20-query seed thresholds and generated 400-fixture scale query thresholds pass; storage-backed query eval has a skip-safe live gate, and eval summaries persist as soc_eval_runs. Manual curation and target-DSN evidence remain pending."
+
+acceptance:
+  - id: ACC-F-SEED-01
+    description: "Seed query runner reports schema, recall, source, and unknown metrics."
+    check: "ops/evals/run_soc_query_eval.py --format json"
+    expected: "status=passed, counts.queries >= 20"
+
+  - id: ACC-F-SEED-02
+    description: "Seed answer comparison meets Stage F quality thresholds."
+    check: "ops/evals/compare_soc_answer.py --format json"
+    expected: "recall >= 0.85, source_accuracy >= 0.95, regression_count = 0"
+
+  - id: ACC-F-SEED-03
+    description: "Seed diagnostics report no failed cases."
+    check: "ops/evals/diagnose_soc_failures.py --format json"
+    expected: "diagnostics.failed_cases = 0"
+
+  - id: ACC-F-SEED-04
+    description: "Stage F comparison and diagnostics tests pass."
+    check: "uv run pytest tests/unit/evals/test_soc_query_eval.py tests/unit/ops/test_soc_stage_f_foundation.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-F-SEED-05
+    description: "SoC query eval reports can be persisted and reloaded as soc_eval_runs without activating any improvement automatically."
+    check: "uv run python ops/evals/run_soc_eval_persistence_rehearsal.py --coverage-mode scale --format json"
+    expected: "status=passed, persisted.collection=soc_eval_runs, persisted.record.coverage_mode=scale"
+
+  - id: ACC-F-SEED-06
+    description: "SoC eval-run diff reports compare baseline and candidate metrics without activating any improvement automatically."
+    check: "uv run python ops/evals/diff_soc_eval_runs.py --coverage-mode scale --format json"
+    expected: "status=passed, coverage_mode=scale, regression_delta=0, regressed_metrics=[]"
+
+  - id: ACC-F-SCALE-01
+    description: "Scale fixture shape is available before broadening the query recall loop."
+    check: "ops/fixtures/validate_soc_fixtures.py --coverage-mode scale --format json"
+    expected: "status=passed, counts.artifacts=400"
+
+  - id: ACC-F-SCALE-02
+    description: "Generated scale query annotations run through the same answer comparison loop."
+    check: "ops/evals/compare_soc_answer.py --coverage-mode scale --format json"
+    expected: "status=passed, counts.artifacts=400, counts.queries >= 30, recall >= 0.85"
+
+  - id: ACC-F-LIVE-01
+    description: "Storage-backed seed or scale query eval reports recall, source accuracy, schema, unknown handling, and regression metrics from a target Postgres hybrid retrieval profile."
+    check: "POSTGRES_TEST_DSN=<target> uv run python ops/evals/run_soc_storage_backed_query_eval.py --live --require-live --apply-migrations --coverage-mode scale --format json"
+    expected: "status=passed, recall >= 0.85, source_accuracy >= 0.95, regression_count = 0"
+
+self_review:
+  - "Can the eval report identify retrieval, source link, schema, precision, and unknown-handling failures?"
+  - "Does regression detection fail a previously passing query if it later misses expected artifacts?"
+  - "Can a passing Stage F eval report be persisted and reloaded as soc_eval_runs without mutating active prompt, model, rule, or retrieval policy?"
+  - "Is the generated 400-fixture query loop passing while manual curation and target storage-backed live evidence remain explicit pending items?"

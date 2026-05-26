@@ -17,10 +17,13 @@ The same `ruff`, `mypy`, and `pytest` gates run in GitHub Actions on pushes to
 `main` and on pull requests.
 
 Optional real PostgreSQL integration tests are skipped unless
-`POSTGRES_TEST_DSN` points to a disposable PostgreSQL database:
+`POSTGRES_TEST_DSN` points to a disposable PostgreSQL database. The default
+`POSTGRES_MIGRATION_PROFILE=core` applies only core application migrations so a
+vanilla PostgreSQL 16 database can run the state-store integration test:
 
 ```powershell
 $env:POSTGRES_TEST_DSN="postgresql://rune:rune@127.0.0.1:5432/rune_agent_test"
+$env:POSTGRES_MIGRATION_PROFILE="core"
 uv run pytest tests/integration/test_postgres_state_store.py
 ```
 
@@ -54,6 +57,18 @@ stack down. Override host ports with `RUNE_IT_POSTGRES_PORT`,
 `RUNE_IT_NEO4J_BOLT_PORT`, and `RUNE_IT_QDRANT_HTTP_PORT` when local ports are
 already in use.
 
+Validate a live SoC Knowledge PostgreSQL profile only against a database that
+has `pg_trgm`, `vector`, and Apache AGE available:
+
+```powershell
+$env:POSTGRES_TEST_DSN="postgresql://rune:rune@127.0.0.1:5432/rune_agent_test"
+uv run python ops/rehearsal/validate_soc_live_postgres.py --require-live
+```
+
+Use `POSTGRES_MIGRATION_PROFILE=soc` only for that prepared SoC profile. The
+default `core` profile intentionally avoids requiring pgvector/AGE for ordinary
+state persistence.
+
 Run a production-shaped full-stack rehearsal:
 
 ```powershell
@@ -63,8 +78,9 @@ uv run python ops/rehearsal/run_full_stack_rehearsal.py
 This starts the disposable backends, launches the API with
 `STATE_STORE=postgres`, `GRAPH_BACKEND=neo4j`, and `VECTOR_BACKEND=qdrant`, then
 runs readiness, analyze, approval commit, graph projection, audit retention, and
-API restart-restore checks. It also runs a small `ops/load/smoke_load.py` pass
-against the live rehearsal API.
+API restart-restore checks. It also records answer feedback and confirms the
+PostgreSQL-backed feedback summary survives API restart. It then runs a small
+`ops/load/smoke_load.py` pass against the live rehearsal API.
 
 Run feedback/eval/canary rehearsal:
 

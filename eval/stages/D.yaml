@@ -1,0 +1,254 @@
+stage: D
+name: "Retrieval & Query"
+goal: "Route natural-language SoC knowledge questions into deterministic slice patterns and return sourced structured answers."
+
+subgoals:
+  - id: D1
+    name: "Graph query tool"
+    artifacts:
+      - "src/req_tracker/query/soc_service.py"
+      - "src/req_tracker/graph/postgres_age_backend.py"
+      - "src/req_tracker/graph/soc_age_loader.py"
+      - "src/req_tracker/ingestion/soc_entity_extraction.py"
+      - "src/req_tracker/storage/migrations/postgres/013_soc_age_schema.sql"
+      - "tests/unit/graph/test_soc_age_loader.py"
+      - "ops/rehearsal/validate_soc_postgres_profile.py"
+      - "ops/rehearsal/validate_soc_live_postgres.py"
+      - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+    status: "implemented_seed"
+    note: "Seed baseline uses fixture classifications; parameterized AGE Cypher wrapper/query builder, AGE graph artifact-axis loader seed, MENTIONS/AUTHORED_BY semantic relation projection, static readiness checks, live DB profile validator, and explicit live storage rehearsal exist. Passing live AGE execution still depends on a target DB with AGE."
+
+  - id: D2
+    name: "Vector search tool"
+    artifacts:
+      - "src/req_tracker/query/soc_service.py"
+      - "src/req_tracker/vector/pgvector_backend.py"
+      - "src/req_tracker/storage/migrations/postgres/012_soc_pgvector_tables.sql"
+      - "ops/rehearsal/validate_soc_postgres_profile.py"
+      - "ops/rehearsal/validate_soc_live_postgres.py"
+      - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+    status: "implemented_seed"
+    note: "Seed baseline is classification-filtered; parameterized pgvector query builder, pgvector table migration/readiness checks, live DB profile validator, and explicit live storage rehearsal exist. Passing live embedding backend execution still depends on a target DB with pgvector."
+
+  - id: D3
+    name: "Keyword search tool"
+    artifacts:
+      - "src/req_tracker/query/soc_service.py"
+      - "src/req_tracker/query/postgres_keyword_backend.py"
+      - "src/req_tracker/storage/migrations/postgres/011_soc_knowledge_tables.sql"
+      - "ops/rehearsal/validate_soc_postgres_profile.py"
+      - "ops/rehearsal/validate_soc_live_postgres.py"
+      - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+    status: "implemented_seed"
+    note: "Seed baseline applies deterministic keyword filters; parameterized Postgres FTS/pg_trgm query builder, typed table/index migration checks, live DB profile validator, and explicit live storage rehearsal exist. Passing live DB execution still depends on a target DB."
+
+  - id: D4
+    name: "Lifecycle/event tool"
+    artifacts:
+      - "src/req_tracker/query/soc_service.py"
+      - "src/req_tracker/storage/soc_postgres_loader.py"
+      - "src/req_tracker/storage/migrations/postgres/011_soc_knowledge_tables.sql"
+    status: "implemented_seed"
+    note: "Lifecycle trace is projected from fixture created/updated metadata, and fixture-to-Postgres loading now writes source-linked artifact_synced lifecycle events into soc_event_log."
+
+  - id: D5
+    name: "Cross-encoder rerank tool"
+    artifacts:
+      - "src/req_tracker/ontology/soc_models.py"
+      - "src/req_tracker/query/reranking.py"
+      - "src/req_tracker/query/soc_runtime.py"
+      - "src/req_tracker/query/soc_service.py"
+      - "ops/evals/smoke_soc_cross_encoder_reranker.py"
+      - "ops/evals/run_soc_local_model_quality_gate.py"
+      - "tests/unit/query/test_soc_reranking.py"
+      - "tests/unit/query/test_soc_runtime_planner.py"
+      - "tests/unit/ops/test_soc_cross_encoder_smoke.py"
+      - "tests/unit/ops/test_soc_local_model_quality_gate.py"
+    status: "implemented_seed"
+    note: "Seed lexical reranker, optional model-gateway reranker, and optional CrossEncoderSocReranker exist. Local cross-encoder quality gate is explicit via --live and is not required in default CI."
+
+  - id: D6
+    name: "Hybrid retrieval pipeline"
+    artifacts:
+      - "src/req_tracker/query/soc_service.py"
+      - "src/req_tracker/query/retrieval.py"
+      - "src/req_tracker/graph/soc_age_loader.py"
+      - "src/req_tracker/storage/soc_postgres_loader.py"
+      - "tests/unit/query/test_soc_storage_retrieval.py"
+      - "tests/unit/graph/test_soc_age_loader.py"
+      - "tests/unit/storage/test_soc_postgres_loader.py"
+      - "ops/rehearsal/validate_soc_postgres_profile.py"
+      - "ops/rehearsal/validate_soc_live_postgres.py"
+      - "ops/rehearsal/run_soc_live_storage_rehearsal.py"
+      - "ops/evals/run_soc_storage_backed_query_eval.py"
+    status: "implemented_seed"
+    note: "Seed baseline combines slice axes and keywords; injectable Postgres hybrid retrieval profile now orchestrates AGE, FTS/pg_trgm, and pgvector query adapters with fake-connection tests, static storage profile validation, live profile introspection, fixture-to-Postgres artifact/classification/lifecycle event writer coverage, AGE semantic relation edge projection, explicit live storage-backed retrieval rehearsal, and a skip-safe storage-backed query quality gate."
+
+  - id: D7
+    name: "Claude Code prompt: slice classification"
+    artifacts:
+      - "src/req_tracker/query/soc_service.py"
+      - "src/req_tracker/query/soc_planner.py"
+      - "src/req_tracker/query/soc_runtime.py"
+      - "src/req_tracker/api/app.py"
+      - "src/req_tracker/config/settings.py"
+      - "ops/evals/run_soc_claude_quality_gate.py"
+      - "tests/unit/query/test_soc_query_planner.py"
+      - "tests/unit/query/test_soc_runtime_planner.py"
+      - "tests/unit/ops/test_soc_claude_quality_gate.py"
+    status: "implemented_seed"
+    note: "Optional model-gateway-backed SocSlice planner exists with deterministic fallback and can be enabled through SOC_QUERY_PLANNER_MODE plus registry profile/prompt settings. SoC Claude quality gate validates slice-planning structured output and passed live in the current environment on 2026-05-27."
+
+  - id: D8
+    name: "Claude Code prompt: query plan to tool calls"
+    artifacts:
+      - "src/req_tracker/ontology/soc_models.py"
+      - "src/req_tracker/query/soc_orchestration.py"
+      - "src/req_tracker/query/soc_runtime.py"
+      - "src/req_tracker/query/soc_service.py"
+      - "ops/evals/run_soc_claude_quality_gate.py"
+      - "tests/unit/query/test_soc_orchestration.py"
+      - "tests/unit/query/test_soc_runtime_planner.py"
+      - "tests/unit/ops/test_soc_claude_quality_gate.py"
+    status: "implemented_seed"
+    note: "Typed SocQueryPlan supports whitelisted tool calls and rejects raw SQL/Cypher arguments; runtime can enable a model-gateway planner with deterministic fallback. SoC Claude quality gate checks live typed tool-planning output for answer projection and forbidden raw query arguments, and passed in the current environment on 2026-05-27."
+
+  - id: D9
+    name: "Claude Code prompt: answer assembly"
+    artifacts:
+      - "src/req_tracker/ontology/soc_models.py"
+      - "src/req_tracker/query/soc_orchestration.py"
+      - "src/req_tracker/query/soc_service.py"
+      - "ops/evals/run_soc_claude_quality_gate.py"
+      - "tests/unit/query/test_soc_orchestration.py"
+      - "tests/unit/ops/test_soc_claude_quality_gate.py"
+    status: "implemented_seed"
+    note: "Optional model-gateway answer assembler validates SocAnswer JSON and falls back to deterministic sourced answers. SoC Claude quality gate checks live answer assembly output preserves SocAnswer schema and source URLs, and passed in the current environment on 2026-05-27."
+
+  - id: D10
+    name: "Reasoning log storage"
+    artifacts:
+      - "src/req_tracker/query/soc_service.py"
+      - "src/req_tracker/query/soc_planner.py"
+      - "src/req_tracker/debug/models.py"
+      - "tests/unit/query/test_soc_query_service.py"
+    status: "implemented_seed"
+    note: "API-backed queries persist structured reasoning JSON and create query AgentRun/AgentStepTrace lineage; gateway planner LLMCallTrace is linked to the same query run when enabled."
+
+  - id: D11
+    name: "Provenance validation"
+    artifacts:
+      - "src/req_tracker/api/routes/soc_query.py"
+      - "tests/unit/ops/test_soc_stage_d_foundation.py"
+      - "ops/evals/run_soc_query_eval.py"
+    status: "implemented_seed"
+
+acceptance:
+  - id: ACC-D-SEED-01
+    description: "Seed Q set returns at least 75 percent recall."
+    check: "ops/evals/run_soc_query_eval.py --format json"
+    expected: "recall >= 0.75"
+
+  - id: ACC-D-SEED-02
+    description: "All returned expected seed artifacts preserve source URLs."
+    check: "ops/evals/run_soc_query_eval.py --format json"
+    expected: "source_accuracy >= 0.95"
+
+  - id: ACC-D-SEED-03
+    description: "All seed query answers validate against SocAnswer schema."
+    check: "ops/evals/run_soc_query_eval.py --format json"
+    expected: "schema_pass_rate = 1.0"
+
+  - id: ACC-D-SEED-04
+    description: "Unknown slice queries return a graceful no-candidates answer."
+    check: "ops/evals/run_soc_query_eval.py --format json"
+    expected: "graceful_unknown_pass_rate = 1.0"
+
+  - id: ACC-D-SEED-05
+    description: "FastAPI exposes the SoC query endpoint."
+    check: "uv run pytest tests/contract/test_soc_query_api.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-D-SEED-06
+    description: "Optional model-gateway slice planner validates SocSlice output, can be wired into runtime settings, and falls back to deterministic routing."
+    check: "uv run pytest tests/unit/query/test_soc_query_planner.py tests/unit/query/test_soc_runtime_planner.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-D-SEED-07
+    description: "SoC query answers create query AgentRun/AgentStepTrace lineage, and planner LLM calls link to the same run when enabled."
+    check: "uv run pytest tests/unit/query/test_soc_query_service.py tests/contract/test_soc_query_api.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-D-SEED-08
+    description: "Typed query plans use only whitelisted tools, reject raw SQL/Cypher arguments, and answer assembly validates SocAnswer output."
+    check: "uv run pytest tests/unit/query/test_soc_orchestration.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-D-SEED-09
+    description: "Seed reranking reorders candidates deterministically; optional gateway reranking validates SocRerankResult output; CrossEncoderSocReranker can be wired and falls back deterministically."
+    check: "uv run pytest tests/unit/query/test_soc_reranking.py tests/unit/query/test_soc_runtime_planner.py tests/unit/ops/test_soc_cross_encoder_smoke.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-D-SEED-10
+    description: "Storage-backed retrieval adapters build parameterized AGE, pgvector, and FTS/pg_trgm queries and can be injected into the query service."
+    check: "uv run pytest tests/unit/query/test_soc_storage_retrieval.py tests/unit/query/test_soc_query_service.py tests/unit/query/test_soc_runtime_planner.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-D-SEED-11
+    description: "SoC storage-backed retrieval profile has PostgreSQL tables, pgvector table, AGE graph, and rollback resources defined."
+    check: "uv run python ops/rehearsal/validate_soc_postgres_profile.py"
+    expected: "passed=true"
+
+  - id: ACC-D-SEED-12
+    description: "SoC fixture artifacts, classifications, lifecycle events, and deterministic embeddings can be upserted into the Postgres profile tables."
+    check: "uv run pytest tests/unit/storage/test_soc_postgres_loader.py -q"
+    expected: "all tests pass"
+
+  - id: ACC-D-SEED-13
+    description: "SoC AGE graph loader builds parameterized Artifact-to-axis and semantic MENTIONS/AUTHORED_BY edge load Cypher, and graph query filters through axis relations."
+    check: "uv run pytest tests/unit/graph/test_soc_age_loader.py tests/unit/query/test_soc_storage_retrieval.py::test_postgres_age_backend_builds_parameterized_cypher_wrapper -q"
+    expected: "all tests pass"
+
+  - id: ACC-D-SEED-14
+    description: "Live SoC PostgreSQL profile validator checks pg_trgm, pgvector, AGE graph, required SoC tables, and indexes against a real DSN without exposing credentials."
+    check: "POSTGRES_TEST_DSN=<target> uv run python ops/rehearsal/validate_soc_live_postgres.py --require-live"
+    expected: "passed=true on a DB with pg_trgm/vector/AGE installed and SoC migrations applied"
+
+  - id: ACC-D-LIVE-15
+    description: "Live SoC PostgreSQL storage rehearsal loads fixture artifacts/classifications/embeddings, loads AGE artifact-axis and semantic relation graph edges, and returns sourced hybrid retrieval results."
+    check: "POSTGRES_TEST_DSN=<target> uv run python ops/rehearsal/run_soc_live_storage_rehearsal.py --require-live --apply-migrations --format json"
+    expected: "status=passed, fixture_load.status=passed, age_graph_load.status=passed, age_graph_load.counts.semantic_relations > 0, hybrid_retrieval.status=passed"
+
+  - id: ACC-D-LIVE-16
+    description: "Local embedding and cross-encoder models can pass seed query recall@k quality gates when explicitly run live."
+    check: "uv run python ops/evals/run_soc_local_model_quality_gate.py --live --format json"
+    expected: "status=passed, embedding_quality.status=passed, reranker_quality.status=passed"
+
+  - id: ACC-D-LIVE-17
+    description: "Claude Code can pass SoC slice planning, typed query tool planning, and answer assembly structured quality gates when explicitly run live through the model gateway."
+    check: "uv run python ops/evals/run_soc_claude_quality_gate.py --live --format json"
+    expected: "status=passed, slice_planning.status=passed, query_tool_planning.status=passed, answer_assembly.status=passed"
+
+  - id: ACC-D-LIVE-18
+    description: "Storage-backed SoC query eval runs seed or scale ground-truth queries through PostgresHybridSocRetrievalBackend against a target DSN."
+    check: "POSTGRES_TEST_DSN=<target> uv run python ops/evals/run_soc_storage_backed_query_eval.py --live --require-live --apply-migrations --coverage-mode scale --format json"
+    expected: "status=passed, recall >= 0.85, source_accuracy >= 0.95, schema_pass_rate = 1.0"
+
+self_review:
+  - "Are slice plans typed rather than generated as raw SQL or Cypher?"
+  - "Does every answer item carry at least one source URL?"
+  - "Does lifecycle trace return ordered events?"
+  - "Does the gateway slice planner fall back without bypassing typed SocSlice validation?"
+  - "Does reranking preserve only known candidate artifact IDs and fall back deterministically?"
+  - "Does CrossEncoderSocReranker stay optional, avoid default live model loading, and preserve lexical fallback on model failure?"
+  - "Are query plans typed tool calls rather than executable SQL/Cypher strings?"
+  - "Does optional answer assembly preserve SocAnswer schema and source URLs?"
+  - "Are live Claude Code reranking quality acceptance and live storage-backed retrieval execution still explicit pending items?"
+  - "Do storage profile migrations cover soc_artifacts, soc_classifications, soc_event_log, soc_eval_runs, pgvector embeddings, and AGE graph creation?"
+  - "Does fixture-to-Postgres loading preserve source URLs, axis classifications, lifecycle events, and 1024-dimension deterministic embeddings?"
+  - "Does AGE graph loading preserve BELONGS_TO_PROJECT, AT_LEVEL, ADDRESSES, INVOLVES, MENTIONS, and AUTHORED_BY relations without interpolating source values into Cypher?"
+  - "Does the live PostgreSQL validator keep core state migrations separate from explicit SoC pgvector/AGE profile validation?"
+  - "Does the live storage rehearsal prove fixture load, AGE graph load including semantic relations, pgvector/FTS/AGE hybrid retrieval, and source URL provenance on a target DB?"
+  - "Does the explicit local model quality gate prove embedding and cross-encoder recall@k on a seed query before promoting local models?"
+  - "Does the explicit Claude Code quality gate prove slice planning, typed tool planning, and sourced answer assembly through the model gateway before promoting live Claude profiles?"
+  - "Does the storage-backed query eval prove retrieval quality against seed or scale ground-truth queries on the same target DB profile used by the live storage rehearsal?"

@@ -52,6 +52,7 @@ logs/
 .run/
 run_server*.log
 .playwright-cli/
+test-results/
 
 # IDE / OS
 .vscode/

@@ -1,0 +1,86 @@
+components:
+  - name: Multimedia
+    aliases: [multimedia]
+    definition: Multimedia subsystem group.
+  - name: Camera
+    aliases: [camera, cam]
+    parent_component: Multimedia
+    definition: Camera, image sensor, and capture pipeline.
+  - name: ISP
+    aliases: [isp, "image signal processor"]
+    parent_component: Camera
+    definition: Image signal processing block.
+  - name: Display
+    aliases: [display, panel]
+    parent_component: Multimedia
+    definition: Display pipeline and panel interface.
+  - name: Codec
+    aliases: [codec, video, image]
+    parent_component: Multimedia
+    definition: Video and image codec blocks.
+  - name: GPU
+    aliases: [gpu, graphics]
+    definition: Graphics processor.
+  - name: AICompute
+    aliases: [ai, compute]
+    definition: AI and compute subsystem group.
+  - name: NPU
+    aliases: [npu, neural]
+    parent_component: AICompute
+    definition: Neural processing unit.
+  - name: DSP
+    aliases: [dsp]
+    parent_component: AICompute
+    definition: Digital signal processor.
+  - name: CPUCluster
+    aliases: [cpu, "cpu cluster"]
+    parent_component: AICompute
+    definition: CPU cluster and scheduler-visible compute capacity.
+  - name: MemorySubsystem
+    aliases: [memory_subsystem, dram, "memory subsystem"]
+    definition: Memory subsystem group.
+  - name: DRAMController
+    aliases: [dram_controller, "dram controller"]
+    parent_component: MemorySubsystem
+    definition: DRAM controller.
+  - name: Cache
+    aliases: [cache, llc]
+    parent_component: MemorySubsystem
+    definition: Shared or private cache hierarchy.
+  - name: Interconnect
+    aliases: [interconnect, fabric]
+    definition: Interconnect subsystem group.
+  - name: NoC
+    aliases: [noc]
+    parent_component: Interconnect
+    definition: Network-on-chip fabric.
+  - name: AXIBus
+    aliases: [axi, "axi bus"]
+    parent_component: Interconnect
+    definition: AXI bus and related fabric.
+  - name: PowerSubsystem
+    aliases: [power_subsystem, power]
+    definition: Power management subsystem group.
+  - name: PMIC
+    aliases: [pmic]
+    parent_component: PowerSubsystem
+    definition: Power management IC.
+  - name: PMU
+    aliases: [pmu]
+    parent_component: PowerSubsystem
+    definition: Power management unit.
+  - name: PowerDomain
+    aliases: [power_domain, "power domain"]
+    parent_component: PowerSubsystem
+    definition: Power domain and gating control.
+  - name: Sensor
+    aliases: [sensor]
+    definition: Sensor subsystem group.
+  - name: Touch
+    aliases: [touch]
+    parent_component: Sensor
+    definition: Touch sensor block.
+  - name: SensorHub
+    aliases: [sensor_hub, "sensor hub"]
+    parent_component: Sensor
+    definition: Sensor hub block.

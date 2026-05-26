@@ -7,7 +7,15 @@ from pydantic import BaseModel, ConfigDict, Field
 
 SCHEMA_VERSION = "v1"
 
-RunType = Literal["ingestion", "analysis", "approval_commit", "eval", "replay", "improvement"]
+RunType = Literal[
+    "ingestion",
+    "analysis",
+    "approval_commit",
+    "eval",
+    "replay",
+    "improvement",
+    "query",
+]
 TriggerSource = Literal["manual", "schedule", "api", "system"]
 RunStatus = Literal["queued", "running", "succeeded", "failed", "cancelled", "partial"]
 StepStatus = Literal["running", "succeeded", "failed", "skipped"]

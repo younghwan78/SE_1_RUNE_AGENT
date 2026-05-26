@@ -16,5 +16,20 @@
     "default_temperature": 0.0,
     "timeout_seconds": 30,
     "is_active": true
+  },
+  {
+    "model_profile_id": "claude-code-local",
+    "provider": "claude_code",
+    "model_name": "claude-code",
+    "endpoint_alias": "claude -p --output-format json",
+    "allowed_data_classes": [
+      "public_internal"
+    ],
+    "supports_json_schema": true,
+    "supports_tool_calling": false,
+    "max_context_tokens": 8192,
+    "default_temperature": 0.0,
+    "timeout_seconds": 60,
+    "is_active": true
   }
 ]

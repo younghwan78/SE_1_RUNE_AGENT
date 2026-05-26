@@ -18,6 +18,7 @@ from req_tracker.api.routes.feedback import router as feedback_router
 from req_tracker.api.routes.graph import router as graph_router
 from req_tracker.api.routes.health import router as health_router
 from req_tracker.api.routes.runs import router as runs_router
+from req_tracker.api.routes.soc_query import router as soc_query_router
 from req_tracker.api.routes.ui import UI_ASSET_DIR
 from req_tracker.api.routes.ui import router as ui_router
 from req_tracker.api.state import RuntimeState
@@ -31,6 +32,13 @@ from req_tracker.graph.neo4j_backend import Neo4jGraphBackend
 from req_tracker.observability.metrics import InMemoryMetrics
 from req_tracker.observability.otel import configure_opentelemetry
 from req_tracker.observability.tracing import resolve_trace_context
+from req_tracker.query.soc_runtime import (
+    create_soc_answer_assembler,
+    create_soc_query_tool_planner,
+    create_soc_reranker,
+    create_soc_retrieval_backend,
+    create_soc_slice_planner,
+)
 from req_tracker.scheduler.models import ScheduleConfig
 from req_tracker.storage.postgres_store import PostgreSQLStateStore
 from req_tracker.storage.sqlite_store import SQLiteStateStore
@@ -53,7 +61,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if resolved_settings.state_store == "sqlite":
         state_store = SQLiteStateStore(resolved_settings.sqlite_state_path)
     elif resolved_settings.state_store == "postgres":
-        state_store = PostgreSQLStateStore(resolved_settings.postgres_dsn)
+        state_store = PostgreSQLStateStore(
+            resolved_settings.postgres_dsn,
+            migration_profile=resolved_settings.postgres_migration_profile,
+        )
     elif resolved_settings.state_store != "memory":
         raise ValueError(f"unsupported STATE_STORE: {resolved_settings.state_store}")
     metrics = InMemoryMetrics()
@@ -81,6 +92,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if isinstance(state_store, PostgreSQLStateStore)
         else None,
         source_adapter=source_adapter,
+    )
+    runtime.soc_slice_planner = create_soc_slice_planner(
+        settings=resolved_settings,
+        traces=runtime.traces,
+        artifact_store=runtime.artifact_store,
+    )
+    runtime.soc_query_tool_planner = create_soc_query_tool_planner(
+        settings=resolved_settings,
+        traces=runtime.traces,
+        artifact_store=runtime.artifact_store,
+    )
+    runtime.soc_reranker = create_soc_reranker(
+        settings=resolved_settings,
+        traces=runtime.traces,
+        artifact_store=runtime.artifact_store,
+    )
+    runtime.soc_retrieval_backend = create_soc_retrieval_backend(settings=resolved_settings)
+    runtime.soc_answer_assembler = create_soc_answer_assembler(
+        settings=resolved_settings,
+        traces=runtime.traces,
+        artifact_store=runtime.artifact_store,
     )
 
     @asynccontextmanager
@@ -168,6 +200,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(debug_router, prefix="/api/v1")
     app.include_router(audit_router, prefix="/api/v1")
     app.include_router(admin_router, prefix="/api/v1")
+    app.include_router(soc_query_router, prefix="/api/v1")
     app.include_router(ui_router)
     app.mount("/ui", StaticFiles(directory=UI_ASSET_DIR), name="ui")
     return app

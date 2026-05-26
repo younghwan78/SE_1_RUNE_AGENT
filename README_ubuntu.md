@@ -69,6 +69,7 @@ TRUSTED_GROUP_ROLE_MAP='{"rune-viewers":"viewer","rune-developers":"developer","
 STATE_STORE=sqlite
 SQLITE_STATE_PATH=/var/lib/rune-agent/rune_state.sqlite3
 POSTGRES_DSN=
+POSTGRES_MIGRATION_PROFILE=core
 LOG_LEVEL=INFO
 OTEL_ENABLED=false
 OTEL_SERVICE_NAME=rune-agent-api
@@ -113,11 +114,22 @@ standard policy and switch only these values:
 ```env
 STATE_STORE=postgres
 POSTGRES_DSN=postgresql://rune:${RUNE_POSTGRES_PASSWORD}@127.0.0.1:5432/rune_agent
+POSTGRES_MIGRATION_PROFILE=core
 ```
 
 On startup, the app applies packaged PostgreSQL migrations through
 `schema_migrations` and stores production-shaped contract payloads in
-`state_entities`. Audit archive/prune stores archive batches in
+`state_entities`. The `core` migration profile applies the production state
+tables without requiring pgvector or Apache AGE. Use
+`POSTGRES_MIGRATION_PROFILE=soc` only for a database prepared for the SoC
+Knowledge PoC profile, and validate it before use:
+
+```bash
+export POSTGRES_TEST_DSN="$POSTGRES_DSN"
+uv run python ops/rehearsal/validate_soc_live_postgres.py --require-live
+```
+
+Audit archive/prune stores archive batches in
 `audit_archive_batches` and deletes pruned audit rows from the PostgreSQL state
 tables. When `STATE_STORE=postgres`, periodic scheduler workers use the
 `scheduler_leases` table so multiple API replicas do not start the same

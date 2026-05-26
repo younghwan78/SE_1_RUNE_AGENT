@@ -1,0 +1,33 @@
+concerns:
+  - name: Power
+    aliases: [power, "power consumption", consumption, "power draw"]
+    units: [mW, mA, W]
+    definition: Power consumption or power-management behavior.
+  - name: Performance
+    aliases: [performance, perf, throughput]
+    units: [fps, MHz, MOPS]
+    definition: Throughput, frame rate, or execution performance.
+  - name: Memory
+    aliases: [memory, footprint, "memory usage"]
+    units: [MB, GB, KB]
+    definition: Memory capacity, footprint, bandwidth pressure, or allocation behavior.
+  - name: Area
+    aliases: [area, "die size", gates]
+    units: [mm2, gates]
+    definition: Silicon area, die size, or gate-count impact.
+  - name: Thermal
+    aliases: [thermal, temperature, heat]
+    units: [C, "junction temp"]
+    definition: Thermal behavior and temperature limits.
+  - name: Latency
+    aliases: [latency, delay, response_time]
+    units: [ms, us, ns]
+    definition: End-to-end or stage-level delay.
+  - name: Bandwidth
+    aliases: [bandwidth, bw, throughput_bw]
+    units: [GBps, MBps]
+    definition: Data movement bandwidth or bus pressure.
+  - name: Reliability
+    aliases: [reliability, fit, robustness]
+    units: [FIT]
+    definition: Failure rate, robustness, or long-term reliability.

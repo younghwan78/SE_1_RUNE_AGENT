@@ -29,6 +29,7 @@ def test_env_example_covers_production_readiness_inputs() -> None:
     required_keys = {
         "STATE_STORE",
         "POSTGRES_DSN",
+        "POSTGRES_MIGRATION_PROFILE",
         "POSTGRES_TEST_DSN",
         "GRAPH_BACKEND",
         "NEO4J_URI",

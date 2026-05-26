@@ -64,6 +64,15 @@ jobs:
       - name: PostgreSQL typed mirror validation
         run: uv run python ops/rehearsal/validate_postgres_typed_mirrors.py
 
+      - name: SoC PostgreSQL profile validation
+        run: uv run python ops/rehearsal/validate_soc_postgres_profile.py
+
+      - name: SoC live PostgreSQL profile smoke
+        run: uv run python ops/rehearsal/validate_soc_live_postgres.py
+
+      - name: SoC live storage-backed retrieval smoke
+        run: uv run python ops/rehearsal/run_soc_live_storage_rehearsal.py
+
       - name: Readiness evidence template smoke
         run: uv run python ops/rehearsal/check_production_readiness.py --write-evidence-template -
 

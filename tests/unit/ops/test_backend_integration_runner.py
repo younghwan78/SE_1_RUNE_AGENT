@@ -11,6 +11,7 @@ def test_integration_env_sets_disposable_backend_variables() -> None:
     env = runner.integration_env()
 
     assert env["POSTGRES_TEST_DSN"].endswith("@127.0.0.1:16432/rune_agent_test")
+    assert env["POSTGRES_MIGRATION_PROFILE"] == "core"
     assert env["NEO4J_TEST_URI"] == "bolt://127.0.0.1:17687"
     assert env["NEO4J_TEST_PASSWORD"] == "rune_integration_password"
     assert env["QDRANT_TEST_URL"] == "http://127.0.0.1:16333"

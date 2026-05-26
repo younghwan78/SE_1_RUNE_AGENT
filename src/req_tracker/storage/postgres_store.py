@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from importlib.resources import files
-from typing import Any
+from typing import Any, Literal
 
 import psycopg
 from psycopg.rows import dict_row
@@ -19,6 +19,8 @@ from req_tracker.storage.state_store import jsonable
 
 MIGRATIONS_PACKAGE = "req_tracker.storage.migrations.postgres"
 ROLLBACKS_PACKAGE = "req_tracker.storage.migrations.postgres.rollback"
+CORE_MIGRATION_MAX_VERSION = "010"
+PostgresMigrationProfile = Literal["core", "soc", "all"]
 
 
 @dataclass(frozen=True)
@@ -333,10 +335,27 @@ TYPED_COLLECTIONS: dict[str, TypedCollectionSpec] = {
             ("schema_version", "schema_version"),
         ),
     ),
+    "soc_eval_runs": TypedCollectionSpec(
+        table="soc_eval_runs",
+        id_column="run_id",
+        columns=(
+            ("run_id", "run_id"),
+            ("query_set_id", "query_set_id"),
+            ("coverage_mode", "coverage_mode"),
+            ("status", "status"),
+            ("started_at", "started_at"),
+            ("completed_at", "completed_at"),
+            ("regression_count", "regression_count"),
+            ("schema_version", "schema_version"),
+        ),
+    ),
 }
 
 
-def load_postgres_migrations() -> list[PostgresMigration]:
+def load_postgres_migrations(
+    *,
+    profile: PostgresMigrationProfile | str = "all",
+) -> list[PostgresMigration]:
     """Load PostgreSQL migrations in filename order."""
     root = files(MIGRATIONS_PACKAGE)
     migrations: list[PostgresMigration] = []
@@ -351,7 +370,24 @@ def load_postgres_migrations() -> list[PostgresMigration]:
                 sql=resource.read_text(encoding="utf-8"),
             )
         )
-    return migrations
+    return filter_postgres_migrations(migrations, profile=profile)
+
+
+def filter_postgres_migrations(
+    migrations: list[PostgresMigration],
+    *,
+    profile: PostgresMigrationProfile | str,
+) -> list[PostgresMigration]:
+    """Filter packaged PostgreSQL migrations for a runtime storage profile."""
+    if profile == "all" or profile == "soc":
+        return list(migrations)
+    if profile == "core":
+        return [
+            migration
+            for migration in migrations
+            if migration.version <= CORE_MIGRATION_MAX_VERSION
+        ]
+    raise ValueError(f"unsupported POSTGRES_MIGRATION_PROFILE: {profile}")
 
 
 def load_postgres_rollbacks() -> dict[str, PostgresMigration]:
@@ -383,11 +419,13 @@ class PostgreSQLStateStore:
         *,
         auto_migrate: bool = True,
         connection_factory: Callable[[], Any] | None = None,
+        migration_profile: PostgresMigrationProfile | str = "core",
     ) -> None:
         if not dsn and connection_factory is None:
             raise ValueError("postgres dsn is required when connection_factory is not provided")
         self.dsn = dsn
         self._connection_factory = connection_factory
+        self.migration_profile = migration_profile
         if auto_migrate:
             self.apply_migrations()
 
@@ -403,7 +441,7 @@ class PostgreSQLStateStore:
                 )
                 """
             )
-            for migration in load_postgres_migrations():
+            for migration in load_postgres_migrations(profile=self.migration_profile):
                 applied = conn.execute(
                     "SELECT 1 FROM schema_migrations WHERE version = %s",
                     (migration.version,),

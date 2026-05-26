@@ -194,6 +194,10 @@ def test_default_model_registry_files_load() -> None:
         registry.active_prompt_for_task("edge_linking").prompt_version_id
         == "pv_edge_linking_v1"
     )
+    assert (
+        registry.active_prompt_for_task("soc_axis_classification").prompt_version_id
+        == "pv_soc_axis_classification_v1"
+    )
 
 
 def test_model_registry_blocks_inactive_profile() -> None:

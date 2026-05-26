@@ -56,6 +56,11 @@ class RuntimeState(BaseModel):
     improvement_decisions: dict[str, dict[str, Any]]
     scheduler: RunScheduler
     source_adapter: Any
+    soc_slice_planner: Any = None
+    soc_query_tool_planner: Any = None
+    soc_reranker: Any = None
+    soc_retrieval_backend: Any = None
+    soc_answer_assembler: Any = None
     state_store: StateStore | None = None
 
     @classmethod

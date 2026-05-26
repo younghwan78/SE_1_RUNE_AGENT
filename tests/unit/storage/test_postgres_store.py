@@ -83,6 +83,7 @@ class FakePostgresConnection:
             or sql.startswith("insert into llm_call_traces")
             or sql.startswith("insert into replay_results")
             or sql.startswith("insert into improvement_decisions")
+            or sql.startswith("insert into soc_eval_runs")
         ):
             table = sql.split(" ", maxsplit=3)[2]
             entity_id = str(_params(params)[0])
@@ -195,6 +196,10 @@ class FakePostgresConnection:
             candidate_id = str(_params(params)[0])
             row = self.typed_entities.get(("improvement_decisions", candidate_id))
             return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
+        if sql.startswith("select payload_json from soc_eval_runs where run_id"):
+            run_id = str(_params(params)[0])
+            row = self.typed_entities.get(("soc_eval_runs", run_id))
+            return FakeCursor(one=None if row is None else {"payload_json": row["payload_json"]})
         if sql.startswith("select payload_json from agent_runs"):
             rows = [
                 {"payload_json": row["payload_json"]}
@@ -229,6 +234,13 @@ class FakePostgresConnection:
                 {"payload_json": row["payload_json"]}
                 for (_table, _entity_id), row in sorted(self.typed_entities.items())
                 if _table == "improvement_decisions"
+            ]
+            return FakeCursor(many=rows)
+        if sql.startswith("select payload_json from soc_eval_runs"):
+            rows = [
+                {"payload_json": row["payload_json"]}
+                for (_table, _entity_id), row in sorted(self.typed_entities.items())
+                if _table == "soc_eval_runs"
             ]
             return FakeCursor(many=rows)
         if "select payload_json from state_entities" in sql and "order by entity_id" not in sql:
@@ -273,6 +285,9 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
         "008",
         "009",
         "010",
+        "011",
+        "012",
+        "013",
     ]
     assert "CREATE TABLE IF NOT EXISTS state_entities" in migrations[0].sql
     assert "JSONB" in migrations[0].sql
@@ -289,6 +304,37 @@ def test_load_postgres_migrations_returns_ordered_state_schema() -> None:
     assert "CREATE TABLE IF NOT EXISTS replay_results" in migrations[7].sql
     assert "CREATE TABLE IF NOT EXISTS improvement_decisions" in migrations[8].sql
     assert "CREATE TABLE IF NOT EXISTS schedule_configs" in migrations[9].sql
+    assert "CREATE EXTENSION IF NOT EXISTS pg_trgm" in migrations[10].sql
+    assert "CREATE TABLE IF NOT EXISTS soc_artifacts" in migrations[10].sql
+    assert "CREATE TABLE IF NOT EXISTS soc_classifications" in migrations[10].sql
+    assert "CREATE TABLE IF NOT EXISTS soc_event_log" in migrations[10].sql
+    assert "CREATE TABLE IF NOT EXISTS soc_eval_runs" in migrations[10].sql
+    assert "idx_soc_artifacts_fts" in migrations[10].sql
+    assert "CREATE EXTENSION IF NOT EXISTS vector" in migrations[11].sql
+    assert "CREATE TABLE IF NOT EXISTS soc_artifact_embeddings" in migrations[11].sql
+    assert "vector(1024)" in migrations[11].sql
+    assert "vector_cosine_ops" in migrations[11].sql
+    assert "CREATE EXTENSION IF NOT EXISTS age" in migrations[12].sql
+    assert "create_graph('soc_graph')" in migrations[12].sql
+
+
+def test_load_postgres_migrations_can_filter_core_profile() -> None:
+    migrations = load_postgres_migrations(profile="core")
+
+    assert [migration.version for migration in migrations] == [
+        "001",
+        "002",
+        "003",
+        "004",
+        "005",
+        "006",
+        "007",
+        "008",
+        "009",
+        "010",
+    ]
+    assert all("CREATE EXTENSION IF NOT EXISTS vector" not in item.sql for item in migrations)
+    assert all("CREATE EXTENSION IF NOT EXISTS age" not in item.sql for item in migrations)
 
 
 def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
@@ -305,6 +351,9 @@ def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
         "008",
         "009",
         "010",
+        "011",
+        "012",
+        "013",
     ]
     assert "DROP TABLE IF EXISTS agent_runs" in rollbacks["002"].sql
     assert "DROP TABLE IF EXISTS audit_archive_batches" in rollbacks["003"].sql
@@ -316,6 +365,12 @@ def test_load_postgres_rollbacks_returns_versioned_scripts() -> None:
     assert "DROP TABLE IF EXISTS replay_results" in rollbacks["008"].sql
     assert "DROP TABLE IF EXISTS improvement_decisions" in rollbacks["009"].sql
     assert "DROP TABLE IF EXISTS schedule_configs" in rollbacks["010"].sql
+    assert "DROP TABLE IF EXISTS soc_eval_runs" in rollbacks["011"].sql
+    assert "DROP TABLE IF EXISTS soc_event_log" in rollbacks["011"].sql
+    assert "DROP TABLE IF EXISTS soc_classifications" in rollbacks["011"].sql
+    assert "DROP TABLE IF EXISTS soc_artifacts" in rollbacks["011"].sql
+    assert "DROP TABLE IF EXISTS soc_artifact_embeddings" in rollbacks["012"].sql
+    assert "drop_graph('soc_graph', true)" in rollbacks["013"].sql
 
 
 def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
@@ -348,6 +403,8 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
         "009",
         "010",
     }
+    assert all("create extension if not exists vector" not in sql for sql in fake.executed_sql)
+    assert all("create extension if not exists age" not in sql for sql in fake.executed_sql)
     assert any("insert into agent_runs" in sql for sql in fake.executed_sql)
     stored = store.get("agent_runs", run.run_id)
     assert stored is not None
@@ -355,6 +412,30 @@ def test_postgres_store_applies_migrations_and_matches_state_contract() -> None:
     stored_runs = store.list("agent_runs", project_key="RUNE_CAM_ALPHA")
     assert stored_runs[0]["project_key"] == "RUNE_CAM_ALPHA"
     assert store.counts_by_collection() == {"agent_runs": 1}
+
+
+def test_postgres_store_applies_soc_migration_profile_when_enabled() -> None:
+    fake = FakePostgresConnection()
+
+    PostgreSQLStateStore("", connection_factory=lambda: fake, migration_profile="soc")
+
+    assert fake.migrations == {
+        "001",
+        "002",
+        "003",
+        "004",
+        "005",
+        "006",
+        "007",
+        "008",
+        "009",
+        "010",
+        "011",
+        "012",
+        "013",
+    }
+    assert any("create extension if not exists vector" in sql for sql in fake.executed_sql)
+    assert any("create extension if not exists age" in sql for sql in fake.executed_sql)
 
 
 def test_postgres_store_typed_operation_state_tables() -> None:
@@ -586,6 +667,37 @@ def test_postgres_store_typed_improvement_decision_table() -> None:
     assert any("insert into improvement_decisions" in sql for sql in fake.executed_sql)
     assert store.get("improvement_decisions", decision["candidate_id"]) == decision
     assert store.list("improvement_decisions")[0]["candidate_id"] == decision["candidate_id"]
+
+
+def test_postgres_store_typed_soc_eval_run_table() -> None:
+    fake = FakePostgresConnection()
+    store = PostgreSQLStateStore("", connection_factory=lambda: fake)
+    eval_run = {
+        "run_id": "soc_eval_seed_001",
+        "query_set_id": "soc_knowledge_seed_v0.1",
+        "coverage_mode": "seed",
+        "status": "passed",
+        "started_at": "2026-05-26T00:00:00Z",
+        "completed_at": "2026-05-26T00:00:01Z",
+        "metrics": {
+            "recall": 1.0,
+            "source_accuracy": 1.0,
+            "counts": {"queries": 20},
+        },
+        "regression_count": 0,
+        "metadata": {"report_schema_version": "soc-query-eval-v0.1"},
+        "schema_version": "soc-v0.1",
+    }
+
+    store.upsert(
+        collection="soc_eval_runs",
+        entity_id=eval_run["run_id"],
+        payload=eval_run,
+    )
+
+    assert any("insert into soc_eval_runs" in sql for sql in fake.executed_sql)
+    assert store.get("soc_eval_runs", eval_run["run_id"]) == eval_run
+    assert store.list("soc_eval_runs")[0]["run_id"] == eval_run["run_id"]
 
 
 def test_postgres_store_acquires_renews_and_releases_scheduler_lease() -> None:
